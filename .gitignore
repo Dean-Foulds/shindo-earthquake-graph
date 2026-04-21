@@ -41,3 +41,4 @@ frontend/.env.local
 # Markdown docs (local only)
 *.md
 !README.md
+!PIPELINE.md
