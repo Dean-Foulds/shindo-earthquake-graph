@@ -6,6 +6,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from .db import get_db, Neo4jService
+from .analysis import get_cached_predict
 
 router = APIRouter()
 
@@ -78,7 +79,17 @@ def agent_chat(req: ChatRequest):
     last_user = next(
         (m.text for m in reversed(req.messages) if m.role == "user"), ""
     )
-    message = sim_context + last_user
+    risk_context = ""
+    try:
+        cached = get_cached_predict()
+        if cached:
+            top = cached["ranked_by_overdue"][:3]
+            risk_context = "\n[SEISMIC RISK CONTEXT] Top overdue fault zones: " + \
+                "; ".join(f"{r['fault_name']} {r['display_label']}" for r in top) + "\n"
+    except Exception:
+        pass
+
+    message = sim_context + risk_context + last_user
 
     payload = {"input": message}
 

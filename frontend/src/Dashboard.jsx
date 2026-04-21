@@ -362,9 +362,150 @@ function QueryCard({q}) {
   )
 }
 
+// ── OVERDUE GAUGE ───────────────────────────────────────────────
+function OverdueGauge({score}) {
+  const clamped = Math.min(score ?? 0, 5)
+  const angle = (clamped / 5) * 180
+  const color = clamped < 0.8 ? "#00cc66" : clamped < 1.5 ? "#ffcc00" : clamped < 2.5 ? "#ff9922" : "#ff3300"
+  const rad = (angle - 180) * (Math.PI / 180)
+  const cx = 60, cy = 54, r = 44
+  const nx = cx + r * Math.cos(rad)
+  const ny = cy + r * Math.sin(rad)
+  return (
+    <svg width={120} height={62} viewBox="0 0 120 62">
+      <path d={`M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${cx+r} ${cy}`} fill="none" stroke="#001a33" strokeWidth={10} strokeLinecap="round"/>
+      <path d={`M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${cx+r} ${cy}`} fill="none" stroke={color} strokeWidth={10}
+        strokeLinecap="round" strokeDasharray={`${(clamped/5)*139} 139`} opacity={0.35}/>
+      <line x1={cx} y1={cy} x2={nx} y2={ny} stroke={color} strokeWidth={2.5} strokeLinecap="round"/>
+      <circle cx={cx} cy={cy} r={4} fill={color} opacity={0.8}/>
+      <text x={cx-r+2} y={cy+14} fontSize={8} fill="#003344">0</text>
+      <text x={cx+r-8} y={cy+14} fontSize={8} fill="#003344">5×</text>
+      <text x={cx} y={cy+14} textAnchor="middle" fontSize={8} fill="#003344">1×</text>
+      <text x={cx} y={cy-r-6} textAnchor="middle" fontSize={9} fontWeight="700" fill={color}>{score != null ? score.toFixed(2)+"×" : "—"}</text>
+    </svg>
+  )
+}
+
+// ── RISK ANALYSIS TAB ───────────────────────────────────────────
+function RiskTab({data, loading, error}) {
+  const TYPE_COL = {subduction:"#ff5544", strike_slip:"#cc55ff", crustal:"#ffcc00", reverse:"#00ccff", intraslab:"#44aaff"}
+  return (
+    <div>
+      {/* Disclaimer — always visible */}
+      <div style={{border:"1px solid #554400",background:"#0d0800",borderRadius:6,padding:"12px 16px",marginBottom:20,fontSize:12,color:"#aa8833",lineHeight:1.8}}>
+        <span style={{fontWeight:700,color:"#ffcc00",letterSpacing:"0.06em"}}>STATISTICAL ANALYSIS — NOT PREDICTION</span>
+        {"  "}These figures represent historical recurrence rates derived from 75 years of seismic records.
+        Earthquake timing is inherently unpredictable. A ratio above 1.0× indicates a fault zone has exceeded its
+        historical average recurrence interval — this does not imply imminent occurrence.
+      </div>
+
+      {loading&&<div style={{color:"#004466",fontSize:13,padding:20}}>Loading recurrence data from graph…</div>}
+      {error&&<div style={{color:"#ff5533",fontSize:13,padding:20}}>Could not load risk data: {error}</div>}
+
+      {data&&<>
+        {/* Summary ranking */}
+        <div style={{background:"#000b1a",border:"1px solid #001a33",borderRadius:8,padding:"14px 16px",marginBottom:16}}>
+          <div style={{fontSize:12,color:"#0088aa",letterSpacing:"0.1em",marginBottom:12,fontWeight:700}}>HISTORICAL OVERDUE RATIO — RANKED</div>
+          <div style={{fontSize:11,color:"#004455",marginBottom:10}}>
+            Based on {data.data_range?.total_events?.toLocaleString()} events · {data.data_range?.from_year}–{data.data_range?.to_year}
+          </div>
+          {data.ranked_by_overdue?.map((r,i)=>{
+            const score = r.overdue_score
+            const col = score < 0.8 ? "#00cc66" : score < 1.5 ? "#ffcc00" : score < 2.5 ? "#ff9922" : "#ff3300"
+            return (
+              <div key={r.fault_id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+                <div style={{width:16,fontSize:10,color:"#003344",textAlign:"right"}}>{i+1}.</div>
+                <div style={{flex:1,fontSize:12,color:"#00ccdd",fontWeight:600}}>{r.fault_name}</div>
+                <div style={{fontSize:11,color:col,fontWeight:700,textShadow:`0 0 6px ${col}66`}}>{r.display_label}</div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Per-fault cards */}
+        {data.fault_zones?.map(fz=>(
+          <div key={fz.fault_id} style={{background:"#000b1a",border:"1px solid #001a33",borderRadius:8,padding:"14px 16px",marginBottom:12}}>
+            {/* Header */}
+            <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:12}}>
+              <div>
+                <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
+                  <span style={{fontSize:14,fontWeight:700,color:"#00ccdd"}}>{fz.fault_name}</span>
+                  <span style={{fontSize:9,padding:"2px 7px",borderRadius:3,
+                    background:"#001020",border:`1px solid ${TYPE_COL[fz.fault_type]||"#003344"}`,
+                    color:TYPE_COL[fz.fault_type]||"#003344",letterSpacing:"0.06em",fontWeight:700}}>
+                    {fz.fault_type}
+                  </span>
+                </div>
+                <div style={{fontSize:11,color:"#005577"}}>
+                  Predicted max: <span style={{color:"#ff9922",fontWeight:700}}>M{fz.predicted_max_mag}</span>
+                  {fz.last_major_year&&<> · Last major: <span style={{color:"#0099bb"}}>{fz.last_major_year}</span></>}
+                  {" · "}<span style={{color:"#004466"}}>{fz.total_events?.toLocaleString()} total events</span>
+                </div>
+              </div>
+              {/* Gauge for best tier */}
+              {(()=>{
+                const best = ["m8","m7","m6"].map(k=>fz.tiers?.[k]).find(t=>t?.overdue_score!=null)
+                return best ? <OverdueGauge score={best.overdue_score}/> : null
+              })()}
+            </div>
+
+            {/* Tier table */}
+            <div style={{display:"grid",gridTemplateColumns:"auto 1fr 1fr 1fr 1fr 1fr",gap:0,fontSize:11}}>
+              {["TIER","EVENTS","AVG INTERVAL","LAST EVENT","YRS SINCE","OVERDUE RATIO"].map(h=>(
+                <div key={h} style={{padding:"5px 8px",color:"#0066aa",borderBottom:"1px solid #001525",fontWeight:700,letterSpacing:"0.06em",fontSize:10}}>{h}</div>
+              ))}
+              {["m6","m7","m8"].map(tier=>{
+                const t = fz.tiers?.[tier]
+                if (!t) return null
+                const score = t.overdue_score
+                const col = score == null ? "#003344" : score < 0.8 ? "#00cc66" : score < 1.5 ? "#ffcc00" : score < 2.5 ? "#ff9922" : "#ff3300"
+                return [
+                  <div key={`${tier}-l`} style={{padding:"5px 8px",color:"#00aacc",borderBottom:"1px solid #001020",fontWeight:700}}>
+                    {tier.toUpperCase().replace("M","M")}+
+                  </div>,
+                  <div key={`${tier}-ec`} style={{padding:"5px 8px",color:"#0099bb",borderBottom:"1px solid #001020"}}>
+                    {t.event_count}
+                    {t.sample_size_warning&&<span style={{fontSize:9,padding:"1px 4px",background:"#1a0800",border:"1px solid #442200",borderRadius:3,color:"#aa6600",marginLeft:5}}>low n</span>}
+                  </div>,
+                  <div key={`${tier}-ar`} style={{padding:"5px 8px",color:"#0088aa",borderBottom:"1px solid #001020"}}>
+                    {t.avg_recurrence_years != null ? `${t.avg_recurrence_years} yr` : "—"}
+                  </div>,
+                  <div key={`${tier}-le`} style={{padding:"5px 8px",color:"#0088aa",borderBottom:"1px solid #001020"}}>
+                    {t.last_event_year ?? "—"}
+                  </div>,
+                  <div key={`${tier}-ys`} style={{padding:"5px 8px",color:"#0088aa",borderBottom:"1px solid #001020"}}>
+                    {t.years_since_last != null ? `${t.years_since_last} yr` : "—"}
+                  </div>,
+                  <div key={`${tier}-os`} style={{padding:"5px 8px",borderBottom:"1px solid #001020",fontWeight:700,color:col,textShadow:score!=null?`0 0 6px ${col}55`:"none"}}>
+                    {score != null ? `${score.toFixed(2)}×` : "—"}
+                  </div>,
+                ]
+              })}
+            </div>
+          </div>
+        ))}
+      </>}
+    </div>
+  )
+}
+
 // ── MAIN DASHBOARD ──────────────────────────────────────────────
 export default function Dashboard({onBack, chat}) {
   const [activeTab,setActiveTab] = useState("eda")
+  const [riskData,setRiskData] = useState(null)
+  const [riskLoading,setRiskLoading] = useState(false)
+  const [riskError,setRiskError] = useState(null)
+
+  const selectTab = (t) => {
+    setActiveTab(t)
+    if (t === "risk" && !riskData && !riskLoading) {
+      setRiskLoading(true)
+      fetch(`${import.meta.env.VITE_API_URL}/analysis/predict`)
+        .then(r => { if (!r.ok) throw new Error(r.statusText); return r.json() })
+        .then(d => { setRiskData(d); setRiskLoading(false) })
+        .catch(e => { setRiskError(e.message); setRiskLoading(false) })
+    }
+  }
 
   return (
     <div style={{height:"100vh",background:"#000510",fontFamily:"'IBM Plex Mono',monospace",color:"#00b4d8",display:"flex",flexDirection:"column"}}>
@@ -378,13 +519,13 @@ export default function Dashboard({onBack, chat}) {
           DATA ANALYSIS DASHBOARD
         </div>
         <div style={{marginLeft:"auto",display:"flex",gap:4}}>
-          {["eda","cypher"].map(t=>(
-            <button key={t} onClick={()=>setActiveTab(t)}
+          {[["eda","EDA CHARTS"],["risk","RISK ANALYSIS"],["cypher","CYPHER QUERIES"]].map(([t,label])=>(
+            <button key={t} onClick={()=>selectTab(t)}
               style={{background:activeTab===t?"#001a33":"none",border:"1px solid",
                 borderColor:activeTab===t?"#003366":"transparent",borderRadius:5,
                 color:activeTab===t?"#00e5ff":"#004466",fontSize:11,padding:"5px 14px",
                 cursor:"pointer",fontFamily:"inherit",letterSpacing:"0.08em"}}>
-              {t==="eda"?"EDA CHARTS":"CYPHER QUERIES"}
+              {label}
             </button>
           ))}
         </div>
@@ -499,6 +640,9 @@ export default function Dashboard({onBack, chat}) {
             </div>
           </div>
         </>}
+
+        {/* ── RISK ANALYSIS TAB ───────────────────────────────── */}
+        {activeTab==="risk"&&<RiskTab data={riskData} loading={riskLoading} error={riskError}/>}
 
         {/* ── CYPHER TAB ──────────────────────────────────────── */}
         {activeTab==="cypher"&&<>
