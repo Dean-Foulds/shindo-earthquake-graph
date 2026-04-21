@@ -351,16 +351,15 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
   const tStr = `translate(${mapT.x},${mapT.y}) scale(${mapT.k})`
 
   return (
-    <div ref={outerRef} style={{display:"flex",flexDirection:isMobile?"column":"row",height:"100vh",fontFamily:"'IBM Plex Mono',monospace",background:"#000510",overflowY:isMobile?"auto":"hidden",overflowX:"hidden"}}>
+    <div ref={outerRef} className="shindo-outer" style={{display:"flex",flexDirection:"row",height:"100vh",fontFamily:"'IBM Plex Mono',monospace",background:"#000510",overflow:"hidden"}}>
 
       {/* ══════════════════════════════════════════════════════════
           MAP COLUMN
       ══════════════════════════════════════════════════════════ */}
-      <div style={{
-        flex:isMobile?"0 0 42vh":"0 0 640px",
+      <div className="shindo-map" style={{
+        flex:"0 0 640px",
         background:"#000510",position:"relative",userSelect:"none",
-        borderRight:isMobile?"none":"1px solid #001a33",
-        borderBottom:isMobile?"1px solid #001a33":"none",
+        borderRight:"1px solid #001a33",
       }}>
         <svg ref={svgRef} width="100%" height="100%" viewBox={`0 0 ${MAP_W} ${MAP_H}`}
           onClick={onClick} style={{display:"block",cursor:"crosshair",height:"100%"}}>
@@ -635,12 +634,11 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
       {/* ══════════════════════════════════════════════════════════
           INTEL PANEL
       ══════════════════════════════════════════════════════════ */}
-      <div ref={intelRef} style={{
-        flex:isMobile?"0 0 30vh":"0 0 280px",
+      <div ref={intelRef} className="shindo-intel" style={{
+        flex:"0 0 280px",
         display:"flex",
         flexDirection:"column",
         overflow:"hidden",
-        borderBottom:isMobile?"1px solid #001a33":"none",
       }}>
         {/* Header + controls */}
         <div style={{padding:"10px 12px 8px",borderBottom:"1px solid #001a33",background:"#000b1a",flexShrink:0}}>
@@ -769,12 +767,12 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
       {/* ══════════════════════════════════════════════════════════
           震度 CHAT PANEL
       ══════════════════════════════════════════════════════════ */}
-      <div style={{
+      <div className="shindo-chat" style={{
         flex:1,
         display:"flex",
         flexDirection:"column",
         overflow:"hidden",
-        borderLeft:isMobile?"none":"1px solid #001a33",
+        borderLeft:"1px solid #001a33",
       }}>
         <div style={{padding:"14px 18px 12px",borderBottom:"1px solid #001a33",background:"#000b1a",flexShrink:0}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
@@ -819,6 +817,32 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: #000510; }
         ::-webkit-scrollbar-thumb { background: #001a33; border-radius: 2px; }
+        @media (max-width: 767px) {
+          .shindo-outer {
+            flex-direction: column !important;
+            overflow-y: auto !important;
+            overflow-x: hidden !important;
+          }
+          .shindo-map {
+            flex: 0 0 44vh !important;
+            width: 100% !important;
+            border-right: none !important;
+            border-bottom: 1px solid #001a33 !important;
+          }
+          .shindo-intel {
+            flex: 0 0 auto !important;
+            width: 100% !important;
+            min-height: 280px !important;
+            overflow-y: auto !important;
+            border-bottom: 1px solid #001a33 !important;
+          }
+          .shindo-chat {
+            flex: 0 0 380px !important;
+            width: 100% !important;
+            border-left: none !important;
+            border-top: 1px solid #001a33 !important;
+          }
+        }
       `}</style>
     </div>
   )
