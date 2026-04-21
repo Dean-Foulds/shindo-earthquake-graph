@@ -179,14 +179,6 @@ export default function Shindo({ chat }) {
   const intelRef  = useRef(null)
   const outerRef  = useRef(null)
 
-  // On mobile, scroll past the map to show intel section on load
-  useEffect(() => {
-    if (isMobile && intelRef.current && outerRef.current) {
-      setTimeout(() => {
-        outerRef.current.scrollTo({ top: intelRef.current.offsetTop, behavior: "smooth" })
-      }, 300)
-    }
-  }, [isMobile])
 
   const svgRef    = useRef(null)
   const zoomRef   = useRef(null)
@@ -224,10 +216,16 @@ export default function Shindo({ chat }) {
   // d3-zoom setup
   useEffect(() => {
     const svg = d3.select(svgRef.current)
-    const zoom = d3.zoom().scaleExtent([0.6,10])
+    const zoom = d3.zoom().scaleExtent([0.4,10])
       .on("zoom", ({transform:t}) => setMapT({x:t.x,y:t.y,k:t.k}))
     zoomRef.current = zoom
     svg.call(zoom)
+    // On mobile, start zoomed out so all of Japan is visible
+    if (window.innerWidth < 768) {
+      const k = 0.62
+      const cx = MAP_W / 2, cy = MAP_H / 2
+      svg.call(zoom.transform, d3.zoomIdentity.translate(cx*(1-k), cy*(1-k)).scale(k))
+    }
     return () => { svg.on(".zoom", null) }
   }, [])
 
