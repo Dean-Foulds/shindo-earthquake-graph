@@ -73,7 +73,16 @@ def severity_band(magnitude):
 class ShindoGraph:
 
     def __init__(self, uri, user, password):
+        self._uri = uri
+        self._auth = (user, password)
         self.driver = GraphDatabase.driver(uri, auth=(user, password))
+
+    def _reconnect(self):
+        try:
+            self.driver.close()
+        except Exception:
+            pass
+        self.driver = GraphDatabase.driver(self._uri, auth=self._auth)
 
     def close(self):
         self.driver.close()
@@ -178,90 +187,108 @@ class ShindoGraph:
 
     # ── DYNAMIC NODES (earthquakes) ──────────────────────────────
 
+    def _run_batch(self, rows):
+        """Write one batch of earthquake rows using UNWIND (single round trip)."""
+        # Main node + relationships (non-tsunami)
+        self.run("""
+            UNWIND $rows AS r
+            MERGE (eq:Earthquake {id: r.id})
+            SET eq.time             = r.time,
+                eq.year             = r.year,
+                eq.decade           = r.decade,
+                eq.magnitude        = r.magnitude,
+                eq.depth_km         = r.depth_km,
+                eq.lat              = r.lat,
+                eq.lon              = r.lon,
+                eq.place            = r.place,
+                eq.tsunami          = r.tsunami,
+                eq.alert            = r.alert,
+                eq.sig              = r.sig,
+                eq.severity         = r.severity,
+                eq.name             = r.name,
+                eq.deaths           = r.deaths,
+                eq.nuclear_incident = r.nuclear_incident,
+                eq.tsunami_max_height_m = r.tsunami_height
+            WITH eq, r
+            MATCH (f:FaultZone {id: r.fzone_id})
+            MERGE (eq)-[:ORIGINATED_ON]->(f)
+            WITH eq, r
+            MATCH (pf:Prefecture {id: r.pref_id})
+            MERGE (eq)-[:STRUCK {distance_km: r.dist}]->(pf)
+            WITH eq, r
+            MERGE (d:Decade {year: r.decade})
+            SET d.label = r.decade_label
+            MERGE (eq)-[:IN_DECADE]->(d)
+        """, rows=rows)
+
+        # Tsunami relationships (separate pass, only for flagged events)
+        tsunami_rows = [r for r in rows if r["tsunami"]]
+        if tsunami_rows:
+            self.run("""
+                UNWIND $rows AS r
+                MERGE (t:Tsunami {id: r.tid})
+                SET t.year          = r.year,
+                    t.earthquake_id = r.id,
+                    t.max_height_m  = r.tsunami_height,
+                    t.source_mag    = r.magnitude
+                WITH t, r
+                MATCH (eq:Earthquake {id: r.id})
+                MERGE (eq)-[:TRIGGERED]->(t)
+                WITH t, r
+                MATCH (pf:Prefecture {id: r.pref_id})
+                MERGE (t)-[:INUNDATED]->(pf)
+            """, rows=tsunami_rows)
+
     def load_earthquakes(self, events):
         print(f"Loading {len(events)} earthquakes...")
         batch_size = 200
         notable = NOTABLE_EVENTS
+        _pref_cache = {}
+
+        def get_pref(lat, lon):
+            key = (round(lat, 2), round(lon, 2))
+            if key not in _pref_cache:
+                _pref_cache[key] = nearest_prefecture(lat, lon)
+            return _pref_cache[key]
+
+        def pref_coords(pid):
+            p = next(x for x in PREFECTURES if x["id"] == pid)
+            return p["lat"], p["lon"]
 
         for i in range(0, len(events), batch_size):
             batch = events[i:i + batch_size]
+            rows = []
             for e in batch:
-                fzone_id  = assign_fault_zone(e["lat"], e["lon"], e["depth_km"])
-                pref_id   = nearest_prefecture(e["lat"], e["lon"])
-                severity  = severity_band(e["magnitude"])
-                extra     = notable.get(e["id"], {})
+                fzone_id = assign_fault_zone(e["lat"], e["lon"], e["depth_km"])
+                pref_id  = get_pref(e["lat"], e["lon"])
+                plat, plon = pref_coords(pref_id)
+                extra    = notable.get(e["id"], {})
+                rows.append({
+                    "id": e["id"], "time": e["time"], "year": e["year"],
+                    "decade": e["decade"], "decade_label": f"{e['decade']}s",
+                    "magnitude": e["magnitude"], "depth_km": e["depth_km"],
+                    "lat": e["lat"], "lon": e["lon"], "place": e["place"],
+                    "tsunami": bool(e["tsunami"]), "alert": e["alert"],
+                    "sig": e["sig"], "severity": severity_band(e["magnitude"]),
+                    "name": extra.get("name"), "deaths": extra.get("deaths"),
+                    "nuclear_incident": extra.get("nuclear_incident"),
+                    "tsunami_height": extra.get("tsunami_max_height_m"),
+                    "fzone_id": fzone_id, "pref_id": pref_id,
+                    "dist": round(haversine_km(e["lat"], e["lon"], plat, plon), 1),
+                    "tid": f"ts_{e['id']}",
+                })
 
-                self.run("""
-                    MERGE (eq:Earthquake {id: $id})
-                    SET eq.time         = $time,
-                        eq.year         = $year,
-                        eq.decade       = $decade,
-                        eq.magnitude    = $magnitude,
-                        eq.depth_km     = $depth_km,
-                        eq.lat          = $lat,
-                        eq.lon          = $lon,
-                        eq.place        = $place,
-                        eq.tsunami      = $tsunami,
-                        eq.alert        = $alert,
-                        eq.sig          = $sig,
-                        eq.severity     = $severity,
-                        eq.name         = $name,
-                        eq.deaths       = $deaths,
-                        eq.nuclear_incident = $nuclear_incident,
-                        eq.tsunami_max_height_m = $tsunami_height
-                """,
-                    id=e["id"], time=e["time"], year=e["year"],
-                    decade=e["decade"], magnitude=e["magnitude"],
-                    depth_km=e["depth_km"], lat=e["lat"], lon=e["lon"],
-                    place=e["place"], tsunami=e["tsunami"],
-                    alert=e["alert"], sig=e["sig"], severity=severity,
-                    name=extra.get("name"),
-                    deaths=extra.get("deaths"),
-                    nuclear_incident=extra.get("nuclear_incident"),
-                    tsunami_height=extra.get("tsunami_max_height_m"),
-                )
-
-                # ORIGINATED_ON → FaultZone
-                self.run("""
-                    MATCH (eq:Earthquake {id: $eid}), (f:FaultZone {id: $fid})
-                    MERGE (eq)-[:ORIGINATED_ON]->(f)
-                """, eid=e["id"], fid=fzone_id)
-
-                # STRUCK → nearest Prefecture
-                self.run("""
-                    MATCH (eq:Earthquake {id: $eid}), (pf:Prefecture {id: $pid})
-                    MERGE (eq)-[:STRUCK {distance_km: $dist}]->(pf)
-                """, eid=e["id"], pid=pref_id,
-                    dist=round(haversine_km(e["lat"], e["lon"],
-                               next(p for p in PREFECTURES if p["id"] == pref_id)["lat"],
-                               next(p for p in PREFECTURES if p["id"] == pref_id)["lon"]), 1))
-
-                # TRIGGERED → Tsunami node (if flagged)
-                if e["tsunami"]:
-                    self.run("""
-                        MERGE (t:Tsunami {id: $tid})
-                        SET t.year            = $year,
-                            t.earthquake_id   = $eid,
-                            t.max_height_m    = $height,
-                            t.source_mag      = $mag
-                        WITH t
-                        MATCH (eq:Earthquake {id: $eid})
-                        MERGE (eq)-[:TRIGGERED]->(t)
-                        WITH t
-                        MATCH (pf:Prefecture {id: $pid})
-                        MERGE (t)-[:INUNDATED]->(pf)
-                    """, tid=f"ts_{e['id']}", year=e["year"],
-                        eid=e["id"], height=extra.get("tsunami_max_height_m"),
-                        mag=e["magnitude"], pid=pref_id)
-
-                # IN_DECADE → Decade node
-                self.run("""
-                    MERGE (d:Decade {year: $decade})
-                    SET d.label = $label
-                    WITH d
-                    MATCH (eq:Earthquake {id: $eid})
-                    MERGE (eq)-[:IN_DECADE]->(d)
-                """, decade=e["decade"], label=f"{e['decade']}s", eid=e["id"])
+            # Retry once on connection reset
+            for attempt in range(2):
+                try:
+                    self._run_batch(rows)
+                    break
+                except Exception as exc:
+                    if attempt == 0 and "defunct" in str(exc).lower():
+                        print(f"  Connection reset at {i} — reconnecting...")
+                        self._reconnect()
+                    else:
+                        raise
 
             print(f"  {min(i + batch_size, len(events))}/{len(events)} loaded...")
 
