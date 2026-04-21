@@ -652,7 +652,7 @@ export default function Dashboard({onBack, chat}) {
                 ]
               })}
             </div>
-            </div></div>
+            </div>
             <div style={{fontSize:12,color:"#006688",marginTop:12}}>
               Score = quake_count + tsunami_count×10 + npp_count×5 + subduction_zones×8
             </div>
