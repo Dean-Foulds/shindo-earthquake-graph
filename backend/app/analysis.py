@@ -134,13 +134,13 @@ def get_cached_predict():
 
 
 @router.get("/predict")
-def predict(db: Neo4jService = Depends(get_db)):
+async def predict(db: Neo4jService = Depends(get_db)):
     now = time.time()
     if _predict_cache["data"] and now < _predict_cache["expires_at"]:
         return _predict_cache["data"]
 
     try:
-        rows = db.cypher_read(_CYPHER)
+        rows = await db.cypher_read(_CYPHER)
         data = _build_response(rows)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {e}\n{traceback.format_exc()}")
