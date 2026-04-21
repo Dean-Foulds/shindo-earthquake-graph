@@ -1,4 +1,4 @@
-# Use official Python image
+# Build: 2026-04-21
 FROM python:3.13-slim
 
 # Set working directory
@@ -17,4 +17,4 @@ COPY app ./app
 EXPOSE 8000
 
 # Run FastAPI with uvicorn
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}

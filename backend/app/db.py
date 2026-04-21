@@ -1,4 +1,5 @@
 import os
+from typing import Optional
 from neo4j import GraphDatabase
 
 VOYAGE_MODEL = "voyage-3"
@@ -52,7 +53,7 @@ class Neo4jService:
             return results
 
     # ── Safe read-only Cypher ────────────────────────────────────
-    def cypher_read(self, query: str, params: dict | None = None) -> list[dict]:
+    def cypher_read(self, query: str, params: Optional[dict] = None) -> list[dict]:
         """Execute a read-only Cypher query. Raises if query contains writes."""
         forbidden = ("CREATE", "MERGE", "SET", "DELETE", "REMOVE", "DROP", "CALL {")
         upper = query.upper()
@@ -63,7 +64,7 @@ class Neo4jService:
             return [r.data() for r in s.run(query, **(params or {}))]
 
     # ── Convenience fetchers ─────────────────────────────────────
-    def get_earthquake(self, eq_id: str) -> dict | None:
+    def get_earthquake(self, eq_id: str) -> Optional[dict]:
         rows = self.run("""
             MATCH (e:Earthquake {id: $id})
             OPTIONAL MATCH (e)-[:ORIGINATED_ON]->(fz:FaultZone)
