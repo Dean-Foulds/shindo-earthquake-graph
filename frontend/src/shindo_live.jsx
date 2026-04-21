@@ -176,6 +176,17 @@ const islandPath = (proj,coords) => "M "+coords.map(([lt,ln])=>proj([ln,lt]).map
 export default function Shindo({ chat }) {
   const width     = useWindowWidth()
   const isMobile  = width < 768
+  const intelRef  = useRef(null)
+  const outerRef  = useRef(null)
+
+  // On mobile, scroll past the map to show intel section on load
+  useEffect(() => {
+    if (isMobile && intelRef.current && outerRef.current) {
+      setTimeout(() => {
+        outerRef.current.scrollTo({ top: intelRef.current.offsetTop, behavior: "smooth" })
+      }, 300)
+    }
+  }, [isMobile])
 
   const svgRef    = useRef(null)
   const zoomRef   = useRef(null)
@@ -340,7 +351,7 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
   const tStr = `translate(${mapT.x},${mapT.y}) scale(${mapT.k})`
 
   return (
-    <div style={{display:"flex",flexDirection:isMobile?"column":"row",height:"100vh",fontFamily:"'IBM Plex Mono',monospace",background:"#000510",overflow:"hidden"}}>
+    <div ref={outerRef} style={{display:"flex",flexDirection:isMobile?"column":"row",height:"100vh",fontFamily:"'IBM Plex Mono',monospace",background:"#000510",overflowY:isMobile?"auto":"hidden",overflowX:"hidden"}}>
 
       {/* ══════════════════════════════════════════════════════════
           MAP COLUMN
@@ -624,7 +635,7 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
       {/* ══════════════════════════════════════════════════════════
           INTEL PANEL
       ══════════════════════════════════════════════════════════ */}
-      <div style={{
+      <div ref={intelRef} style={{
         flex:isMobile?"0 0 30vh":"0 0 280px",
         display:"flex",
         flexDirection:"column",
