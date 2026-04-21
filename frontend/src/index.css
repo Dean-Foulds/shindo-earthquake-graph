@@ -20,7 +20,7 @@ input[type=range] { cursor: pointer; accent-color: #00e5ff; }
     overflow-x: hidden !important;
   }
   .shindo-map {
-    flex: 0 0 44vh !important;
+    flex: 0 0 52vh !important;
     width: 100% !important;
     border-right: none !important;
     border-bottom: 1px solid #001a33 !important;
