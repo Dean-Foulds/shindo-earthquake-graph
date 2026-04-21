@@ -24,4 +24,4 @@ app.include_router(analysis_router)
 
 @app.get("/")
 def root():
-    return {"message": "Shindo API running"}
+    return {"message": "Shindo API running", "version": "2.1.0"}
