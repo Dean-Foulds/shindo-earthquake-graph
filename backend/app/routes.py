@@ -3,8 +3,9 @@ import time
 import base64
 import requests
 from typing import Optional
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
+from .db import get_db, Neo4jService
 
 router = APIRouter()
 
@@ -110,5 +111,8 @@ def agent_chat(req: ChatRequest):
 
 # ── Original route ───────────────────────────────────────────────
 @router.get("/earthquakes")
-def get_earthquakes():
-    return []
+def get_earthquakes(limit: int = 10, db: Neo4jService = Depends(get_db)):
+    return db.run(
+        "MATCH (e:Earthquake) RETURN e.id AS id LIMIT $limit",
+        limit=limit
+    )
