@@ -225,11 +225,9 @@ PREFECTURES = [
 # ──────────────────────────────────────────────────────────────────
 
 NOTABLE_EVENTS = {
-    # USGS event id → enriched fields
-    # These will be merged into earthquake nodes at load time
-    "usp000d6vk": {"name": "2011 Tohoku",      "deaths": 15897, "missing": 2533, "injured": 6157,  "nuclear_incident": True,  "tsunami_max_height_m": 40.5},
-    "usp000cfz9": {"name": "1995 Kobe",         "deaths": 6434,  "missing": 0,    "injured": 43792, "nuclear_incident": False, "tsunami_max_height_m": None},
-    "usp00004ht": {"name": "1923 Great Kanto",  "deaths": 142807,"missing": 0,    "injured": 0,     "nuclear_incident": False, "tsunami_max_height_m": 12.0},
-    "usp000e3wq": {"name": "2016 Kumamoto",     "deaths": 273,   "missing": 0,    "injured": 2809,  "nuclear_incident": False, "tsunami_max_height_m": None},
-    "usp000hvnd": {"name": "2024 Noto",         "deaths": 241,   "missing": 0,    "injured": 1491,  "nuclear_incident": False, "tsunami_max_height_m": 4.0},
+    # USGS event id → enriched fields (verified against actual graph IDs)
+    "official20110311054624120_30": {"name": "2011 Tohoku",     "deaths": 15897, "missing": 2533, "injured": 6157,  "nuclear_incident": True,  "tsunami_max_height_m": 40.5},
+    "usp0006rew":                   {"name": "1995 Kobe",        "deaths": 6434,  "missing": 0,    "injured": 43792, "nuclear_incident": False, "tsunami_max_height_m": None},
+    "us20005iis":                   {"name": "2016 Kumamoto",    "deaths": 273,   "missing": 0,    "injured": 2809,  "nuclear_incident": False, "tsunami_max_height_m": None},
+    "us6000m0xl":                   {"name": "2024 Noto",        "deaths": 241,   "missing": 0,    "injured": 1491,  "nuclear_incident": False, "tsunami_max_height_m": 4.0},
 }
