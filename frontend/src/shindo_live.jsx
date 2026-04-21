@@ -340,20 +340,16 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
   const tStr = `translate(${mapT.x},${mapT.y}) scale(${mapT.k})`
 
   return (
-    <div style={{display:"flex",flexDirection:isMobile?"column":"row",height:"100vh",fontFamily:"'IBM Plex Mono',monospace",background:"#000510",overflowY:isMobile?"auto":"hidden",overflowX:"hidden"}}>
+    <div style={{display:"flex",flexDirection:isMobile?"column":"row",height:"100vh",fontFamily:"'IBM Plex Mono',monospace",background:"#000510",overflow:"hidden"}}>
 
       {/* ══════════════════════════════════════════════════════════
           MAP COLUMN
       ══════════════════════════════════════════════════════════ */}
       <div style={{
-        flex:isMobile?"none":"0 0 640px",
-        height:isMobile?"60vw":"100%",
-        minHeight:isMobile?240:undefined,
-        maxHeight:isMobile?360:undefined,
+        flex:isMobile?"0 0 42vh":"0 0 640px",
         background:"#000510",position:"relative",userSelect:"none",
         borderRight:isMobile?"none":"1px solid #001a33",
         borderBottom:isMobile?"1px solid #001a33":"none",
-        flexShrink:0,
       }}>
         <svg ref={svgRef} width="100%" height="100%" viewBox={`0 0 ${MAP_W} ${MAP_H}`}
           onClick={onClick} style={{display:"block",cursor:"crosshair",height:"100%"}}>
@@ -629,12 +625,11 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
           INTEL PANEL
       ══════════════════════════════════════════════════════════ */}
       <div style={{
-        flex:isMobile?"none":"0 0 280px",
+        flex:isMobile?"0 0 30vh":"0 0 280px",
         display:"flex",
         flexDirection:"column",
-        height:isMobile?"auto":"100%",
-        overflow:isMobile?"visible":"hidden",
-        flexShrink:0,
+        overflow:"hidden",
+        borderBottom:isMobile?"1px solid #001a33":"none",
       }}>
         {/* Header + controls */}
         <div style={{padding:"10px 12px 8px",borderBottom:"1px solid #001a33",background:"#000b1a",flexShrink:0}}>
@@ -764,15 +759,11 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
           震度 CHAT PANEL
       ══════════════════════════════════════════════════════════ */}
       <div style={{
-        flex:isMobile?"none":1,
+        flex:1,
         display:"flex",
         flexDirection:"column",
-        overflow:isMobile?"visible":"hidden",
-        height:isMobile?400:"100%",
-        minHeight:isMobile?360:undefined,
+        overflow:"hidden",
         borderLeft:isMobile?"none":"1px solid #001a33",
-        borderTop:isMobile?"1px solid #001a33":"none",
-        flexShrink:0,
       }}>
         <div style={{padding:"14px 18px 12px",borderBottom:"1px solid #001a33",background:"#000b1a",flexShrink:0}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
