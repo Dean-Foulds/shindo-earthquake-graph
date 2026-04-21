@@ -1,6 +1,7 @@
 import time
+import traceback
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from .db import get_db, Neo4jService
 
 router = APIRouter(prefix="/analysis")
@@ -138,8 +139,11 @@ def predict(db: Neo4jService = Depends(get_db)):
     if _predict_cache["data"] and now < _predict_cache["expires_at"]:
         return _predict_cache["data"]
 
-    rows = db.cypher_read(_CYPHER)
-    data = _build_response(rows)
+    try:
+        rows = db.cypher_read(_CYPHER)
+        data = _build_response(rows)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {e}\n{traceback.format_exc()}")
 
     _predict_cache["data"] = data
     _predict_cache["expires_at"] = now + CACHE_TTL
