@@ -33,7 +33,7 @@ FAKE_ROWS = [
 
 
 class MockAnalysisDb:
-    def cypher_read(self, query, params=None):
+    async def cypher_read(self, query, params=None):
         return FAKE_ROWS
 
 
