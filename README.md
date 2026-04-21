@@ -1,21 +1,127 @@
-# Shindo — Japan Seismic Risk Intelligence Graph
+# 震度 Shindo — Japan Seismic Risk Intelligence Graph
 
-**Agent Name: 震度 (Shindo)**
-
-Japan's seismic intensity scale. A cascading risk graph that connects earthquakes, fault zones, tsunamis, nuclear facilities, and prefectures — so an AI agent can reason over disaster chains, not just look up events.
+> **Agent Name: 震度 (Shindo)** — Japan's official seismic intensity scale.  
+> A cascading risk graph that connects earthquakes, fault zones, tsunamis, nuclear facilities, and prefectures — so an AI agent can reason over disaster chains, not just look up events.
 
 ---
 
-## Submission
+## Neo4j Competition Submission
 
-| | |
-|---|---|
-| **Agent Name** | 震度 Shindo |
-| **Dataset** | USGS Earthquake Hazards Program (~20,000 M4.0+ events, 1950–2024) + IAEA PRIS nuclear reactor registry + curated fault zone and prefecture reference data |
-| **Why a graph** | Japan's disasters cascade. A CSV stores events. A graph stores the chain — and an agent can traverse it. |
-| **Tools implemented** | Cypher Template · Text2Cypher · Similarity Search |
+### Agent Name
 
-> Screenshots and live agent link below.
+**震度 Shindo** — named after Japan's official seismic intensity scale (JMA). Shindo measures the intensity of shaking at a specific location, not just the energy at the source. This agent reasons the same way: local impact and cascading consequences, not just raw magnitude.
+
+### What It Does
+
+震度 Shindo is a seismic intelligence agent for Japan. The user clicks anywhere on a live SVG map to place a simulated earthquake. The agent immediately analyses the event against the graph:
+
+- Which fault zone ruptured, and what is its historical overdue ratio?
+- Which prefectures are in the felt zone? Which have nuclear facilities?
+- Are there historical analogs in the graph? What happened then?
+- Is tsunami risk expected given the fault type and depth?
+
+Every claim the agent makes is anchored to a Cypher query result from the graph — no hallucination.
+
+Beyond the map there are three analytical views:
+
+- **EDA Charts** — decade-by-decade event counts, fault zone death totals, prefecture composite risk index
+- **Risk Analysis** — statistical recurrence gauges: how long since each fault zone last had a major event versus its historical average interval, expressed as an overdue ratio
+- **Cypher Queries** — graph schema explorer with template query patterns pre-loaded
+
+### Dataset and Why a Graph Fits
+
+**Dataset:** USGS Earthquake Hazards Program (~20,000 M4.0+ events, 1950–2024) + IAEA PRIS nuclear reactor registry + curated fault zone reference data + JMA prefecture data (47 prefectures with coastal classifications).
+
+**Why a graph:** Japan's disasters don't happen in isolation — they cascade:
+
+```
+Fault rupture → Ground shaking → Tsunami generation → Prefecture inundation → Nuclear facility exposure
+```
+
+A CSV stores events. A graph stores the chain — and an agent can traverse it in a single query. The nuclear proximity layer is the distinguishing move. Post-Fukushima, this is the question that actually matters in Japanese disaster planning. In SQL you'd need a spatial join, a subquery, and three table hops. In Cypher:
+
+```cypher
+MATCH (eq:Earthquake)-[:WITHIN_50KM_OF]->(nf:NuclearFacility)
+WHERE eq.magnitude >= 6.5
+RETURN eq.time, eq.magnitude, nf.name, nf.status
+```
+
+The 2011 Tōhoku earthquake didn't just happen — it traversed a graph:
+
+```
+Japan Trench ruptured
+  → M9.1 earthquake struck
+    → 40m tsunami generated
+      → Miyagi, Iwate, Fukushima inundated
+        → Fukushima Daiichi within 10km of impact
+          → cascading nuclear crisis
+```
+
+Every link in that chain is a graph edge. The agent can trace it, explain it, and ask: which other fault zones have the same potential?
+
+---
+
+### Agent in the Aura Console
+
+**Graph visualisation — full schema, all node types connected:**
+
+![Aura console — full graph schema visualisation with STRUCK relationship query](data/Pasted%20image%20(10).png)
+
+**Nuclear proximity layer — WITHIN_50KM_OF relationship between earthquakes and facilities:**
+
+![Aura console — WITHIN_50KM_OF graph showing earthquake-to-nuclear-facility proximity edges](data/Pasted%20image%20(11).png)
+
+**Agent configuration — 震度 Shindo agent wired to the Earthquake Data instance:**
+
+![Aura agent config — instance, prompt instructions, and preview chat showing 137 M5+ events in 2023](data/Pasted%20image%20(12).png)
+
+**All nine Cypher Template tools registered on the agent:**
+
+![Aura agent config — cascade_trace, compound_risk_corridors, historical_analog_finder, nuclear_proximity_risk, decade_pattern_analysis, fault_zone_lethality, the_hamoaka_question, region_vulnerability_score, graph_summary](data/Pasted%20image%20(13).png)
+
+---
+
+### Agent in Action
+
+**Live map — Japan with all fault zones rendered, ready to simulate:**
+
+![Shindo live map — Japan SVG with fault zone overlays and agent chat panel](data/Pasted%20image.png)
+
+**Active simulation — epicentre placed, impact zone calculated, nuclear exposure flagged:**
+
+![Simulation running — affected prefectures highlighted, nuclear proximity risk shown](data/Pasted%20image%20(2).png)
+
+**Agent analysis — structured response grounded in graph data:**
+
+![Agent response to "give me your analysis of this event"](data/Pasted%20image%20(3).png)
+
+**Data Analysis Dashboard — EDA Charts: decade bar chart, fault zone deaths, prefecture risk index:**
+
+![EDA charts dashboard — 4,720 total events, M9.1 max, decade breakdown, fault zone lethality](data/Pasted%20image%20(4).png)
+
+**Dashboard with agent responding to event analysis alongside EDA charts:**
+
+![Dashboard with agent chat active alongside EDA charts and risk tab](data/Pasted%20image%20(5).png)
+
+**Risk Analysis tab — statistical recurrence overview with disclaimer:**
+
+![Risk analysis tab — historical overdue ratio explanation and top overdue fault zones](data/Pasted%20image%20(6).png)
+
+**Risk Analysis — per-fault-zone gauges (Noto Peninsula, Ryukyu Trench, Sagami Trough):**
+
+![Fault zone overdue ratio gauges — Noto 0.18×, Ryukyu 1.67×, Sagami 4.33×](data/Pasted%20image%20(7).png)
+
+**Cypher Queries tab — graph schema explorer with four template patterns:**
+
+![Cypher explorer — schema diagram and template query list](data/Pasted%20image%20(8).png)
+
+**Cascade trace query executed — fault zone through to nuclear facility:**
+
+![Cascade trace Cypher results — full chain from fault zone to nuclear facility](data/Pasted%20image%20(9).png)
+
+### Live Agent
+
+**Frontend:** [shindo.pages.dev](https://shindo.pages.dev)
 
 ---
 
@@ -36,50 +142,7 @@ Japan's seismic intensity scale. A cascading risk graph that connects earthquake
 | 6 Upper | Very Strong | Cannot move at all; most unreinforced buildings collapse |
 | 7 | Violent | Ground deforms; landslides; extreme tsunami risk |
 
-Key distinctions:
-- **Location-based** — JMA broadcasts per-municipality readings, not per-earthquake values
-- **5 and 6 split** into Lower (弱) and Upper (強) for resolution at the most damaging range
-- **7 is the ceiling** — the 2011 Tōhoku earthquake registered 7 in parts of Miyagi
-- **Not logarithmic** — levels are defined by observable damage, not a formula
-
 This agent is named 震度 because it reasons about local impact and cascading consequences — not just raw magnitude at the source.
-
----
-
-## Why This Dataset, Why a Graph
-
-Japan is the most earthquake-instrumented country on Earth. The risk architecture is genuinely layered, which is exactly what makes a graph matter over a table.
-
-**The core idea: don't build an earthquake lookup. Build a cascading risk graph.**
-
-Japan's disasters don't happen in isolation. They chain:
-
-```
-Fault rupture → Ground shaking → Tsunami generation → Prefecture inundation → Nuclear facility exposure
-```
-
-A CSV stores events. A graph stores that chain — and an agent can traverse it in a single query.
-
-**The nuclear proximity layer is the distinguishing move.** Post-Fukushima, this is the question that actually matters in Japanese disaster planning. In SQL you'd need a spatial join, a subquery, and three table hops. In Cypher:
-
-```cypher
-MATCH (eq:Earthquake)-[:WITHIN_50KM_OF]->(nf:NuclearFacility)
-WHERE eq.magnitude >= 6.5
-RETURN eq.time, eq.magnitude, nf.name, nf.status
-```
-
-**The submission story:** The 2011 Tōhoku earthquake didn't just happen — it traversed a graph.
-
-```
-Japan Trench ruptured
-  → M9.1 earthquake struck
-    → 40m tsunami generated
-      → Miyagi, Iwate, Fukushima inundated
-        → Fukushima Daiichi within 10km of impact
-          → cascading nuclear crisis
-```
-
-Every link in that chain is a graph edge. The agent can trace it, explain it, and ask: which other fault zones have the same potential?
 
 ---
 
@@ -90,86 +153,66 @@ Every link in that chain is a graph edge. The agent can trace it, explain it, an
 | Label | Count | Key Properties |
 |-------|-------|----------------|
 | `Earthquake` | ~20,000 | `id`, `magnitude`, `depth_km`, `lat`, `lon`, `year`, `decade`, `severity`, `deaths`, `tsunami` |
-
-> `severity` values: `minor` (M<4.0) · `moderate` (M4.0–4.9) · `strong` (M5.0–6.9) · `major` (M7.0–7.9) · `catastrophic` (M8.0+)
 | `FaultZone` | 9 | `id`, `name`, `type`, `plates`, `predicted_max_mag`, `last_major_year` |
 | `Tsunami` | ~200 | `id`, `max_height_m`, `source_mag`, `year` |
 | `Prefecture` | 47 | `id`, `name`, `region`, `lat`, `lon`, `coast`, `population_m` |
 | `NuclearFacility` | 15 | `id`, `name`, `lat`, `lon`, `reactors`, `status`, `operator` |
 | `Decade` | 8 | `year`, `label` |
 
+> `severity` values: `minor` (M<4.0) · `moderate` (M4.0–4.9) · `strong` (M5.0–6.9) · `major` (M7.0–7.9) · `catastrophic` (M8.0+)
+
 ### Relationship Types
 
-| Relationship | From → To | Properties | Meaning |
-|-------------|-----------|------------|---------|
-| `ORIGINATED_ON` | Earthquake → FaultZone | — | Quake occurred on this fault |
-| `TRIGGERED` | Earthquake → Tsunami | — | Quake caused a tsunami |
-| `STRUCK` | Earthquake → Prefecture | `distance_km` | Nearest affected prefecture |
-| `INUNDATED` | Tsunami → Prefecture | — | Tsunami reached this coast |
-| `UNDERLIES` | FaultZone → Prefecture | — | Fault runs beneath the prefecture |
-| `CONTAINS` | Prefecture → NuclearFacility | — | Plant is in this prefecture |
-| `WITHIN_50KM_OF` | Earthquake → NuclearFacility | — | Epicentre within 50km of plant |
-| `BORDERS` | Prefecture → Prefecture | — | Geographic adjacency |
-| `IN_DECADE` | Earthquake → Decade | — | Temporal grouping |
+| Relationship | From → To | Meaning |
+|-------------|-----------|---------|
+| `ORIGINATED_ON` | Earthquake → FaultZone | Quake occurred on this fault |
+| `TRIGGERED` | Earthquake → Tsunami | Quake caused a tsunami |
+| `STRUCK` | Earthquake → Prefecture | Nearest affected prefecture |
+| `INUNDATED` | Tsunami → Prefecture | Tsunami reached this coast |
+| `UNDERLIES` | FaultZone → Prefecture | Fault runs beneath the prefecture |
+| `CONTAINS` | Prefecture → NuclearFacility | Plant is in this prefecture |
+| `WITHIN_50KM_OF` | Earthquake → NuclearFacility | Epicentre within 50km of plant |
+| `BORDERS` | Prefecture → Prefecture | Geographic adjacency |
+| `IN_DECADE` | Earthquake → Decade | Temporal grouping |
 
-### Neo4j Best Practices
+### Neo4j Best Practices Used
 
 - **MERGE throughout** — all load scripts are idempotent; safe to re-run without duplicates
-- **Constraints before data** — unique constraints on `id`/`year` created first, preventing bad loads
+- **Constraints before data** — unique constraints on `id`/`year` created first
 - **Indexes on query hotpaths** — `magnitude`, `year`, `tsunami` indexed for range scans
-- **Vector indexes** — `earthquake_embedding`, `fault_zone_embedding`, `nuclear_embedding`, `prefecture_embedding` enable semantic search via `db.index.vector.queryNodes`
+- **Vector indexes** — `earthquake_embedding`, `fault_zone_embedding`, `nuclear_embedding`, `prefecture_embedding` via `db.index.vector.queryNodes`
 - **Read-only guard** — `cypher_read()` in the API rejects any query containing write keywords before it reaches Neo4j
-- **No unbounded MATCH** — all queries use `LIMIT` or relationship traversal bounds
 
 ---
 
-## The Three Agent Tools
+## Agent Tools
 
-### 1. Cypher Templates
+### Cypher Templates (9 registered)
 
-Pre-built queries for the high-value risk questions:
+| Tool | Description |
+|------|-------------|
+| `the_cascade_trace` | Full chain: fault zone → earthquake → tsunami → prefecture → nuclear facility |
+| `compund_risk_corridors` | Subduction faults overlapping nuclear-hosting, Pacific-coast prefectures |
+| `historical_analog_finder` | Past events near a given location and magnitude |
+| `nuclear_proximaty_risk` | M6.5+ events within 50km of any nuclear plant |
+| `decade_patter_analysis` | Event counts and deaths grouped by decade |
+| `fault_zone_leathality` | Total deaths attributed to each fault zone |
+| `the_hamoaka_question` | Hamaoka nuclear plant specific risk analysis |
+| `region_vunrability_score` | Composite risk score per prefecture |
+| `graph_summary` | Node and relationship counts across the full graph |
 
-**Cascade trace** — fault zone through to nuclear exposure:
-```cypher
-MATCH path =
-    (fz:FaultZone)<-[:ORIGINATED_ON]-(eq:Earthquake)
-    -[:TRIGGERED]->(t:Tsunami)
-    -[:INUNDATED]->(pf:Prefecture)
-    <-[:CONTAINS]-(nf:NuclearFacility)
-WHERE eq.magnitude >= 7.5
-RETURN fz.name, eq.magnitude, t.max_height_m, pf.name, nf.name, nf.status
-ORDER BY eq.magnitude DESC
-```
+### Text2Cypher
 
-**Compounded risk corridors** — subduction fault + nuclear + Pacific coast:
-```cypher
-MATCH (fz:FaultZone)-[:UNDERLIES]->(pf:Prefecture)<-[:CONTAINS]-(nf:NuclearFacility)
-WHERE fz.type = 'subduction' AND pf.coast IN ['pacific', 'both']
-RETURN pf.name, fz.name, nf.name, fz.predicted_max_mag
-ORDER BY fz.predicted_max_mag DESC
-```
-
-**Nuclear proximity alerts** — M6.5+ within 50km of any plant:
-```cypher
-MATCH (eq:Earthquake)-[:WITHIN_50KM_OF]->(nf:NuclearFacility)
-WHERE eq.magnitude >= 6.5
-MATCH (eq)-[:ORIGINATED_ON]->(fz:FaultZone)
-RETURN eq.time, eq.magnitude, nf.name, nf.status, fz.name
-ORDER BY eq.magnitude DESC
-```
-
-### 2. Text2Cypher
-
-Natural language → Cypher generation. Examples the agent handles:
+Natural language → Cypher generation. Examples:
 
 - *"Which prefectures on the Nankai Trough also have nuclear plants?"*
 - *"What M7+ earthquakes struck Miyagi in the 2000s?"*
 - *"Which fault zone has caused the most deaths?"*
 - *"Show me every earthquake that triggered a tsunami and hit an active nuclear plant"*
 
-### 3. Similarity Search
+### Similarity Search
 
-Given a simulated earthquake (from the live map), the agent finds historical analogs by magnitude, depth, location, and fault type:
+Given a simulated earthquake, the agent finds historical analogs by magnitude, depth, and location:
 
 ```cypher
 MATCH (e:Earthquake)
@@ -182,19 +225,21 @@ ORDER BY abs(e.magnitude - $mag) + abs(e.lat - $lat) + abs(e.lon - $lon)
 LIMIT 5
 ```
 
-Vector semantic search is also available over embedded node descriptions using `voyage-3` (1024-dim) for free-text queries.
+Vector semantic search is also available over node embeddings using Voyage AI `voyage-3` (1024-dim).
 
 ---
 
-## Setup — Data Pipeline (Run Once)
+## Data Pipeline Setup (Run Once)
 
 ### Prerequisites
+
 ```bash
 pip install requests neo4j python-dotenv voyageai
 ```
 
 Create `.env` in the project root:
-```
+
+```env
 NEO4J_URI=neo4j+s://<id>.databases.neo4j.io
 NEO4J_USER=neo4j
 NEO4J_PASSWORD=<password>
@@ -202,36 +247,60 @@ VOYAGE_API_KEY=<key>
 ```
 
 ### Step 1 — Fetch USGS earthquake data
+
 ```bash
 python 01_fetch_usgs.py
 ```
+
 Downloads M4.0+ events for Japan (1950–2024) into `data/earthquakes_raw.json`. Free, no API key. Takes ~2 min.
 
 ### Step 2 — Build the graph
+
 ```bash
 python 02_build_graph.py
 ```
-Loads fault zones, prefectures, nuclear facilities, and all earthquake events. Builds all relationships including geographic proximity. Takes ~5 min. Safe to re-run.
+
+Loads fault zones, prefectures, nuclear facilities, and all earthquake events. Builds all relationships including geographic proximity. Takes ~5 min. Safe to re-run (uses MERGE throughout).
+
+> **Note:** The script uses UNWIND batching (~200 events per query) and reconnects automatically on Aura session timeout.
 
 ### Step 3 — Add vector embeddings
+
 ```bash
 python 04_embed_graph.py
 ```
+
 Embeds all nodes with Voyage AI `voyage-3` and registers vector indexes in Neo4j Aura. Enables semantic search.
 
 ### Step 4 — Explore with sample queries
+
 Open Neo4j Aura Console → your instance → **Query** tab. Paste from `03_sample_queries.cypher`.
 
 ---
 
-## Backend API (`backend/`)
+## Backend API
 
-FastAPI service deployed on Railway (port 8000).
+FastAPI service. All routes are async — uses `AsyncGraphDatabase` and `httpx.AsyncClient`.
+
+### Local development
 
 ```bash
 cd backend
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
+```
+
+Set `backend/.env`:
+
+```env
+NEO4J_URI=neo4j+s://<id>.databases.neo4j.io
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=<password>
+VOYAGE_API_KEY=<key>
+AURA_CLIENT_ID=<id>
+AURA_CLIENT_SECRET=<secret>
+AURA_AGENT_URL=https://api.neo4j.io/v2beta1/organizations/.../agents/.../invoke
+CORS_ORIGINS=http://localhost:5173
 ```
 
 ### Environment Variables
@@ -244,7 +313,7 @@ uvicorn app.main:app --reload --port 8000
 | `VOYAGE_API_KEY` | Semantic search embeddings |
 | `AURA_CLIENT_ID` | OAuth2 client ID for Aura Agent API |
 | `AURA_CLIENT_SECRET` | OAuth2 client secret |
-| `AURA_AGENT_URL` | `https://api.neo4j.io/v2beta1/organizations/.../agents/.../invoke` |
+| `AURA_AGENT_URL` | Aura agent invoke URL |
 | `CORS_ORIGINS` | Comma-separated allowed origins |
 
 ### Routes
@@ -252,30 +321,24 @@ uvicorn app.main:app --reload --port 8000
 | Method | Path | Description |
 |--------|------|-------------|
 | `POST` | `/agent/chat` | Proxy to Neo4j Aura 震度 agent |
-| `GET` | `/earthquakes` | Direct Neo4j query (used in tests) |
-
-The `/agent/chat` endpoint prepends an active simulation context block when the user has a scenario running on the map:
-```
-[ACTIVE SIMULATION] Epicentre: 35.60°N 139.70°E | M7.5 depth 20km |
-Fault: Tokyo Metropolitan Fault | Affected: Tokyo, Kanagawa | Tsunami risk: low
-```
-
-### Aura Agent OAuth Flow
-1. `POST https://api.neo4j.io/oauth/token` — Basic auth (base64 `client_id:client_secret`)
-2. Token cached in memory with 30-second expiry buffer
-3. All agent calls use `Authorization: Bearer <token>`
+| `GET` | `/analysis/predict` | Statistical recurrence analysis (1-hour cache) |
+| `GET` | `/earthquakes` | Direct Neo4j query |
 
 ### Tests
+
 ```bash
 cd backend && pytest -v
 ```
-Uses FastAPI `TestClient` with `app.dependency_overrides` to inject a mock DB — no live Neo4j required in CI.
+
+Uses FastAPI `TestClient` with `app.dependency_overrides` — no live Neo4j required in CI.
 
 ---
 
-## Frontend (`frontend/`)
+## Frontend
 
-React + Vite app deployed on Cloudflare Pages.
+React + Vite app.
+
+### Local development
 
 ```bash
 cd frontend
@@ -284,34 +347,49 @@ npm run dev   # → http://localhost:5173
 ```
 
 Set `frontend/.env.local`:
-```
+
+```env
 VITE_API_URL=http://localhost:8000
 ```
 
 ### Pages
 
-| Route | Component | What it does |
+| Route | Component | Description |
 |-------|-----------|-------------|
-| `/` | `shindo_live.jsx` | Interactive SVG map of Japan — magnitude/depth sliders, fault zone highlight, prefecture impact, AI chat |
-| `/dashboard` | `Dashboard.jsx` | Metrics, decade bar chart, Cypher explorer, AI chat |
-
-Chat history persists across page navigation (state lifted to `App.jsx`, passed as props).
-
-Slider changes trigger a debounced (800ms) re-analysis that updates the fault zone, affected prefectures, tsunami risk, and fetches historical analogs.
+| `/` | `shindo_live.jsx` | Interactive SVG map — simulate earthquakes, fault zone highlighting, AI chat |
+| `/dashboard` | `Dashboard.jsx` | EDA charts, risk analysis gauges, Cypher explorer, AI chat |
 
 ---
 
 ## Deployment
 
 ### Backend — Railway
-- Start: `uvicorn app.main:app --host 0.0.0.0 --port 8000`
-- Set all env vars in Railway dashboard
-- Add Cloudflare Pages domain to `CORS_ORIGINS`
+
+1. Connect the GitHub repo in Railway → select the `backend/` service root
+2. Railway detects `railway.toml` and builds via Dockerfile
+3. Set all environment variables in the Railway dashboard
+4. Add your Cloudflare Pages domain to `CORS_ORIGINS`
+
+**`railway.toml`:**
+```toml
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+```
+
+**`Dockerfile` CMD** (shell form required so `$PORT` expands at runtime):
+```dockerfile
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+```
 
 ### Frontend — Cloudflare Pages
-- Build: `npm run build` | Output: `dist` | Root: `frontend`
-- Set `VITE_API_URL` to the Railway backend URL
 
-### CI/CD — GitHub Actions
-Trigger: push to `main`, `develop`, `feature/**`
-Jobs: `test` → `build` (Docker) → `deploy` (main only)
+| Setting | Value |
+|---------|-------|
+| Framework preset | Vite |
+| Build command | `npm run build` |
+| Output directory | `dist` |
+| Root directory | `frontend` |
+| `VITE_API_URL` | Railway backend URL |
+
+Deploys automatically on push to `main`.
