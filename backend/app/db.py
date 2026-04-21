@@ -37,6 +37,7 @@ class Neo4jService:
             "FaultZone":       "fault_zone_embedding",
             "NuclearFacility": "nuclear_embedding",
             "Prefecture":      "prefecture_embedding",
+            "Tsunami":         "tsunami_embedding",
         }
         idx = index_map.get(label, "earthquake_embedding")
         vec = await self.embed_query(query)

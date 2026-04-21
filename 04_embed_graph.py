@@ -116,6 +116,23 @@ def prefecture_text(pf: dict) -> str:
     return " ".join(parts)
 
 
+def tsunami_text(ts: dict) -> str:
+    parts = [f"Tsunami event in {ts.get('year', '?')}"]
+    h = ts.get("max_height_m")
+    if h:
+        parts.append(f"with maximum wave height {h} m")
+    mag = ts.get("source_mag")
+    if mag:
+        parts.append(f"triggered by a M{mag} earthquake")
+    cause = ts.get("cause")
+    if cause:
+        parts.append(f"Cause: {cause}.")
+    deaths = ts.get("deaths")
+    if deaths:
+        parts.append(f"Caused approximately {deaths:,} deaths.")
+    return " ".join(parts) + "."
+
+
 # ── Neo4j helpers ─────────────────────────────────────────────────
 
 def neo4j_driver():
@@ -130,6 +147,7 @@ def create_vector_indexes(driver):
         ("fault_zone_embedding", "FaultZone"),
         ("nuclear_embedding",    "NuclearFacility"),
         ("prefecture_embedding", "Prefecture"),
+        ("tsunami_embedding",    "Tsunami"),
     ]
     with driver.session() as s:
         for idx_name, label in indexes:
@@ -178,6 +196,13 @@ def fetch_prefectures(driver):
     with driver.session() as s:
         return [dict(r["pf"]) for r in s.run(
             "MATCH (pf:Prefecture) RETURN pf"
+        )]
+
+
+def fetch_tsunamis(driver):
+    with driver.session() as s:
+        return [dict(r["ts"]) for r in s.run(
+            "MATCH (ts:Tsunami) RETURN ts"
         )]
 
 
@@ -306,10 +331,11 @@ def semantic_search(driver, query_text: str, label: str = "Earthquake",
     Returns list of {node_id, score, properties}.
     """
     index_map = {
-        "Earthquake":    "earthquake_embedding",
-        "FaultZone":     "fault_zone_embedding",
+        "Earthquake":      "earthquake_embedding",
+        "FaultZone":       "fault_zone_embedding",
         "NuclearFacility": "nuclear_embedding",
-        "Prefecture":    "prefecture_embedding",
+        "Prefecture":      "prefecture_embedding",
+        "Tsunami":         "tsunami_embedding",
     }
     idx = index_map.get(label, "earthquake_embedding")
 
@@ -333,7 +359,7 @@ def semantic_search(driver, query_text: str, label: str = "Earthquake",
 
 def main():
     parser = argparse.ArgumentParser(description="SHINDO — Embed graph nodes")
-    parser.add_argument("--type",    choices=["earthquake","faultzone","nuclear","prefecture","all"], default="all")
+    parser.add_argument("--type",    choices=["earthquake","faultzone","nuclear","prefecture","tsunami","all"], default="all")
     parser.add_argument("--dry-run", action="store_true", help="Preview text without calling Voyage AI")
     parser.add_argument("--limit",   type=int, default=None, help="Max nodes per type (useful for testing)")
     parser.add_argument("--search",  type=str, default=None, help="Run a semantic search test after embedding")
@@ -378,6 +404,11 @@ def main():
     if run_all or args.type == "prefecture":
         pfs = fetch_prefectures(driver)
         embed_nodes(driver, "Prefecture", "id", pfs, prefecture_text,
+                    dry_run=args.dry_run, limit=args.limit)
+
+    if run_all or args.type == "tsunami":
+        tss = fetch_tsunamis(driver)
+        embed_nodes(driver, "Tsunami", "id", tss, tsunami_text,
                     dry_run=args.dry_run, limit=args.limit)
 
     if run_all or args.type == "earthquake":
