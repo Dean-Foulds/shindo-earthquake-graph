@@ -63,7 +63,8 @@ def severity_band(magnitude):
     if magnitude >= 8.0:  return "catastrophic"
     if magnitude >= 7.0:  return "major"
     if magnitude >= 6.0:  return "strong"
-    if magnitude >= 5.0:  return "moderate"
+    if magnitude >= 5.0:  return "strong"
+    if magnitude >= 4.0:  return "moderate"
     return "minor"
 
 

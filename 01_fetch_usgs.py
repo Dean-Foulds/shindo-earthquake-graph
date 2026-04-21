@@ -1,7 +1,7 @@
 """
 SHINDO — Step 1: Fetch Japan earthquake data from USGS
 =======================================================
-Run this first. It pulls M5.0+ events for Japan (1950–2024)
+Run this first. It pulls M4.0+ events for Japan (1950–2024)
 from the free USGS Earthquake Hazards API and saves them to
 data/earthquakes_raw.json.
 
@@ -47,7 +47,7 @@ def fetch_decade(start, end):
         "format":       "geojson",
         "starttime":    start,
         "endtime":      end,
-        "minmagnitude": 5.0,
+        "minmagnitude": 4.0,
         "orderby":      "time-asc",
         **JAPAN_BBOX,
     }

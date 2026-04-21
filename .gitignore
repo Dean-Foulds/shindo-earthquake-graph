@@ -32,8 +32,12 @@ htmlcov/
 # Frontend env
 frontend/.env.local
 
-# wrangler files
+# Wrangler / Cloudflare
 .wrangler
 .dev.vars*
 !.dev.vars.example
 !.env.example
+
+# Markdown docs (local only)
+*.md
+!README.md
