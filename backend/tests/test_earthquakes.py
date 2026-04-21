@@ -20,7 +20,7 @@ def teardown_function():
 
 # ✅ EDGE CASE
 class MockNeo4jServiceEmpty:
-    def run(self, query, **params):
+    async def run(self, query, **params):
         return []
 
 
