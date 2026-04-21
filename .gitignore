@@ -25,3 +25,9 @@ htmlcov/
 # IDE
 .vscode/
 .idea/
+
+# Embedding pipeline
+.embed_progress.json
+
+# Frontend env
+frontend/.env.local
