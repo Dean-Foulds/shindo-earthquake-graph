@@ -51,7 +51,7 @@ function ChatBubble({msg}) {
   )
 }
 
-function ChatPanel({ chat, mobile, onClose }) {
+function ChatPanel({ chat, mobile }) {
   const { chatMsgs: msgs, setChatMsgs: setMsgs, chatInput: input, setChatInput: setInput, chatLoading: loading, setChatLoading: setLoading } = chat
   const endRef = useRef(null)
 
@@ -89,7 +89,6 @@ function ChatPanel({ chat, mobile, onClose }) {
             <div style={{fontSize:10,color:"#005577",letterSpacing:"0.12em",marginTop:1}}>SEISMIC INTELLIGENCE AGENT</div>
           </div>
         </div>
-        {mobile&&onClose&&<button onClick={onClose} style={{background:"none",border:"none",color:"#005577",fontSize:18,cursor:"pointer",padding:"0 4px"}}>✕</button>}
       </div>
       {/* Messages */}
       <div style={{flex:1,overflowY:"auto",padding:"14px"}}>
@@ -510,7 +509,6 @@ export default function Dashboard({onBack, chat}) {
   const [riskData,setRiskData] = useState(null)
   const [riskLoading,setRiskLoading] = useState(false)
   const [riskError,setRiskError] = useState(null)
-  const [chatOpen,setChatOpen] = useState(false)
 
   const selectTab = (t) => {
     setActiveTab(t)
@@ -548,11 +546,6 @@ export default function Dashboard({onBack, chat}) {
             </button>
           ))}
         </div>
-        {isMobile&&<button onClick={()=>setChatOpen(o=>!o)}
-          style={{background:chatOpen?"#001a33":"none",border:"1px solid #002244",borderRadius:5,
-            color:"#00aacc",fontSize:10,padding:"5px 8px",cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
-          AI
-        </button>}
       </div>
 
       {/* Body: charts + chat */}
@@ -696,7 +689,7 @@ export default function Dashboard({onBack, chat}) {
         </>}
       </div>{/* end scrollable content */}
 
-      {(!isMobile || chatOpen) && <ChatPanel chat={chat} mobile={isMobile} onClose={()=>setChatOpen(false)}/>}
+      <ChatPanel chat={chat} mobile={isMobile}/>
       </div>{/* end body */}
 
       <style>{`

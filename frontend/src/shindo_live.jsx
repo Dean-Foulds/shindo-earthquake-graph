@@ -176,7 +176,6 @@ const islandPath = (proj,coords) => "M "+coords.map(([lt,ln])=>proj([ln,lt]).map
 export default function Shindo({ chat }) {
   const width     = useWindowWidth()
   const isMobile  = width < 768
-  const [mobileTab, setMobileTab] = useState("map")
 
   const svgRef    = useRef(null)
   const zoomRef   = useRef(null)
@@ -341,19 +340,20 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
   const tStr = `translate(${mapT.x},${mapT.y}) scale(${mapT.k})`
 
   return (
-    <div style={{display:"flex",flexDirection:isMobile?"column":"row",height:"100vh",fontFamily:"'IBM Plex Mono',monospace",background:"#000510",overflow:"hidden"}}>
+    <div style={{display:"flex",flexDirection:isMobile?"column":"row",height:"100vh",fontFamily:"'IBM Plex Mono',monospace",background:"#000510",overflowY:isMobile?"auto":"hidden",overflowX:"hidden"}}>
 
       {/* ══════════════════════════════════════════════════════════
           MAP COLUMN
       ══════════════════════════════════════════════════════════ */}
       <div style={{
         flex:isMobile?"none":"0 0 640px",
-        height:isMobile?(mobileTab==="map"?"calc(100vh - 48px)":"0"):"100%",
-        overflow:"hidden",
-        display:isMobile&&mobileTab!=="map"?"none":"block",
+        height:isMobile?"60vw":"100%",
+        minHeight:isMobile?240:undefined,
+        maxHeight:isMobile?360:undefined,
         background:"#000510",position:"relative",userSelect:"none",
         borderRight:isMobile?"none":"1px solid #001a33",
         borderBottom:isMobile?"1px solid #001a33":"none",
+        flexShrink:0,
       }}>
         <svg ref={svgRef} width="100%" height="100%" viewBox={`0 0 ${MAP_W} ${MAP_H}`}
           onClick={onClick} style={{display:"block",cursor:"crosshair",height:"100%"}}>
@@ -630,10 +630,11 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
       ══════════════════════════════════════════════════════════ */}
       <div style={{
         flex:isMobile?"none":"0 0 280px",
-        display:isMobile&&mobileTab!=="intel"?"none":"flex",
+        display:"flex",
         flexDirection:"column",
-        height:isMobile?"calc(100vh - 48px)":"100%",
-        overflow:"hidden",
+        height:isMobile?"auto":"100%",
+        overflow:isMobile?"visible":"hidden",
+        flexShrink:0,
       }}>
         {/* Header + controls */}
         <div style={{padding:"10px 12px 8px",borderBottom:"1px solid #001a33",background:"#000b1a",flexShrink:0}}>
@@ -763,12 +764,15 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
           震度 CHAT PANEL
       ══════════════════════════════════════════════════════════ */}
       <div style={{
-        flex:1,
-        display:isMobile&&mobileTab!=="chat"?"none":"flex",
+        flex:isMobile?"none":1,
+        display:"flex",
         flexDirection:"column",
-        overflow:"hidden",
-        height:isMobile?"calc(100vh - 48px)":"100%",
+        overflow:isMobile?"visible":"hidden",
+        height:isMobile?400:"100%",
+        minHeight:isMobile?360:undefined,
         borderLeft:isMobile?"none":"1px solid #001a33",
+        borderTop:isMobile?"1px solid #001a33":"none",
+        flexShrink:0,
       }}>
         <div style={{padding:"14px 18px 12px",borderBottom:"1px solid #001a33",background:"#000b1a",flexShrink:0}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
@@ -806,20 +810,6 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
           <div style={{fontSize:10,color:"#003344",marginTop:5}}>Enter to send · Shift+Enter for newline</div>
         </div>
       </div>
-
-      {/* ── MOBILE BOTTOM TAB BAR ─────────────────────────────── */}
-      {isMobile&&<div style={{display:"flex",height:48,flexShrink:0,borderTop:"1px solid #001a33",background:"#000b1a"}}>
-        {[["map","MAP"],["intel","INTEL"],["chat","CHAT"]].map(([t,label])=>(
-          <button key={t} onClick={()=>{ setMobileTab(t); if(t==="chat") setTimeout(()=>chatEndRef.current?.scrollIntoView(),100) }}
-            style={{flex:1,background:mobileTab===t?"#001a33":"none",border:"none",
-              borderTop:`2px solid ${mobileTab===t?"#00e5ff":"transparent"}`,
-              color:mobileTab===t?"#00e5ff":"#004466",
-              fontSize:11,cursor:"pointer",fontFamily:"inherit",letterSpacing:"0.1em",fontWeight:700}}>
-            {t==="intel"&&ana&&!loading&&<span style={{display:"block",fontSize:7,color:"#ff9922",marginBottom:1}}>●</span>}
-            {label}
-          </button>
-        ))}
-      </div>}
 
       <style>{`
         @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
