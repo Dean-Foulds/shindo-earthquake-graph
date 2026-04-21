@@ -2,6 +2,16 @@ import { useState, useEffect, useRef, useMemo } from "react"
 import * as d3 from "d3"
 import ReactMarkdown from "react-markdown"
 
+function useWindowWidth() {
+  const [w, setW] = useState(window.innerWidth)
+  useEffect(() => {
+    const h = () => setW(window.innerWidth)
+    window.addEventListener("resize", h)
+    return () => window.removeEventListener("resize", h)
+  }, [])
+  return w
+}
+
 const MD_COMPONENTS = {
   p:      ({children}) => <p style={{margin:"0 0 8px",lineHeight:1.7}}>{children}</p>,
   strong: ({children}) => <strong style={{color:"#00ffff",fontWeight:700}}>{children}</strong>,
@@ -164,6 +174,10 @@ const faultMatch = str => {
 const islandPath = (proj,coords) => "M "+coords.map(([lt,ln])=>proj([ln,lt]).map(v=>v.toFixed(1)).join(",")).join(" L ")+" Z"
 
 export default function Shindo({ chat }) {
+  const width     = useWindowWidth()
+  const isMobile  = width < 768
+  const [mobileTab, setMobileTab] = useState("map")
+
   const svgRef    = useRef(null)
   const zoomRef   = useRef(null)
   const proj      = useRef(makeProj())
@@ -327,12 +341,20 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
   const tStr = `translate(${mapT.x},${mapT.y}) scale(${mapT.k})`
 
   return (
-    <div style={{display:"flex",height:"100vh",fontFamily:"'IBM Plex Mono',monospace",background:"#000510",overflow:"hidden"}}>
+    <div style={{display:"flex",flexDirection:isMobile?"column":"row",height:"100vh",fontFamily:"'IBM Plex Mono',monospace",background:"#000510",overflow:"hidden"}}>
 
       {/* ══════════════════════════════════════════════════════════
           MAP COLUMN
       ══════════════════════════════════════════════════════════ */}
-      <div style={{flex:"0 0 640px",background:"#000510",position:"relative",userSelect:"none",borderRight:"1px solid #001a33"}}>
+      <div style={{
+        flex:isMobile?"none":"0 0 640px",
+        height:isMobile?(mobileTab==="map"?"calc(100vh - 48px)":"0"):"100%",
+        overflow:"hidden",
+        display:isMobile&&mobileTab!=="map"?"none":"block",
+        background:"#000510",position:"relative",userSelect:"none",
+        borderRight:isMobile?"none":"1px solid #001a33",
+        borderBottom:isMobile?"1px solid #001a33":"none",
+      }}>
         <svg ref={svgRef} width="100%" height="100%" viewBox={`0 0 ${MAP_W} ${MAP_H}`}
           onClick={onClick} style={{display:"block",cursor:"crosshair",height:"100%"}}>
           <defs>
@@ -606,7 +628,13 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
       {/* ══════════════════════════════════════════════════════════
           INTEL PANEL
       ══════════════════════════════════════════════════════════ */}
-      <div style={{flex:"0 0 280px",display:"flex",flexDirection:"column",overflow:"hidden"}}>
+      <div style={{
+        flex:isMobile?"none":"0 0 280px",
+        display:isMobile&&mobileTab!=="intel"?"none":"flex",
+        flexDirection:"column",
+        height:isMobile?"calc(100vh - 48px)":"100%",
+        overflow:"hidden",
+      }}>
         {/* Header + controls */}
         <div style={{padding:"10px 12px 8px",borderBottom:"1px solid #001a33",background:"#000b1a",flexShrink:0}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:8}}>
@@ -734,7 +762,14 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
       {/* ══════════════════════════════════════════════════════════
           震度 CHAT PANEL
       ══════════════════════════════════════════════════════════ */}
-      <div style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden",borderLeft:"1px solid #001a33"}}>
+      <div style={{
+        flex:1,
+        display:isMobile&&mobileTab!=="chat"?"none":"flex",
+        flexDirection:"column",
+        overflow:"hidden",
+        height:isMobile?"calc(100vh - 48px)":"100%",
+        borderLeft:isMobile?"none":"1px solid #001a33",
+      }}>
         <div style={{padding:"14px 18px 12px",borderBottom:"1px solid #001a33",background:"#000b1a",flexShrink:0}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <div style={{width:8,height:8,borderRadius:"50%",background:"#00e5ff",boxShadow:"0 0 10px #00e5ff"}}/>
@@ -771,6 +806,20 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
           <div style={{fontSize:10,color:"#003344",marginTop:5}}>Enter to send · Shift+Enter for newline</div>
         </div>
       </div>
+
+      {/* ── MOBILE BOTTOM TAB BAR ─────────────────────────────── */}
+      {isMobile&&<div style={{display:"flex",height:48,flexShrink:0,borderTop:"1px solid #001a33",background:"#000b1a"}}>
+        {[["map","MAP"],["intel","INTEL"],["chat","CHAT"]].map(([t,label])=>(
+          <button key={t} onClick={()=>{ setMobileTab(t); if(t==="chat") setTimeout(()=>chatEndRef.current?.scrollIntoView(),100) }}
+            style={{flex:1,background:mobileTab===t?"#001a33":"none",border:"none",
+              borderTop:`2px solid ${mobileTab===t?"#00e5ff":"transparent"}`,
+              color:mobileTab===t?"#00e5ff":"#004466",
+              fontSize:11,cursor:"pointer",fontFamily:"inherit",letterSpacing:"0.1em",fontWeight:700}}>
+            {t==="intel"&&ana&&!loading&&<span style={{display:"block",fontSize:7,color:"#ff9922",marginBottom:1}}>●</span>}
+            {label}
+          </button>
+        ))}
+      </div>}
 
       <style>{`
         @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
