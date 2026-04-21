@@ -1,5 +1,15 @@
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import ReactMarkdown from "react-markdown"
+
+function useWindowWidth() {
+  const [w, setW] = useState(window.innerWidth)
+  useEffect(() => {
+    const h = () => setW(window.innerWidth)
+    window.addEventListener("resize", h)
+    return () => window.removeEventListener("resize", h)
+  }, [])
+  return w
+}
 
 // ── Markdown renderer ───────────────────────────────────────────
 const MD = {
@@ -41,7 +51,7 @@ function ChatBubble({msg}) {
   )
 }
 
-function ChatPanel({ chat }) {
+function ChatPanel({ chat, mobile, onClose }) {
   const { chatMsgs: msgs, setChatMsgs: setMsgs, chatInput: input, setChatInput: setInput, chatLoading: loading, setChatLoading: setLoading } = chat
   const endRef = useRef(null)
 
@@ -67,9 +77,11 @@ function ChatPanel({ chat }) {
   }
 
   return (
-    <div style={{width:360,flexShrink:0,display:"flex",flexDirection:"column",borderLeft:"1px solid #001a33",background:"#000b1a"}}>
+    <div style={{width:mobile?"100%":360,flexShrink:0,display:"flex",flexDirection:"column",
+      borderLeft:mobile?"none":"1px solid #001a33",borderTop:mobile?"1px solid #001a33":"none",
+      background:"#000b1a",height:mobile?360:"auto"}}>
       {/* Header */}
-      <div style={{padding:"14px 18px 12px",borderBottom:"1px solid #001a33",flexShrink:0}}>
+      <div style={{padding:"10px 18px",borderBottom:"1px solid #001a33",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <div style={{width:8,height:8,borderRadius:"50%",background:"#00e5ff",boxShadow:"0 0 10px #00e5ff"}}/>
           <div>
@@ -77,6 +89,7 @@ function ChatPanel({ chat }) {
             <div style={{fontSize:10,color:"#005577",letterSpacing:"0.12em",marginTop:1}}>SEISMIC INTELLIGENCE AGENT</div>
           </div>
         </div>
+        {mobile&&onClose&&<button onClick={onClose} style={{background:"none",border:"none",color:"#005577",fontSize:18,cursor:"pointer",padding:"0 4px"}}>✕</button>}
       </div>
       {/* Messages */}
       <div style={{flex:1,overflowY:"auto",padding:"14px"}}>
@@ -450,7 +463,7 @@ function RiskTab({data, loading, error}) {
             </div>
 
             {/* Tier table */}
-            <div style={{display:"grid",gridTemplateColumns:"auto 1fr 1fr 1fr 1fr 1fr",gap:0,fontSize:11}}>
+            <div style={{overflowX:"auto"}}><div style={{display:"grid",gridTemplateColumns:"auto 1fr 1fr 1fr 1fr 1fr",gap:0,fontSize:11,minWidth:380}}>
               {["TIER","EVENTS","AVG INTERVAL","LAST EVENT","YRS SINCE","OVERDUE RATIO"].map(h=>(
                 <div key={h} style={{padding:"5px 8px",color:"#0066aa",borderBottom:"1px solid #001525",fontWeight:700,letterSpacing:"0.06em",fontSize:10}}>{h}</div>
               ))}
@@ -481,7 +494,7 @@ function RiskTab({data, loading, error}) {
                   </div>,
                 ]
               })}
-            </div>
+            </div></div>
           </div>
         ))}
       </>}
@@ -491,10 +504,13 @@ function RiskTab({data, loading, error}) {
 
 // ── MAIN DASHBOARD ──────────────────────────────────────────────
 export default function Dashboard({onBack, chat}) {
+  const width = useWindowWidth()
+  const isMobile = width < 768
   const [activeTab,setActiveTab] = useState("eda")
   const [riskData,setRiskData] = useState(null)
   const [riskLoading,setRiskLoading] = useState(false)
   const [riskError,setRiskError] = useState(null)
+  const [chatOpen,setChatOpen] = useState(false)
 
   const selectTab = (t) => {
     setActiveTab(t)
@@ -507,33 +523,41 @@ export default function Dashboard({onBack, chat}) {
     }
   }
 
+  const col2 = isMobile ? "1fr" : "1fr 1fr"
+
   return (
     <div style={{height:"100vh",background:"#000510",fontFamily:"'IBM Plex Mono',monospace",color:"#00b4d8",display:"flex",flexDirection:"column"}}>
       {/* Nav */}
-      <div style={{borderBottom:"1px solid #001a33",background:"#000b1a",padding:"0 24px",display:"flex",alignItems:"center",gap:16,height:50,flexShrink:0}}>
+      <div style={{borderBottom:"1px solid #001a33",background:"#000b1a",padding:isMobile?"0 12px":"0 24px",
+        display:"flex",alignItems:"center",gap:isMobile?8:16,height:50,flexShrink:0,flexWrap:"wrap",minHeight:50}}>
         <button onClick={onBack} style={{background:"none",border:"1px solid #002244",borderRadius:5,
-          color:"#0099bb",fontSize:11,padding:"5px 12px",cursor:"pointer",fontFamily:"inherit",letterSpacing:"0.06em"}}>
+          color:"#0099bb",fontSize:11,padding:"5px 10px",cursor:"pointer",fontFamily:"inherit",letterSpacing:"0.06em",flexShrink:0}}>
           ← SHINDO
         </button>
-        <div style={{fontSize:14,fontWeight:700,color:"#00e5ff",letterSpacing:"0.08em",textShadow:"0 0 10px rgba(0,229,255,0.4)"}}>
+        {!isMobile&&<div style={{fontSize:14,fontWeight:700,color:"#00e5ff",letterSpacing:"0.08em",textShadow:"0 0 10px rgba(0,229,255,0.4)"}}>
           DATA ANALYSIS DASHBOARD
-        </div>
-        <div style={{marginLeft:"auto",display:"flex",gap:4}}>
-          {[["eda","EDA CHARTS"],["risk","RISK ANALYSIS"],["cypher","CYPHER QUERIES"]].map(([t,label])=>(
+        </div>}
+        <div style={{marginLeft:"auto",display:"flex",gap:isMobile?2:4,flexShrink:0}}>
+          {[["eda",isMobile?"EDA":"EDA CHARTS"],["risk",isMobile?"RISK":"RISK ANALYSIS"],["cypher",isMobile?"CYPHER":"CYPHER QUERIES"]].map(([t,label])=>(
             <button key={t} onClick={()=>selectTab(t)}
               style={{background:activeTab===t?"#001a33":"none",border:"1px solid",
                 borderColor:activeTab===t?"#003366":"transparent",borderRadius:5,
-                color:activeTab===t?"#00e5ff":"#004466",fontSize:11,padding:"5px 14px",
-                cursor:"pointer",fontFamily:"inherit",letterSpacing:"0.08em"}}>
+                color:activeTab===t?"#00e5ff":"#004466",fontSize:isMobile?10:11,padding:isMobile?"5px 8px":"5px 14px",
+                cursor:"pointer",fontFamily:"inherit",letterSpacing:"0.05em"}}>
               {label}
             </button>
           ))}
         </div>
+        {isMobile&&<button onClick={()=>setChatOpen(o=>!o)}
+          style={{background:chatOpen?"#001a33":"none",border:"1px solid #002244",borderRadius:5,
+            color:"#00aacc",fontSize:10,padding:"5px 8px",cursor:"pointer",fontFamily:"inherit",flexShrink:0}}>
+          AI
+        </button>}
       </div>
 
       {/* Body: charts + chat */}
-      <div style={{flex:1,display:"flex",overflow:"hidden"}}>
-      <div style={{flex:1,overflowY:"auto",padding:"24px"}}>
+      <div style={{flex:1,display:"flex",flexDirection:isMobile?"column":"row",overflow:"hidden"}}>
+      <div style={{flex:1,overflowY:"auto",padding:isMobile?"12px":"24px"}}>
 
         {/* ── EDA TAB ─────────────────────────────────────────── */}
         {activeTab==="eda"&&<>
@@ -546,7 +570,7 @@ export default function Dashboard({onBack, chat}) {
             <StatCard label="AVG ANNUAL M6+"     value="18.4"  sub="past 50 years" color="#cc55ff"/>
           </div>
 
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
+          <div style={{display:"grid",gridTemplateColumns:col2,gap:16,marginBottom:16}}>
             {/* Magnitude distribution */}
             <div style={{background:"#000b1a",border:"1px solid #001a33",borderRadius:8,padding:"14px 16px"}}>
               <div style={{fontSize:12,color:"#0088aa",letterSpacing:"0.1em",marginBottom:14,fontWeight:700}}>MAGNITUDE DISTRIBUTION</div>
@@ -575,7 +599,7 @@ export default function Dashboard({onBack, chat}) {
             </div>
           </div>
 
-          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16,marginBottom:16}}>
+          <div style={{display:"grid",gridTemplateColumns:col2,gap:16,marginBottom:16}}>
             {/* Decade trend */}
             <div style={{background:"#000b1a",border:"1px solid #001a33",borderRadius:8,padding:"14px 16px"}}>
               <div style={{fontSize:12,color:"#0088aa",letterSpacing:"0.1em",marginBottom:14,fontWeight:700}}>EVENTS PER DECADE (M4+)</div>
@@ -616,7 +640,7 @@ export default function Dashboard({onBack, chat}) {
           {/* Prefecture risk table */}
           <div style={{background:"#000b1a",border:"1px solid #001a33",borderRadius:8,padding:"14px 16px"}}>
             <div style={{fontSize:12,color:"#0088aa",letterSpacing:"0.1em",marginBottom:14,fontWeight:700}}>PREFECTURE COMPOSITE RISK INDEX (top 8)</div>
-            <div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr 1fr 1fr",gap:0}}>
+            <div style={{overflowX:"auto"}}><div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr 1fr 1fr",gap:0,minWidth:420}}>
               {["PREFECTURE","RISK SCORE","QUAKES","TSUNAMIS","NPP","RISK BAR"].map(h=>(
                 <div key={h} style={{fontSize:11,color:"#0088aa",padding:"6px 10px",borderBottom:"1px solid #001525",letterSpacing:"0.07em",fontWeight:700}}>{h}</div>
               ))}
@@ -635,6 +659,7 @@ export default function Dashboard({onBack, chat}) {
                 ]
               })}
             </div>
+            </div></div>
             <div style={{fontSize:12,color:"#006688",marginTop:12}}>
               Score = quake_count + tsunami_count×10 + npp_count×5 + subduction_zones×8
             </div>
@@ -671,7 +696,7 @@ export default function Dashboard({onBack, chat}) {
         </>}
       </div>{/* end scrollable content */}
 
-      <ChatPanel chat={chat}/>
+      {(!isMobile || chatOpen) && <ChatPanel chat={chat} mobile={isMobile} onClose={()=>setChatOpen(false)}/>}
       </div>{/* end body */}
 
       <style>{`
