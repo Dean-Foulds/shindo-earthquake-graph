@@ -53,7 +53,7 @@ function ChatPanel({ chat }) {
     const next = [...msgs, {role:"user", text:txt}]
     setMsgs(next)
     try {
-      const res = await fetch("http://localhost:8000/agent/chat", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/agent/chat`, {
         method:"POST", headers:{"Content-Type":"application/json"},
         body: JSON.stringify({messages: next.slice(-12).map(m=>({role:m.role,text:m.text}))}),
       })
