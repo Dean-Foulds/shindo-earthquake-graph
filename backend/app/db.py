@@ -1,5 +1,4 @@
 import os
-import voyageai
 from neo4j import GraphDatabase
 
 VOYAGE_MODEL = "voyage-3"
@@ -15,6 +14,7 @@ class Neo4jService:
 
     def _voyage(self):
         if not self._vo:
+            import voyageai
             self._vo = voyageai.Client(api_key=os.getenv("VOYAGE_API_KEY"))
         return self._vo
 
