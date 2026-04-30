@@ -9,6 +9,9 @@ from pydantic import BaseModel
 from .db import get_db, Neo4jService
 from .analysis import get_cached_predict
 
+from pydantic import BaseModel
+from app.agent.agent import run_impact_agent
+
 router = APIRouter()
 
 # ── OAuth token cache ────────────────────────────────────────────
@@ -128,3 +131,17 @@ async def get_earthquakes(limit: int = 10, db: Neo4jService = Depends(get_db)):
         "MATCH (e:Earthquake) RETURN e.id AS id LIMIT $limit",
         limit=limit
     )
+
+class PredictRequest(BaseModel):
+    lat: float
+    lon: float
+    magnitude: float = 7.5  # default if not provided
+
+@router.post("/agent/predict")
+async def agent_predict(req: PredictRequest):
+    result = await run_impact_agent(
+        latitude  = req.lat,
+        longitude = req.lon,
+        magnitude = req.magnitude
+    )
+    return result

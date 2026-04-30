@@ -86,20 +86,26 @@ class Neo4jService:
         return node
 
     async def find_similar_events(self, lat: float, lon: float,
-                                  magnitude: float, top_k: int = 5) -> list[dict]:
+                              magnitude: float, top_k: int = 5) -> list[dict]:
         return await self.run("""
-            MATCH (e:Earthquake)
-            WHERE abs(e.lat - $lat) < 3 AND abs(e.lon - $lon) < 3
-              AND abs(e.magnitude - $mag) < 1.5
-            OPTIONAL MATCH (e)-[:ORIGINATED_ON]->(fz:FaultZone)
-            OPTIONAL MATCH (e)-[:TRIGGERED]->(t:Tsunami)
-            RETURN e.id AS id, e.magnitude AS magnitude, e.year AS year,
-                   e.place AS place, e.depth_km AS depth_km,
-                   e.deaths AS deaths, fz.name AS fault_zone,
-                   t.max_height_m AS tsunami_height_m
-            ORDER BY abs(e.magnitude - $mag) + abs(e.lat - $lat) + abs(e.lon - $lon)
-            LIMIT $k
-        """, lat=lat, lon=lon, mag=magnitude, k=top_k)
+        MATCH (e:Earthquake)
+        WHERE abs(e.epicentreLat - $lat) < 3
+          AND abs(e.epicentreLon - $lon) < 3
+          AND abs(e.momentMagnitude - $mag) < 1.5
+        OPTIONAL MATCH (e)-[:ORIGINATED_ON]->(fz:FaultZone)
+        OPTIONAL MATCH (e)-[:TRIGGERED]->(t:Tsunami)
+        RETURN e.id              AS id,
+               e.momentMagnitude AS magnitude,
+               e.year            AS year,
+               e.place           AS place,
+               e.hypocentralDepthKm AS depth_km,
+               fz.name           AS fault_zone,
+               t.waveHeightAtShoreM AS tsunami_height_m
+        ORDER BY abs(e.momentMagnitude - $mag)
+               + abs(e.epicentreLat - $lat)
+               + abs(e.epicentreLon - $lon)
+        LIMIT $k
+    """, lat=lat, lon=lon, mag=magnitude, k=top_k)
 
     async def graph_summary(self) -> dict:
         rows = await self.run("""
