@@ -42,3 +42,8 @@ frontend/.env.local
 *.md
 !README.md
 !PIPELINE.md
+
+# Large data files
+data/enrichment/*.nc
+data/historical/*.json
+data/enrichment/events.json
