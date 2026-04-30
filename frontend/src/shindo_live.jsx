@@ -173,6 +173,8 @@ const faultMatch = str => {
 }
 const islandPath = (proj,coords) => "M "+coords.map(([lt,ln])=>proj([ln,lt]).map(v=>v.toFixed(1)).join(",")).join(" L ")+" Z"
 
+const INIT_MSG = "Hello — I'm 震度 (Shindo), your seismic risk assistant.\n\nClick anywhere on Japan to run a simulation, then ask me anything about the event, fault zones, or historical precedents."
+
 export default function Shindo({ chat }) {
   const width     = useWindowWidth()
   const isMobile  = width < 768
@@ -195,9 +197,13 @@ export default function Shindo({ chat }) {
   const [ana,   setAna]   = useState(null)
   const [loading,setLoading] = useState(false)
   const [showFaults,setShowFaults] = useState(true)
-
-  // ── NEW: Neo4j-backed prediction state ───────────────────────
   const [predictData, setPredictData] = useState(null)
+
+  // ── LIVE FEED STATE ──────────────────────────────────────────
+  const [liveEvents, setLiveEvents] = useState([])
+  const [liveStatus, setLiveStatus] = useState(null)
+  const [liveMode,   setLiveMode]   = useState(true)
+  const [tooltip,    setTooltip]    = useState(null)
 
   const { chatMsgs, setChatMsgs, chatInput, setChatInput, chatLoading, setChatLoading } = chat
 
@@ -248,12 +254,32 @@ export default function Shindo({ chat }) {
     )
   },[])
 
+  // ── LIVE FEED POLLING ─────────────────────────────────────────
+  useEffect(() => {
+    const fetchLive = async () => {
+      try {
+        const [eventsRes, statusRes] = await Promise.all([
+          fetch(`${import.meta.env.VITE_API_URL}/live/earthquakes?days=30&min_magnitude=4.5`),
+          fetch(`${import.meta.env.VITE_API_URL}/live/status`)
+        ])
+        const events = await eventsRes.json()
+        const status = await statusRes.json()
+        if (Array.isArray(events)) setLiveEvents(events)
+        if (status) setLiveStatus(status)
+      } catch(err) {
+        console.warn("[live feed]", err)
+      }
+    }
+    fetchLive()
+    const interval = setInterval(fetchLive, 60000)
+    return () => clearInterval(interval)
+  }, [])
+
   // ── CORE ANALYSIS ────────────────────────────────────────────
   const runAnalysis = async (lat, lon, currentMag, currentDep) => {
     setLoading(true)
-    setPredictData(null) // ← reset Neo4j data on new analysis
+    setPredictData(null)
 
-    // ── NEW: call Neo4j-backed agent endpoint in parallel ───────
     fetch(`${import.meta.env.VITE_API_URL}/agent/predict`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -262,7 +288,6 @@ export default function Shindo({ chat }) {
     .then(r => r.json())
     .then(d => setPredictData(d))
     .catch(err => console.warn("[predict]", err))
-    // ── end new block ────────────────────────────────────────────
 
     try{
       const res=await fetch("https://api.anthropic.com/v1/messages",{
@@ -288,7 +313,7 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
     setLoading(false)
   }
 
-// ── MAP CLICK → SIMULATION ───────────────────────────────────
+  // ── MAP CLICK → SIMULATION ───────────────────────────────────
   const onClick = async e => {
     if(loading) return
     const rect=svgRef.current.getBoundingClientRect()
@@ -300,8 +325,20 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
     if(lat<23||lat>47||lon<120||lon>150) return
     const [ex,ey]=proj.current([lon,lat])
     setEpi({lat,lon,x:ex,y:ey}); setWk(k=>k+1); setAna(null); setPredictData(null)
-    setChatMsgs([{role:"assistant", text:"Hello — I'm 震度 (Shindo), your seismic risk assistant.\n\nClick anywhere on Japan to run a simulation, then ask me anything about the event, fault zones, or historical precedents."}])
+    setLiveMode(false)
+    setTooltip(null)
+    setChatMsgs([{role:"assistant", text:INIT_MSG}])
     runAnalysis(lat, lon, mag, dep)
+  }
+
+  // ── RETURN TO LIVE MODE ──────────────────────────────────────
+  const returnToLive = () => {
+    setLiveMode(true)
+    setEpi(null)
+    setAna(null)
+    setPredictData(null)
+    setTooltip(null)
+    setChatMsgs([{role:"assistant", text:INIT_MSG}])
   }
 
   // ── SLIDER → RE-ANALYSE (debounced 800ms) ───────────────────
@@ -310,7 +347,7 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
     if (!epi) return
     clearTimeout(sliderTimerRef.current)
     sliderTimerRef.current = setTimeout(() => {
-      setPredictData(null) // ← reset on slider change too
+      setPredictData(null)
       runAnalysis(epi.lat, epi.lon, mag, dep)
     }, 800)
     return () => clearTimeout(sliderTimerRef.current)
@@ -327,7 +364,6 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
       fault_zone:ana?.fault_zone, severity:ana?.severity,
       affected:ana?.affected_prefectures?.map(p=>p.name)||[],
       tsunami_risk:ana?.tsunami?.risk, cascade:ana?.cascade_chain||[],
-      // ── NEW: include Neo4j prediction context in chat ──────────
       neo4j_wave_range: predictData ? `${predictData.wave_height_min_m}–${predictData.wave_height_max_m}m` : null,
       neo4j_jma_warning: predictData?.jma_warning_en || null,
       neo4j_historical_basis: predictData?.historical_basis || null,
@@ -366,14 +402,8 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
   return (
     <div ref={outerRef} className="shindo-outer" style={{display:"flex",flexDirection:"row",height:"100vh",fontFamily:"'IBM Plex Mono',monospace",background:"#000510",overflow:"hidden"}}>
 
-      {/* ══════════════════════════════════════════════════════════
-          MAP COLUMN
-      ══════════════════════════════════════════════════════════ */}
-      <div className="shindo-map" style={{
-        flex:"0 0 640px",
-        background:"#000510",position:"relative",userSelect:"none",
-        borderRight:"1px solid #001a33",
-      }}>
+      {/* MAP COLUMN */}
+      <div className="shindo-map" style={{flex:"0 0 640px",background:"#000510",position:"relative",userSelect:"none",borderRight:"1px solid #001a33"}}>
         <svg ref={svgRef} width="100%" height="100%" viewBox={`0 0 ${MAP_W} ${MAP_H}`}
           onClick={onClick} style={{display:"block",cursor:"crosshair",height:"100%"}}>
           <defs>
@@ -404,7 +434,6 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
           {Array.from({length:7},(_,i)=><line key={`v${i}`} x1={(i+1)*MAP_W/8} y1={0} x2={(i+1)*MAP_W/8} y2={MAP_H} stroke="#001525" strokeWidth="0.4"/>)}
 
           <g transform={tStr}>
-
             {plexusLinks.map((lk,i)=>(
               <line key={i} x1={lk.x1} y1={lk.y1} x2={lk.x2} y2={lk.y2}
                 stroke="#00b4d8" strokeWidth="0.4" opacity={Math.max(0.04,0.2-lk.d/145*0.16)}/>
@@ -431,6 +460,34 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
               </g>
             ))}
 
+            {/* ── LIVE EARTHQUAKE DOTS — orange, static, hoverable ── */}
+            {liveMode && liveEvents.map(ev => {
+              const coords = proj.current([ev.lon, ev.lat])
+              if (!coords) return null
+              const [x, y] = coords
+              const r = Math.max(2, (ev.magnitude - 2) * 1.8)
+              const opacity = Math.min(0.9, 0.3 + (ev.magnitude - 3) * 0.15)
+              return (
+                <g key={ev.id} style={{cursor:"pointer"}}
+                  onMouseEnter={e => {
+                    const rect = svgRef.current.getBoundingClientRect()
+                    setTooltip({
+                      x: e.clientX - rect.left,
+                      y: e.clientY - rect.top,
+                      magnitude: ev.magnitude,
+                      time: ev.time,
+                      place: ev.place
+                    })
+                  }}
+                  onMouseLeave={() => setTooltip(null)}
+                  onClick={ev2 => ev2.stopPropagation()}
+                >
+                  <circle cx={x} cy={y} r={r * 2.5} fill="#ff8c00" opacity={opacity * 0.15}/>
+                  <circle cx={x} cy={y} r={r} fill="#ff8c00" opacity={opacity} stroke="#ff6600" strokeWidth="0.4"/>
+                </g>
+              )
+            })}
+
             {epi&&ana?.affected_prefectures?.length>0&&(
               [...ana.affected_prefectures]
                 .filter(ap=>ap.distance_km)
@@ -439,10 +496,8 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
                   const r=(ap.distance_km||50)*KM_PX
                   const col=iCol(ap.intensity)||"#884400"
                   const op=0.04+(ap.intensity||3)*0.016
-                  return (<circle key={`zone-${ap.id}`}
-                    cx={epi.x} cy={epi.y} r={r}
-                    fill={col} fillOpacity={op}
-                    stroke={col} strokeOpacity={0.5} strokeWidth={0.7}/>)
+                  return (<circle key={`zone-${ap.id}`} cx={epi.x} cy={epi.y} r={r}
+                    fill={col} fillOpacity={op} stroke={col} strokeOpacity={0.5} strokeWidth={0.7}/>)
                 })
             )}
 
@@ -459,12 +514,9 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
                 const cy=py+Math.sin(angle)*ry*0.45
                 const deg=angle*180/Math.PI-90
                 return (<g key={`flood-${ap.id}`}>
-                  <ellipse cx={cx} cy={cy} rx={rx} ry={ry}
-                    fill="#0055cc" fillOpacity={0.32}
-                    stroke="#00aaff" strokeOpacity={0.6} strokeWidth={0.8}
-                    transform={`rotate(${deg},${cx},${cy})`}/>
-                  <ellipse cx={cx} cy={cy} rx={rx*0.55} ry={ry*0.55}
-                    fill="#0099ff" fillOpacity={0.18}
+                  <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="#0055cc" fillOpacity={0.32}
+                    stroke="#00aaff" strokeOpacity={0.6} strokeWidth={0.8} transform={`rotate(${deg},${cx},${cy})`}/>
+                  <ellipse cx={cx} cy={cy} rx={rx*0.55} ry={ry*0.55} fill="#0099ff" fillOpacity={0.18}
                     transform={`rotate(${deg},${cx},${cy})`}/>
                   {ap.tsunami_height_m&&(
                     <text x={px+11} y={py-10} fontSize={9/mapT.k} fill="#00e5ff" fontFamily="inherit" fontWeight="700"
@@ -592,6 +644,80 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
           </g>
         </svg>
 
+        {/* ── HOVER TOOLTIP ──────────────────────────────────── */}
+        {tooltip && (
+          <div style={{
+            position:"absolute",
+            left: tooltip.x + 14,
+            top:  tooltip.y - 12,
+            background:"rgba(0,5,16,0.93)",
+            border:"1px solid #ff8c00",
+            borderRadius:4,
+            padding:"5px 9px",
+            fontSize:10,
+            color:"#ff8c00",
+            fontFamily:"'IBM Plex Mono',monospace",
+            letterSpacing:"0.07em",
+            lineHeight:1.8,
+            pointerEvents:"none",
+            zIndex:200,
+            whiteSpace:"nowrap",
+            boxShadow:"0 0 12px rgba(255,140,0,0.2)"
+          }}>
+            <div style={{fontWeight:700}}>M{tooltip.magnitude?.toFixed(1)}</div>
+            <div style={{color:"#cc6600",fontSize:9}}>
+              {tooltip.time ? new Date(tooltip.time).toLocaleString("ja-JP",{
+                month:"short", day:"numeric",
+                hour:"2-digit", minute:"2-digit"
+              }) : "—"}
+            </div>
+            {tooltip.place && (
+              <div style={{color:"#884400",fontSize:9,maxWidth:180,overflow:"hidden",textOverflow:"ellipsis"}}>
+                {tooltip.place}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── LIVE STATUS LABEL ──────────────────────────────── */}
+        {liveMode && liveEvents.length > 0 && (
+          <div style={{
+            position:"absolute", top:10, left:10,
+            background:"rgba(0,5,16,0.88)",
+            border:"1px solid #ff8c00",
+            borderRadius:5, padding:"6px 10px",
+            fontSize:10, color:"#ff8c00",
+            fontFamily:"'IBM Plex Mono',monospace",
+            letterSpacing:"0.08em", lineHeight:1.9,
+            pointerEvents:"none",
+            boxShadow:"0 0 14px rgba(255,140,0,0.18)"
+          }}>
+            <div style={{fontWeight:700,marginBottom:1}}>● SEISMIC CONDITIONS</div>
+            <div style={{color:"#cc6600"}}>
+              {liveEvents.length} events · M{Math.min(...liveEvents.map(e=>e.magnitude)).toFixed(1)}–M{Math.max(...liveEvents.map(e=>e.magnitude)).toFixed(1)}
+            </div>
+            <div style={{color:"#664400",fontSize:9}}>last 30 days · hover dots for detail</div>
+            <div style={{color:"#553300",fontSize:9,marginTop:1}}>CLICK MAP TO SIMULATE →</div>
+          </div>
+        )}
+
+        {/* ── RETURN TO LIVE BUTTON ──────────────────────────── */}
+        {!liveMode && (
+          <button onClick={e=>{e.stopPropagation(); returnToLive()}} style={{
+            position:"absolute", top:10, left:10,
+            background:"rgba(0,5,16,0.88)",
+            border:"1px solid #ff8c00",
+            borderRadius:5, padding:"5px 10px",
+            fontSize:10, color:"#ff8c00",
+            fontFamily:"'IBM Plex Mono',monospace",
+            letterSpacing:"0.08em", cursor:"pointer",
+            boxShadow:"0 0 10px rgba(255,140,0,0.15)"
+          }}>
+            ← LIVE CONDITIONS
+          </button>
+        )}
+
+        {/* ── LEGEND ────────────────────────────────────────── */}
         <div style={{position:"absolute",bottom:10,left:10,fontSize:11,color:"#0099bb",lineHeight:1.9,pointerEvents:"auto"}}>
           <div style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",opacity:showFaults?1:0.4}}
             onClick={e=>{e.stopPropagation();setShowFaults(f=>!f)}}>
@@ -607,8 +733,15 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
             <svg width="8" height="8"><polygon points="4,0 8,8 0,8" fill="#00cc66"/></svg>
             <span>NUCLEAR</span>
           </div>
+          {liveEvents.length > 0 && (
+            <div style={{marginTop:3,display:"flex",alignItems:"center",gap:5}}>
+              <div style={{width:8,height:8,borderRadius:"50%",background:"#ff8c00"}}/>
+              <span style={{color:"#ff8c00"}}>RECENT EVENTS</span>
+            </div>
+          )}
         </div>
 
+        {/* ── ZOOM CONTROLS ──────────────────────────────────── */}
         <div style={{position:"absolute",top:10,right:10,display:"inline-flex",flexDirection:"column",gap:3,width:"fit-content"}}>
           {[{l:"+",s:1.5},{l:"−",s:1/1.5},{l:"⌂",s:null}].map(({l,s})=>(
             <button key={l} onClick={e=>{
@@ -625,32 +758,23 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
 
         {epi&&<div style={{position:"absolute",bottom:10,right:10,fontSize:11,color:"#00aacc",textAlign:"right",lineHeight:1.7}}>
           <div>{epi.lat.toFixed(2)}°N {epi.lon.toFixed(2)}°E</div>
-          <div>M{mag.toFixed(1)} · {dep}km · ×{mapT.k.toFixed(1)}</div>
+          <div>M{mag.toFixed(1)} · ×{mapT.k.toFixed(1)}</div>
         </div>}
       </div>
 
-      {/* ══════════════════════════════════════════════════════════
-          INTEL PANEL
-      ══════════════════════════════════════════════════════════ */}
-      <div ref={intelRef} className="shindo-intel" style={{
-        flex:"0 0 280px",
-        display:"flex",
-        flexDirection:"column",
-        overflow:"hidden",
-      }}>
+      {/* INTEL PANEL */}
+      <div ref={intelRef} className="shindo-intel" style={{flex:"0 0 280px",display:"flex",flexDirection:"column",overflow:"hidden"}}>
         <div style={{padding:"10px 12px 8px",borderBottom:"1px solid #001a33",background:"#000b1a",flexShrink:0}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:8}}>
             <span style={{fontSize:14,fontWeight:700,letterSpacing:"0.06em",color:"#00e5ff",textShadow:"0 0 12px rgba(0,229,255,0.5)"}}>震度</span>
             <span style={{fontSize:10,color:"#0099bb",letterSpacing:"0.1em",fontWeight:600}}>SEISMIC INTEL</span>
           </div>
-          {/* Magnitude slider only — depth removed, now auto from GEBCO */}
           <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:0}}>
             <span style={{fontSize:11,color:"#00aacc",letterSpacing:"0.07em",minWidth:42,fontWeight:600}}>MAG</span>
             <input type="range" min={4} max={9.1} step={0.1} value={mag} onChange={e=>setMag(parseFloat(e.target.value))}
               style={{flex:1,accentColor:"#00e5ff",height:3}}/>
             <span style={{fontSize:11,fontWeight:700,minWidth:32,textAlign:"right",color:"#00e5ff"}}>{mag.toFixed(1)}</span>
           </div>
-          {/* Show auto sea floor depth from Neo4j if available */}
           {predictData?.sea_floor_depth_m != null && (
             <div style={{fontSize:10,color:"#004466",marginTop:4,letterSpacing:"0.05em"}}>
               DEPTH AUTO: {predictData.sea_floor_depth_m > 0 ? "+" : ""}{predictData.sea_floor_depth_m}m
@@ -666,6 +790,19 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
             <div style={{fontSize:28,marginBottom:8,color:"#00e5ff",opacity:0.15,fontWeight:700}}>震</div>
             <div style={{fontSize:12,color:"#0099bb",letterSpacing:"0.08em",fontWeight:600}}>CLICK MAP TO SIMULATE</div>
             <div style={{fontSize:11,marginTop:6,color:"#006688"}}>Scroll to zoom · Drag to pan</div>
+            {liveEvents.length > 0 && (
+              <div style={{marginTop:16,fontSize:10,color:"#664400",letterSpacing:"0.06em"}}>
+                <div style={{color:"#ff8c00",marginBottom:6,fontWeight:700}}>● {liveEvents.length} RECENT EVENTS</div>
+                {liveEvents.slice(0,5).map(ev=>(
+                  <div key={ev.id} style={{marginBottom:3,color:"#553300",display:"flex",justifyContent:"space-between",padding:"2px 6px",background:"#0a0500",borderRadius:3}}>
+                    <span>M{ev.magnitude?.toFixed(1)}</span>
+                    <span style={{opacity:0.7,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:130,marginLeft:6}}>
+                      {ev.place?.split(",")[0] || "Japan"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>}
 
           {loading&&<div style={{paddingTop:32,textAlign:"center",lineHeight:2.4}}>
@@ -676,15 +813,12 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
           </div>}
 
           {ana&&!loading&&<div style={{fontSize:12}}>
-
-            {/* Severity badge */}
             <div style={{padding:"6px 10px",borderRadius:5,marginBottom:9,background:sev[0],border:`1px solid ${sev[1]}40`,
               display:"flex",justifyContent:"space-between",alignItems:"center",boxShadow:`0 0 14px ${sev[1]}22`}}>
               <span style={{fontSize:11,fontWeight:700,letterSpacing:"0.09em",color:sev[1],textShadow:`0 0 8px ${sev[1]}`}}>{(ana.severity||"").toUpperCase()}</span>
               <span style={{fontSize:10,color:sev[1],opacity:0.8}}>{ana.fault_zone}</span>
             </div>
 
-            {/* Cascade */}
             {ana.cascade_chain?.length>0&&<div style={{marginBottom:9}}>
               <div style={{fontSize:11,color:"#0099bb",letterSpacing:"0.1em",marginBottom:4,fontWeight:700}}>CASCADE</div>
               <div style={{display:"flex",flexWrap:"wrap",gap:3,alignItems:"center"}}>
@@ -695,7 +829,6 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
               </div>
             </div>}
 
-            {/* Tsunami */}
             {tsunamiOn&&<div style={{marginBottom:9,padding:"8px 10px",background:"#000b1a",border:"1px solid #003366",borderRadius:6,boxShadow:"0 0 16px rgba(0,100,200,0.1)"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
                 <span style={{fontSize:12,color:"#00aadd",letterSpacing:"0.1em",fontWeight:700}}>TSUNAMI</span>
@@ -723,68 +856,44 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
                   {p.tsunami_height_m&&<span style={{fontSize:12,color:"#00e5ff",fontWeight:700}}>{p.tsunami_height_m}m</span>}
                 </div>
               ))}
-
-              {/* ── NEW: Neo4j historical basis section ─────────── */}
               {predictData?.nearest_events?.length > 0 && (
                 <div style={{marginTop:8,borderTop:"1px solid #002244",paddingTop:7}}>
-                  <div style={{fontSize:10,color:"#005577",letterSpacing:"0.06em",fontWeight:600,marginBottom:5,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                  <div style={{fontSize:10,color:"#005577",letterSpacing:"0.06em",fontWeight:600,marginBottom:5,display:"flex",justifyContent:"space-between"}}>
                     <span>NEO4J HISTORICAL BASIS</span>
                     <span style={{color:"#003344"}}>{predictData.historical_basis} events</span>
                   </div>
-
-                  {/* JMA warning from Neo4j */}
                   {predictData.jma_warning_ja && (
                     <div style={{marginBottom:6,padding:"4px 8px",background:"#1a0005",border:"1px solid #440011",borderRadius:4,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
                       <span style={{fontSize:10,color:"#883333",fontWeight:600}}>JMA</span>
                       <span style={{fontSize:11,color:"#ff4444",fontWeight:700}}>{predictData.jma_warning_ja}</span>
                     </div>
                   )}
-
-                  {/* Wave range from real data */}
                   <div style={{display:"flex",gap:8,marginBottom:6}}>
                     <div>
                       <div style={{fontSize:10,color:"#005577",fontWeight:600}}>OBSERVED RANGE</div>
-                      <div style={{fontSize:13,color:"#00ccdd",fontWeight:700}}>
-                        {predictData.wave_height_min_m}–{predictData.wave_height_max_m}m
-                      </div>
+                      <div style={{fontSize:13,color:"#00ccdd",fontWeight:700}}>{predictData.wave_height_min_m}–{predictData.wave_height_max_m}m</div>
                     </div>
                     <div>
                       <div style={{fontSize:10,color:"#005577",fontWeight:600}}>AVG</div>
-                      <div style={{fontSize:13,color:"#00ccdd",fontWeight:700}}>
-                        {predictData.wave_height_avg_m}m
-                      </div>
+                      <div style={{fontSize:13,color:"#00ccdd",fontWeight:700}}>{predictData.wave_height_avg_m}m</div>
                     </div>
                   </div>
-
-                  {/* Nearest historical events */}
                   {predictData.nearest_events.slice(0,3).map((ev,i) => (
-                    <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",
-                      padding:"3px 7px",marginBottom:2,
-                      background:"#00050f",border:"1px solid #001a2e",borderRadius:3}}>
-                      <span style={{fontSize:10,color:"#006688",fontWeight:600,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
-                        {ev.location || "Unknown"}
-                      </span>
-                      <span style={{fontSize:10,color:"#004455",marginLeft:4,whiteSpace:"nowrap"}}>
-                        M{ev.magnitude}
-                      </span>
-                      <span style={{fontSize:10,color:"#00aacc",fontWeight:700,marginLeft:4,whiteSpace:"nowrap"}}>
-                        {ev.waveHeight}m
-                      </span>
+                    <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 7px",marginBottom:2,background:"#00050f",border:"1px solid #001a2e",borderRadius:3}}>
+                      <span style={{fontSize:10,color:"#006688",fontWeight:600,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.location||"Unknown"}</span>
+                      <span style={{fontSize:10,color:"#004455",marginLeft:4,whiteSpace:"nowrap"}}>M{ev.magnitude}</span>
+                      <span style={{fontSize:10,color:"#00aacc",fontWeight:700,marginLeft:4,whiteSpace:"nowrap"}}>{ev.waveHeight}m</span>
                     </div>
                   ))}
                 </div>
               )}
-
-              {/* Show loading indicator while Neo4j data is incoming */}
               {!predictData && tsunamiOn && (
                 <div style={{marginTop:8,borderTop:"1px solid #001a33",paddingTop:6,fontSize:10,color:"#003344",letterSpacing:"0.06em"}}>
                   NEO4J INFERENCE LOADING...
                 </div>
               )}
-              {/* ── end Neo4j section ────────────────────────────── */}
             </div>}
 
-            {/* Shaking */}
             {ana.affected_prefectures?.filter(p=>p.risk==="shaking").length>0&&<div style={{marginBottom:9}}>
               <div style={{fontSize:11,color:"#0099bb",letterSpacing:"0.1em",marginBottom:4,fontWeight:700}}>GROUND SHAKING</div>
               {ana.affected_prefectures.filter(p=>p.risk==="shaking").slice(0,6).map(p=>(
@@ -797,8 +906,7 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
               ))}
             </div>}
 
-            {/* Nuclear */}
-            {ana.nuclear_risk?.filter(n=>n.risk!=="none").length>0&&<div style={{marginBottom:9,padding:"8px 10px",background:"#0c0005",border:"1px solid #440011",borderRadius:5,boxShadow:"0 0 14px rgba(200,0,0,0.07)"}}>
+            {ana.nuclear_risk?.filter(n=>n.risk!=="none").length>0&&<div style={{marginBottom:9,padding:"8px 10px",background:"#0c0005",border:"1px solid #440011",borderRadius:5}}>
               <div style={{fontSize:11,color:"#ff4455",letterSpacing:"0.1em",marginBottom:4,fontWeight:700}}>NUCLEAR RISK</div>
               {ana.nuclear_risk.filter(n=>n.risk!=="none").map(n=>(
                 <div key={n.id} style={{display:"flex",alignItems:"center",gap:4,marginBottom:3}}>
@@ -810,7 +918,6 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
               ))}
             </div>}
 
-            {/* Analogs */}
             {ana.historical_analogs?.length>0&&<div style={{marginBottom:9}}>
               <div style={{fontSize:11,color:"#0099bb",letterSpacing:"0.1em",marginBottom:4,fontWeight:700}}>HISTORICAL ANALOGS</div>
               {ana.historical_analogs.slice(0,3).map((a,i)=>(
@@ -821,22 +928,13 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
               ))}
             </div>}
 
-            {/* Insight */}
             {ana.insight&&<div style={{fontSize:12,lineHeight:1.75,color:"#a0e4ff",fontWeight:500,padding:"9px 12px",borderLeft:"2px solid #0055aa",background:"#000f1f",borderRadius:"0 6px 6px 0"}}>{ana.insight}</div>}
           </div>}
         </div>
       </div>
 
-      {/* ══════════════════════════════════════════════════════════
-          震度 CHAT PANEL
-      ══════════════════════════════════════════════════════════ */}
-      <div className="shindo-chat" style={{
-        flex:1,
-        display:"flex",
-        flexDirection:"column",
-        overflow:"hidden",
-        borderLeft:"1px solid #001a33",
-      }}>
+      {/* CHAT PANEL */}
+      <div className="shindo-chat" style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden",borderLeft:"1px solid #001a33"}}>
         <div style={{padding:"14px 18px 12px",borderBottom:"1px solid #001a33",background:"#000b1a",flexShrink:0}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <div style={{width:8,height:8,borderRadius:"50%",background:"#00e5ff",boxShadow:"0 0 10px #00e5ff"}}/>
@@ -881,30 +979,10 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
         ::-webkit-scrollbar-track { background: #000510; }
         ::-webkit-scrollbar-thumb { background: #001a33; border-radius: 2px; }
         @media (max-width: 767px) {
-          .shindo-outer {
-            flex-direction: column !important;
-            overflow-y: auto !important;
-            overflow-x: hidden !important;
-          }
-          .shindo-map {
-            flex: 0 0 44vh !important;
-            width: 100% !important;
-            border-right: none !important;
-            border-bottom: 1px solid #001a33 !important;
-          }
-          .shindo-intel {
-            flex: 0 0 auto !important;
-            width: 100% !important;
-            min-height: 280px !important;
-            overflow-y: auto !important;
-            border-bottom: 1px solid #001a33 !important;
-          }
-          .shindo-chat {
-            flex: 0 0 380px !important;
-            width: 100% !important;
-            border-left: none !important;
-            border-top: 1px solid #001a33 !important;
-          }
+          .shindo-outer { flex-direction: column !important; overflow-y: auto !important; overflow-x: hidden !important; }
+          .shindo-map { flex: 0 0 44vh !important; width: 100% !important; border-right: none !important; border-bottom: 1px solid #001a33 !important; }
+          .shindo-intel { flex: 0 0 auto !important; width: 100% !important; min-height: 280px !important; overflow-y: auto !important; border-bottom: 1px solid #001a33 !important; }
+          .shindo-chat { flex: 0 0 380px !important; width: 100% !important; border-left: none !important; border-top: 1px solid #001a33 !important; }
         }
       `}</style>
     </div>
