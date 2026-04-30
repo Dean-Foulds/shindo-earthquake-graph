@@ -16,9 +16,9 @@ WITH fz, collect(eq) AS all_events
 RETURN fz.id AS fault_id, fz.name AS fault_name, fz.type AS fault_type,
        fz.predicted_max_mag AS predicted_max_mag, fz.last_major_year AS last_major_year,
        size(all_events) AS total_events,
-       [e IN all_events WHERE e.magnitude >= 6.0 | e.year] AS years_m6,
-       [e IN all_events WHERE e.magnitude >= 7.0 | e.year] AS years_m7,
-       [e IN all_events WHERE e.magnitude >= 8.0 | e.year] AS years_m8
+       [e IN all_events WHERE e.momentMagnitude >= 6.0 | e.year] AS years_m6,
+       [e IN all_events WHERE e.momentMagnitude >= 7.0 | e.year] AS years_m7,
+       [e IN all_events WHERE e.momentMagnitude >= 8.0 | e.year] AS years_m8
 ORDER BY fz.name
 """
 

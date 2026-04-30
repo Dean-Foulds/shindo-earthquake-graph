@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from .db import get_db, Neo4jService
 from .analysis import get_cached_predict
+from app.agent.agent import run_impact_agent
 
 router = APIRouter()
 
@@ -54,18 +55,22 @@ class ChatResponse(BaseModel):
     reply: str
     tool_calls_made: list[str] = []
 
+class PredictRequest(BaseModel):
+    lat: float
+    lon: float
+    magnitude: float = 7.5
 
-# ── Agent endpoint ───────────────────────────────────────────────
+
+# ── Agent chat endpoint ──────────────────────────────────────────
 @router.post("/agent/chat", response_model=ChatResponse)
 async def agent_chat(req: ChatRequest):
     agent_url = os.getenv("AURA_AGENT_URL")
     if not agent_url:
         raise HTTPException(500, "AURA_AGENT_URL not set")
 
-    # Fetch token and build context concurrently
     token, _ = await asyncio.gather(
         get_aura_token(),
-        asyncio.sleep(0),  # yield to event loop
+        asyncio.sleep(0),
     )
 
     sim_context = ""
@@ -76,8 +81,16 @@ async def agent_chat(req: ChatRequest):
             f"M{sim['mag']:.1f} depth {sim['depth']}km | "
             f"Fault: {sim.get('fault_zone','unknown')} | "
             f"Affected: {', '.join(sim.get('affected',[]))} | "
-            f"Tsunami risk: {sim.get('tsunami_risk','none')}\n"
+            f"Tsunami risk: {sim.get('tsunami_risk','none')}"
         )
+        # Include Neo4j prediction context if available
+        if sim.get("neo4j_wave_range"):
+            sim_context += (
+                f" | Neo4j wave range: {sim['neo4j_wave_range']}"
+                f" | JMA: {sim.get('neo4j_jma_warning','unknown')}"
+                f" | Historical basis: {sim.get('neo4j_historical_basis','?')} events"
+            )
+        sim_context += "\n"
 
     last_user = next(
         (m.text for m in reversed(req.messages) if m.role == "user"), ""
@@ -119,6 +132,27 @@ async def agent_chat(req: ChatRequest):
         reply = data.get("response") or data.get("output") or data.get("text") or str(data)
 
     return ChatResponse(reply=reply, tool_calls_made=[])
+
+
+# ── Impact prediction endpoint ───────────────────────────────────
+@router.post("/agent/predict")
+async def agent_predict(
+    req: PredictRequest,
+    db: Neo4jService = Depends(get_db)
+):
+    """
+    Impact prediction endpoint.
+    Called when user clicks map in prediction mode.
+    Claude agent calls Neo4j tools using the injected db session
+    to avoid creating a new async driver in a worker thread.
+    """
+    result = await run_impact_agent(
+        latitude  = req.lat,
+        longitude = req.lon,
+        magnitude = req.magnitude,
+        db        = db
+    )
+    return result
 
 
 # ── Earthquakes route ────────────────────────────────────────────

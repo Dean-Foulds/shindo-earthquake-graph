@@ -1,0 +1,566 @@
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix eq:   <http://deanfoulds.xyz/ontology/earthquake#> .
+
+eq: a owl:Ontology ;
+    rdfs:label "Japanese Earthquake Ontology"@en ;
+    rdfs:label "日本地震オントロジー"@ja .
+
+eq:Earthquake a owl:Class ;
+    rdfs:label   "Earthquake"@en ;
+    rdfs:label   "地震"@ja ;
+    rdfs:comment "A seismic event recorded in or around Japan."@en .
+
+# WHEN
+eq:occurrenceDateTime a owl:DatatypeProperty ;
+    rdfs:domain eq:Earthquake ;
+    rdfs:range  xsd:dateTime ;
+    rdfs:label  "occurrence date and time (JST)"@en ;
+    rdfs:label  "発生日時"@ja .
+
+# WHERE — epicentre coordinates
+eq:epicentreLat a owl:DatatypeProperty ;
+    rdfs:domain eq:Earthquake ;
+    rdfs:range  xsd:decimal ;
+    rdfs:label  "epicentre latitude"@en ;
+    rdfs:label  "震央緯度"@ja .
+
+eq:epicentreLon a owl:DatatypeProperty ;
+    rdfs:domain eq:Earthquake ;
+    rdfs:range  xsd:decimal ;
+    rdfs:label  "epicentre longitude"@en ;
+    rdfs:label  "震央経度"@ja .
+
+# HOW DEEP — below Earth's surface
+eq:hypocentralDepthKm a owl:DatatypeProperty ;
+    rdfs:domain eq:Earthquake ;
+    rdfs:range  xsd:decimal ;
+    rdfs:label  "hypocentral depth (km)"@en ;
+    rdfs:label  "震源深さ（km）"@ja .
+
+# HOW POWERFUL
+eq:momentMagnitude a owl:DatatypeProperty ;
+    rdfs:domain eq:Earthquake ;
+    rdfs:range  xsd:decimal ;
+    rdfs:label  "moment magnitude (Mw)"@en ;
+    rdfs:label  "モーメントマグニチュード"@ja .
+
+# JMA INTENSITY SCALE
+eq:jmaIntensity a owl:DatatypeProperty ;
+    rdfs:domain eq:Earthquake ;
+    rdfs:range  xsd:string ;
+    rdfs:label  "JMA seismic intensity"@en ;
+    rdfs:label  "震度"@ja ;
+    rdfs:comment "Values: 0, 1, 2, 3, 4, 5-lower, 5-upper, 6-lower, 6-upper, 7"@en .
+
+# FAULT TYPE
+eq:faultType a owl:DatatypeProperty ;
+    rdfs:domain eq:Earthquake ;
+    rdfs:range  xsd:string ;
+    rdfs:label  "fault type"@en ;
+    rdfs:label  "断層タイプ"@ja ;
+    rdfs:comment "Values: subduction, strike-slip, normal, reverse"@en .
+
+# SEA FLOOR DEPTH (looked up from GEBCO at epicentre lat/lon)
+eq:seaFloorDepthM a owl:DatatypeProperty ;
+    rdfs:domain eq:Earthquake ;
+    rdfs:range  xsd:decimal ;
+    rdfs:label  "sea floor depth at epicentre (m)"@en ;
+    rdfs:label  "震央海底深度（m）"@ja ;
+    rdfs:comment "Negative = below sea level. Positive = above (onshore). Auto-populated from GEBCO."@en .
+
+# ─────────────────────────────────────────────
+# PREFECTURE CLASS
+# ─────────────────────────────────────────────
+
+eq:Prefecture a owl:Class ;
+    rdfs:label   "Prefecture"@en ;
+    rdfs:label   "都道府県"@ja ;
+    rdfs:comment "An administrative division of Japan."@en .
+
+# Its name
+eq:prefectureName a owl:DatatypeProperty ;
+    rdfs:domain eq:Prefecture ;
+    rdfs:range  xsd:string ;
+    rdfs:label  "prefecture name"@en ;
+    rdfs:label  "都道府県名"@ja .
+
+# JIS code — Japan's official 2-digit prefecture numbering
+eq:prefectureCode a owl:DatatypeProperty ;
+    rdfs:domain eq:Prefecture ;
+    rdfs:range  xsd:string ;
+    rdfs:label  "JIS prefecture code"@en ;
+    rdfs:comment "e.g. 04 = Miyagi, 03 = Iwate, 13 = Tokyo"@en .
+
+# Is it coastal? Important for tsunami risk
+eq:isCoastal a owl:DatatypeProperty ;
+    rdfs:domain eq:Prefecture ;
+    rdfs:range  xsd:boolean ;
+    rdfs:label  "is coastal prefecture"@en ;
+    rdfs:label  "沿岸都道府県"@ja .
+
+
+# ─────────────────────────────────────────────
+# CITY CLASS
+# ─────────────────────────────────────────────
+
+eq:City a owl:Class ;
+    rdfs:label   "City"@en ;
+    rdfs:label   "市区町村"@ja ;
+    rdfs:comment "A city, town or village within a Japanese prefecture."@en .
+
+eq:cityName a owl:DatatypeProperty ;
+    rdfs:domain eq:City ;
+    rdfs:range  xsd:string ;
+    rdfs:label  "city name"@en ;
+    rdfs:label  "市区町村名"@ja .
+
+# Distance from the epicentre — important for damage calculation
+eq:distanceFromEpicentreKm a owl:DatatypeProperty ;
+    rdfs:domain eq:City ;
+    rdfs:range  xsd:decimal ;
+    rdfs:label  "distance from epicentre (km)"@en .
+
+# ─────────────────────────────────────────────
+# RELATIONSHIPS
+# ─────────────────────────────────────────────
+
+# Earthquake affects one or more prefectures
+eq:affectsPrefecture a owl:ObjectProperty ;
+    rdfs:domain  eq:Earthquake ;
+    rdfs:range   eq:Prefecture ;
+    rdfs:label   "affects prefecture"@en ;
+    rdfs:label   "都道府県に影響する"@ja .
+
+# Prefecture contains cities
+eq:containsCity a owl:ObjectProperty ;
+    rdfs:domain  eq:Prefecture ;
+    rdfs:range   eq:City ;
+    rdfs:label   "contains city"@en ;
+    rdfs:label   "市区町村を含む"@ja .
+
+# City is affected by the earthquake
+eq:affectsCity a owl:ObjectProperty ;
+    rdfs:domain  eq:Earthquake ;
+    rdfs:range   eq:City ;
+    rdfs:label   "affects city"@en ;
+    rdfs:label   "市区町村に影響する"@ja .
+
+# ─────────────────────────────────────────────
+# JMA TSUNAMI WARNING CLASS
+# ─────────────────────────────────────────────
+
+eq:TsunamiWarning a owl:Class ;
+    rdfs:label   "Tsunami Warning"@en ;
+    rdfs:label   "津波警報"@ja ;
+    rdfs:comment "Official JMA warning issued based on magnitude and location."@en .
+
+eq:warningLevel a owl:DatatypeProperty ;
+    rdfs:domain  eq:TsunamiWarning ;
+    rdfs:range   xsd:string ;
+    rdfs:label   "warning level"@en ;
+    rdfs:comment "One of: 津波注意報 (Advisory, <1m), 津波警報 (Warning, 1-3m), 大津波警報 (Major, >3m)"@en .
+
+eq:warningIssuedAt a owl:DatatypeProperty ;
+    rdfs:domain  eq:TsunamiWarning ;
+    rdfs:range   xsd:dateTime ;
+    rdfs:label   "warning issued at"@en ;
+    rdfs:label   "警報発令時刻"@ja .
+
+# Time between quake and warning — important for your simulator
+eq:minutesFromQuakeToWarning a owl:DatatypeProperty ;
+    rdfs:domain  eq:TsunamiWarning ;
+    rdfs:range   xsd:decimal ;
+    rdfs:label   "minutes from quake to warning"@en ;
+    rdfs:comment "JMA target is under 3 minutes"@en .
+
+# ─────────────────────────────────────────────
+# TSUNAMI EVENT CLASS
+# ─────────────────────────────────────────────
+
+eq:TsunamiEvent a owl:Class ;
+    rdfs:label   "Tsunami Event"@en ;
+    rdfs:label   "津波"@ja ;
+    rdfs:comment "A tsunami triggered by a seismic event."@en .
+
+# Was a tsunami actually generated?
+eq:tsunamiGenerated a owl:DatatypeProperty ;
+    rdfs:domain  eq:TsunamiEvent ;
+    rdfs:range   xsd:boolean ;
+    rdfs:label   "tsunami generated"@en .
+
+# How long did it take to reach the nearest shore?
+eq:minutesToShore a owl:DatatypeProperty ;
+    rdfs:domain  eq:TsunamiEvent ;
+    rdfs:range   xsd:decimal ;
+    rdfs:label   "minutes from generation to nearest shore"@en ;
+    rdfs:label   "最短到達時間（分）"@ja .
+
+# ─────────────────────────────────────────────
+# WAVE PROFILE CLASS
+# ─────────────────────────────────────────────
+
+eq:WaveProfile a owl:Class ;
+    rdfs:label   "Wave Profile"@en ;
+    rdfs:label   "津波波形"@ja ;
+    rdfs:comment "Physical characteristics of the tsunami wave."@en .
+
+# Height at the point of generation
+eq:waveHeightAtSourceM a owl:DatatypeProperty ;
+    rdfs:domain  eq:WaveProfile ;
+    rdfs:range   xsd:decimal ;
+    rdfs:label   "wave height at source (m)"@en ;
+    rdfs:label   "震源波高（m）"@ja .
+
+# Height when it reaches shore — often very different to source
+eq:waveHeightAtShoreM a owl:DatatypeProperty ;
+    rdfs:domain  eq:WaveProfile ;
+    rdfs:range   xsd:decimal ;
+    rdfs:label   "wave height at shore (m)"@en ;
+    rdfs:label   "海岸波高（m）"@ja .
+
+# Wave speed across ocean
+eq:waveSpeedKmh a owl:DatatypeProperty ;
+    rdfs:domain  eq:WaveProfile ;
+    rdfs:range   xsd:decimal ;
+    rdfs:label   "wave speed (km/h)"@en .
+
+# Distance from epicentre to shore
+eq:distanceEpicentreToShoreKm a owl:DatatypeProperty ;
+    rdfs:domain  eq:WaveProfile ;
+    rdfs:range   xsd:decimal ;
+    rdfs:label   "distance from epicentre to shore (km)"@en .
+
+# ─────────────────────────────────────────────
+# INUNDATION ZONE CLASS
+# ─────────────────────────────────────────────
+
+eq:InundationZone a owl:Class ;
+    rdfs:label   "Inundation Zone"@en ;
+    rdfs:label   "浸水域"@ja ;
+    rdfs:comment "The area of land flooded by the tsunami inland."@en .
+
+# How far inland the water reached
+eq:inundationDistanceKm a owl:DatatypeProperty ;
+    rdfs:domain  eq:InundationZone ;
+    rdfs:range   xsd:decimal ;
+    rdfs:label   "inundation distance inland (km)"@en ;
+    rdfs:label   "浸水距離（km）"@ja .
+
+# Maximum elevation the water reached
+eq:maxInlandElevationM a owl:DatatypeProperty ;
+    rdfs:domain  eq:InundationZone ;
+    rdfs:range   xsd:decimal ;
+    rdfs:label   "maximum inland elevation reached (m)"@en ;
+    rdfs:label   "最大浸水標高（m）"@ja .
+
+# Total area flooded
+eq:inundationAreaKm2 a owl:DatatypeProperty ;
+    rdfs:domain  eq:InundationZone ;
+    rdfs:range   xsd:decimal ;
+    rdfs:label   "inundation area (km²)"@en ;
+    rdfs:label   "浸水面積（km²）"@ja .
+
+# Which prefecture was inundated
+eq:inundatedPrefecture a owl:ObjectProperty ;
+    rdfs:domain  eq:InundationZone ;
+    rdfs:range   eq:Prefecture ;
+    rdfs:label   "inundated prefecture"@en .
+
+# Which cities were inundated
+eq:inundatedCity a owl:ObjectProperty ;
+    rdfs:domain  eq:InundationZone ;
+    rdfs:range   eq:City ;
+    rdfs:label   "inundated city"@en .
+
+# ─────────────────────────────────────────────
+# TSUNAMI DAMAGE CLASS
+# ─────────────────────────────────────────────
+
+eq:TsunamiDamage a owl:Class ;
+    rdfs:label   "Tsunami Damage"@en ;
+    rdfs:label   "津波被害"@ja ;
+    rdfs:comment "Damage caused specifically by tsunami inundation, separate from shaking."@en .
+
+eq:tsunamiFatalities a owl:DatatypeProperty ;
+    rdfs:domain  eq:TsunamiDamage ;
+    rdfs:range   xsd:integer ;
+    rdfs:label   "tsunami fatalities"@en ;
+    rdfs:label   "津波死者数"@ja .
+
+eq:tsunamiMissing a owl:DatatypeProperty ;
+    rdfs:domain  eq:TsunamiDamage ;
+    rdfs:range   xsd:integer ;
+    rdfs:label   "tsunami missing persons"@en ;
+    rdfs:label   "津波行方不明者数"@ja .
+
+eq:buildingsWashedAway a owl:DatatypeProperty ;
+    rdfs:domain  eq:TsunamiDamage ;
+    rdfs:range   xsd:integer ;
+    rdfs:label   "buildings washed away"@en ;
+    rdfs:label   "流失建物棟数"@ja .
+
+eq:buildingsFlooded a owl:DatatypeProperty ;
+    rdfs:domain  eq:TsunamiDamage ;
+    rdfs:range   xsd:integer ;
+    rdfs:label   "buildings flooded"@en ;
+    rdfs:label   "浸水建物棟数"@ja .
+
+# ─────────────────────────────────────────────
+# THE CHAIN — Object Properties
+# ─────────────────────────────────────────────
+
+eq:triggeredTsunami a owl:ObjectProperty ;
+    rdfs:domain  eq:Earthquake ;
+    rdfs:range   eq:TsunamiEvent ;
+    rdfs:label   "triggered tsunami"@en .
+
+eq:hasWarning a owl:ObjectProperty ;
+    rdfs:domain  eq:TsunamiEvent ;
+    rdfs:range   eq:TsunamiWarning ;
+    rdfs:label   "has JMA warning"@en .
+
+eq:hasWaveProfile a owl:ObjectProperty ;
+    rdfs:domain  eq:TsunamiEvent ;
+    rdfs:range   eq:WaveProfile ;
+    rdfs:label   "has wave profile"@en .
+
+eq:causedInundation a owl:ObjectProperty ;
+    rdfs:domain  eq:TsunamiEvent ;
+    rdfs:range   eq:InundationZone ;
+    rdfs:label   "caused inundation"@en .
+
+eq:hasTsunamiDamage a owl:ObjectProperty ;
+    rdfs:domain  eq:InundationZone ;
+    rdfs:range   eq:TsunamiDamage ;
+    rdfs:label   "has tsunami damage"@en .
+
+# ─────────────────────────────────────────────
+# DAMAGE REPORT — PARENT CLASS
+# ─────────────────────────────────────────────
+
+eq:DamageReport a owl:Class ;
+    rdfs:label   "Damage Report"@en ;
+    rdfs:label   "被害報告"@ja ;
+    rdfs:comment "A formal assessment of damage from a seismic event."@en .
+
+# When was the report published?
+eq:reportDateTime a owl:DatatypeProperty ;
+    rdfs:domain  eq:DamageReport ;
+    rdfs:range   xsd:dateTime ;
+    rdfs:label   "report date and time"@en ;
+    rdfs:label   "報告日時"@ja .
+
+# Which organisation published it?
+eq:reportedBy a owl:DatatypeProperty ;
+    rdfs:domain  eq:DamageReport ;
+    rdfs:range   xsd:string ;
+    rdfs:label   "reported by"@en ;
+    rdfs:comment "e.g. JMA, Cabinet Office, Prefecture Government"@en .
+
+# Link back to the earthquake
+eq:hasDamageReport a owl:ObjectProperty ;
+    rdfs:domain  eq:Earthquake ;
+    rdfs:range   eq:DamageReport ;
+    rdfs:label   "has damage report"@en .
+
+# ─────────────────────────────────────────────
+# SHAKING DAMAGE CLASS
+# ─────────────────────────────────────────────
+
+eq:ShakingDamage a owl:Class ;
+    rdfs:subClassOf eq:DamageReport ;
+    rdfs:label   "Shaking Damage"@en ;
+    rdfs:label   "揺れによる被害"@ja ;
+    rdfs:comment "Damage caused directly by ground shaking."@en .
+
+# Casualties from shaking only (not tsunami)
+eq:shakingFatalities a owl:DatatypeProperty ;
+    rdfs:domain  eq:ShakingDamage ;
+    rdfs:range   xsd:integer ;
+    rdfs:label   "shaking fatalities"@en ;
+    rdfs:label   "揺れ死者数"@ja .
+
+eq:shakingInjuries a owl:DatatypeProperty ;
+    rdfs:domain  eq:ShakingDamage ;
+    rdfs:range   xsd:integer ;
+    rdfs:label   "shaking injuries"@en ;
+    rdfs:label   "揺れ負傷者数"@ja .
+
+# Building damage
+eq:buildingsTotallyDestroyed a owl:DatatypeProperty ;
+    rdfs:domain  eq:ShakingDamage ;
+    rdfs:range   xsd:integer ;
+    rdfs:label   "buildings totally destroyed"@en ;
+    rdfs:label   "全壊棟数"@ja .
+
+eq:buildingsHalfDestroyed a owl:DatatypeProperty ;
+    rdfs:domain  eq:ShakingDamage ;
+    rdfs:range   xsd:integer ;
+    rdfs:label   "buildings half destroyed"@en ;
+    rdfs:label   "半壊棟数"@ja .
+
+eq:buildingsPartiallyDamaged a owl:DatatypeProperty ;
+    rdfs:domain  eq:ShakingDamage ;
+    rdfs:range   xsd:integer ;
+    rdfs:label   "buildings partially damaged"@en ;
+    rdfs:label   "一部損壊棟数"@ja .
+
+# ─────────────────────────────────────────────
+# FIRE AFTER QUAKE CLASS
+# ─────────────────────────────────────────────
+
+eq:FireAfterQuake a owl:Class ;
+    rdfs:subClassOf eq:DamageReport ;
+    rdfs:label   "Fire After Earthquake"@en ;
+    rdfs:label   "地震後火災"@ja ;
+    rdfs:comment "Fires ignited as a direct consequence of seismic shaking."@en .
+
+# How many separate fires broke out?
+eq:numberOfFires a owl:DatatypeProperty ;
+    rdfs:domain  eq:FireAfterQuake ;
+    rdfs:range   xsd:integer ;
+    rdfs:label   "number of fires ignited"@en ;
+    rdfs:label   "火災件数"@ja .
+
+# What caused them?
+eq:fireCause a owl:DatatypeProperty ;
+    rdfs:domain  eq:FireAfterQuake ;
+    rdfs:range   xsd:string ;
+    rdfs:label   "fire cause"@en ;
+    rdfs:comment "e.g. gas line rupture, electrical fault, overturned stove"@en .
+
+# Area burned
+eq:areaBurnedHectares a owl:DatatypeProperty ;
+    rdfs:domain  eq:FireAfterQuake ;
+    rdfs:range   xsd:decimal ;
+    rdfs:label   "area burned (hectares)"@en ;
+    rdfs:label   "焼失面積（ha）"@ja .
+
+# Buildings destroyed by fire
+eq:buildingsBurnedDown a owl:DatatypeProperty ;
+    rdfs:domain  eq:FireAfterQuake ;
+    rdfs:range   xsd:integer ;
+    rdfs:label   "buildings burned down"@en ;
+    rdfs:label   "全焼棟数"@ja .
+
+# Which city did the fire occur in?
+eq:fireOccurredIn a owl:ObjectProperty ;
+    rdfs:domain  eq:FireAfterQuake ;
+    rdfs:range   eq:City ;
+    rdfs:label   "fire occurred in"@en .
+
+# ─────────────────────────────────────────────
+# LANDSLIDE RISK CLASS
+# ─────────────────────────────────────────────
+
+eq:LandslideRisk a owl:Class ;
+    rdfs:subClassOf eq:DamageReport ;
+    rdfs:label   "Landslide Risk"@en ;
+    rdfs:label   "土砂災害リスク"@ja ;
+    rdfs:comment "Landslide or slope failure triggered by seismic shaking."@en .
+
+# Risk level — used in your simulator
+eq:landslideRiskLevel a owl:DatatypeProperty ;
+    rdfs:domain  eq:LandslideRisk ;
+    rdfs:range   xsd:string ;
+    rdfs:label   "landslide risk level"@en ;
+    rdfs:comment "One of: low, moderate, high, critical"@en .
+
+# Did a landslide actually occur?
+eq:landslideOccurred a owl:DatatypeProperty ;
+    rdfs:domain  eq:LandslideRisk ;
+    rdfs:range   xsd:boolean ;
+    rdfs:label   "landslide occurred"@en ;
+    rdfs:label   "土砂災害発生"@ja .
+
+# How many landslide events?
+eq:numberOfLandslides a owl:DatatypeProperty ;
+    rdfs:domain  eq:LandslideRisk ;
+    rdfs:range   xsd:integer ;
+    rdfs:label   "number of landslides"@en ;
+    rdfs:label   "土砂崩れ件数"@ja .
+
+# Volume of material displaced
+eq:volumeDisplacedM3 a owl:DatatypeProperty ;
+    rdfs:domain  eq:LandslideRisk ;
+    rdfs:range   xsd:decimal ;
+    rdfs:label   "volume displaced (m³)"@en .
+
+# Which terrain type? Affects risk calculation
+eq:terrainType a owl:DatatypeProperty ;
+    rdfs:domain  eq:LandslideRisk ;
+    rdfs:range   xsd:string ;
+    rdfs:label   "terrain type"@en ;
+    rdfs:comment "e.g. volcanic, sedimentary, granite"@en .
+
+# ─────────────────────────────────────────────
+# NUCLEAR INCIDENT CLASS
+# ─────────────────────────────────────────────
+
+eq:NuclearIncident a owl:Class ;
+    rdfs:subClassOf eq:DamageReport ;
+    rdfs:label   "Nuclear Incident"@en ;
+    rdfs:label   "原子力事故"@ja ;
+    rdfs:comment "A nuclear facility impact or risk event associated with a seismic event."@en .
+
+# Name of the facility
+eq:facilityName a owl:DatatypeProperty ;
+    rdfs:domain  eq:NuclearIncident ;
+    rdfs:range   xsd:string ;
+    rdfs:label   "facility name"@en ;
+    rdfs:label   "施設名"@ja ;
+    rdfs:comment "e.g. Fukushima Daiichi, Onagawa, Kashiwazaki-Kariwa"@en .
+
+# How far was the facility from the epicentre?
+eq:distanceFromEpicentreKm a owl:DatatypeProperty ;
+    rdfs:domain  eq:NuclearIncident ;
+    rdfs:range   xsd:decimal ;
+    rdfs:label   "distance from epicentre (km)"@en .
+
+# INES scale — international nuclear event scale 0-7
+eq:inesLevel a owl:DatatypeProperty ;
+    rdfs:domain  eq:NuclearIncident ;
+    rdfs:range   xsd:integer ;
+    rdfs:label   "INES level"@en ;
+    rdfs:comment "International Nuclear Event Scale: 0 (no impact) to 7 (major accident)"@en .
+
+# Was automatic shutdown triggered?
+eq:scramActivated a owl:DatatypeProperty ;
+    rdfs:domain  eq:NuclearIncident ;
+    rdfs:range   xsd:boolean ;
+    rdfs:label   "SCRAM activated"@en ;
+    rdfs:comment "Whether the automatic emergency shutdown of the reactor was triggered"@en .
+
+# Cooling system status
+eq:coolingSystemIntact a owl:DatatypeProperty ;
+    rdfs:domain  eq:NuclearIncident ;
+    rdfs:range   xsd:boolean ;
+    rdfs:label   "cooling system intact"@en ;
+    rdfs:label   "冷却システム正常"@ja .
+
+# ─────────────────────────────────────────────
+# OBJECT PROPERTIES — connecting damage to earthquake
+# ─────────────────────────────────────────────
+
+eq:hasShakingDamage a owl:ObjectProperty ;
+    rdfs:domain  eq:Earthquake ;
+    rdfs:range   eq:ShakingDamage ;
+    rdfs:label   "has shaking damage"@en .
+
+eq:hasFireRisk a owl:ObjectProperty ;
+    rdfs:domain  eq:Earthquake ;
+    rdfs:range   eq:FireAfterQuake ;
+    rdfs:label   "has fire after quake"@en .
+
+eq:hasLandslideRisk a owl:ObjectProperty ;
+    rdfs:domain  eq:Earthquake ;
+    rdfs:range   eq:LandslideRisk ;
+    rdfs:label   "has landslide risk"@en .
+
+eq:hasNuclearIncident a owl:ObjectProperty ;
+    rdfs:domain  eq:Earthquake ;
+    rdfs:range   eq:NuclearIncident ;
+    rdfs:label   "has nuclear incident"@en .
