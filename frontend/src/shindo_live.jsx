@@ -288,7 +288,7 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
     setLoading(false)
   }
 
-  // ── MAP CLICK → SIMULATION ───────────────────────────────────
+// ── MAP CLICK → SIMULATION ───────────────────────────────────
   const onClick = async e => {
     if(loading) return
     const rect=svgRef.current.getBoundingClientRect()
@@ -299,7 +299,8 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
     const [lon,lat]=proj.current.invert([mx,my])
     if(lat<23||lat>47||lon<120||lon>150) return
     const [ex,ey]=proj.current([lon,lat])
-    setEpi({lat,lon,x:ex,y:ey}); setWk(k=>k+1); setAna(null)
+    setEpi({lat,lon,x:ex,y:ey}); setWk(k=>k+1); setAna(null); setPredictData(null)
+    setChatMsgs([{role:"assistant", text:"Hello — I'm 震度 (Shindo), your seismic risk assistant.\n\nClick anywhere on Japan to run a simulation, then ask me anything about the event, fault zones, or historical precedents."}])
     runAnalysis(lat, lon, mag, dep)
   }
 
