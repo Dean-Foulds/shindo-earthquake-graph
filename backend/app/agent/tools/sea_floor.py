@@ -1,10 +1,9 @@
-from app.db import Neo4jService
-
 DEFINITION = {
     "name": "get_sea_floor_depth",
     "description": (
         "Looks up the sea floor depth or land elevation at a given "
-        "latitude and longitude. "
+        "latitude and longitude using pre-computed GEBCO data stored "
+        "in the Neo4j knowledge graph. "
         "Returns depth in metres — negative means ocean floor, "
         "positive means land above sea level. "
         "Always call this first before any tsunami or damage assessment."
@@ -12,7 +11,7 @@ DEFINITION = {
     "input_schema": {
         "type": "object",
         "properties": {
-            "latitude":  {
+            "latitude": {
                 "type": "number",
                 "description": "Latitude of the point (24 to 50 for Japan)"
             },
@@ -25,8 +24,16 @@ DEFINITION = {
     }
 }
 
-async def get_sea_floor_depth(latitude: float, longitude: float) -> dict:
-    db = Neo4jService()
+async def get_sea_floor_depth(
+    latitude  : float,
+    longitude : float,
+    db        = None
+) -> dict:
+    """
+    Finds the nearest Earthquake node in Neo4j and returns
+    its pre-computed GEBCO sea floor depth.
+    db is injected from the FastAPI route — no new driver created.
+    """
     rows = await db.cypher_read("""
         MATCH (e:Earthquake)
         WHERE e.seaFloorDepthM IS NOT NULL

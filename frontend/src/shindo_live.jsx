@@ -52,7 +52,7 @@ function ChatBubble({msg}) {
 }
 
 const MAP_W = 390, MAP_H = 518
-const KM_PX = 1040 * Math.PI / 180 / 111.12   // ~0.163 svg-px per km
+const KM_PX = 1040 * Math.PI / 180 / 111.12
 const API_HEADERS = {
   "Content-Type": "application/json",
   "x-api-key": import.meta.env.VITE_ANTHROPIC_KEY,
@@ -179,7 +179,6 @@ export default function Shindo({ chat }) {
   const intelRef  = useRef(null)
   const outerRef  = useRef(null)
 
-
   const svgRef    = useRef(null)
   const zoomRef   = useRef(null)
   const proj      = useRef(makeProj())
@@ -196,14 +195,16 @@ export default function Shindo({ chat }) {
   const [ana,   setAna]   = useState(null)
   const [loading,setLoading] = useState(false)
   const [showFaults,setShowFaults] = useState(true)
+
+  // ── NEW: Neo4j-backed prediction state ───────────────────────
+  const [predictData, setPredictData] = useState(null)
+
   const { chatMsgs, setChatMsgs, chatInput, setChatInput, chatLoading, setChatLoading } = chat
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({behavior:"smooth"}) }, [chatMsgs])
 
-  // Precompute projected pref positions
   const prefXY = useMemo(() => PREFS.map(p => { const [x,y]=proj.current([p.lon,p.lat]); return {...p,x,y} }), [])
 
-  // Plexus network links between nearby prefectures
   const plexusLinks = useMemo(() => {
     const links=[]; const T=145
     for(let i=0;i<prefXY.length;i++) for(let j=i+1;j<prefXY.length;j++) {
@@ -213,14 +214,12 @@ export default function Shindo({ chat }) {
     return links
   }, [prefXY])
 
-  // d3-zoom setup
   useEffect(() => {
     const svg = d3.select(svgRef.current)
     const zoom = d3.zoom().scaleExtent([0.4,10])
       .on("zoom", ({transform:t}) => setMapT({x:t.x,y:t.y,k:t.k}))
     zoomRef.current = zoom
     svg.call(zoom)
-    // On mobile, start zoomed out so all of Japan is visible
     if (window.innerWidth < 768) {
       const k = 0.62
       const cx = MAP_W / 2, cy = MAP_H / 2
@@ -229,9 +228,6 @@ export default function Shindo({ chat }) {
     return () => { svg.on(".zoom", null) }
   }, [])
 
-  // Scroll chat to bottom
-
-  // Load Japan topojson
   useEffect(()=>{
     const load = async () => {
       if(!window.topojson){
@@ -255,6 +251,19 @@ export default function Shindo({ chat }) {
   // ── CORE ANALYSIS ────────────────────────────────────────────
   const runAnalysis = async (lat, lon, currentMag, currentDep) => {
     setLoading(true)
+    setPredictData(null) // ← reset Neo4j data on new analysis
+
+    // ── NEW: call Neo4j-backed agent endpoint in parallel ───────
+    fetch(`${import.meta.env.VITE_API_URL}/agent/predict`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lat, lon, magnitude: currentMag })
+    })
+    .then(r => r.json())
+    .then(d => setPredictData(d))
+    .catch(err => console.warn("[predict]", err))
+    // ── end new block ────────────────────────────────────────────
+
     try{
       const res=await fetch("https://api.anthropic.com/v1/messages",{
         method:"POST", headers:API_HEADERS,
@@ -300,6 +309,7 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
     if (!epi) return
     clearTimeout(sliderTimerRef.current)
     sliderTimerRef.current = setTimeout(() => {
+      setPredictData(null) // ← reset on slider change too
       runAnalysis(epi.lat, epi.lon, mag, dep)
     }, 800)
     return () => clearTimeout(sliderTimerRef.current)
@@ -316,6 +326,10 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
       fault_zone:ana?.fault_zone, severity:ana?.severity,
       affected:ana?.affected_prefectures?.map(p=>p.name)||[],
       tsunami_risk:ana?.tsunami?.risk, cascade:ana?.cascade_chain||[],
+      // ── NEW: include Neo4j prediction context in chat ──────────
+      neo4j_wave_range: predictData ? `${predictData.wave_height_min_m}–${predictData.wave_height_max_m}m` : null,
+      neo4j_jma_warning: predictData?.jma_warning_en || null,
+      neo4j_historical_basis: predictData?.historical_basis || null,
     } : null
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/agent/chat`, {
@@ -390,13 +404,11 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
 
           <g transform={tStr}>
 
-            {/* Plexus network lines */}
             {plexusLinks.map((lk,i)=>(
               <line key={i} x1={lk.x1} y1={lk.y1} x2={lk.x2} y2={lk.y2}
                 stroke="#00b4d8" strokeWidth="0.4" opacity={Math.max(0.04,0.2-lk.d/145*0.16)}/>
             ))}
 
-            {/* Fault lines */}
             {showFaults&&faultPaths.map(fl=>{
               const act=fl.id===activeFault
               const dash=fl.type==="strike_slip"?"8 4":fl.type==="reverse"?"3 3":undefined
@@ -409,7 +421,6 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
               </g>)
             })}
 
-            {/* Japan landmass */}
             {jpFeature&&<g filter="url(#landGlow)">
               <path d={pg.current(jpFeature)} fill="#020d1a" stroke="#00e5ff" strokeWidth="1.2" opacity="0.9"/>
             </g>}
@@ -419,7 +430,6 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
               </g>
             ))}
 
-            {/* ── TREMOR DAMAGE ZONES (intensity rings from epicenter) */}
             {epi&&ana?.affected_prefectures?.length>0&&(
               [...ana.affected_prefectures]
                 .filter(ap=>ap.distance_km)
@@ -435,7 +445,6 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
                 })
             )}
 
-            {/* ── TSUNAMI INLAND FLOOD ZONES */}
             {epi&&tsunamiOn&&ana?.affected_prefectures
               ?.filter(ap=>(ap.risk==="tsunami"||ap.risk==="both")&&PREFS.find(p=>p.id===ap.id)?.coast!=="inland")
               .map(ap=>{
@@ -464,13 +473,11 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
               })
             }
 
-            {/* Active plexus highlight lines */}
             {epi&&ana&&prefXY.filter(p=>aSet.has(p.id)).map(p=>(
               <line key={`apl-${p.id}`} x1={p.x} y1={p.y} x2={epi.x} y2={epi.y}
                 stroke="#00e5ff" strokeWidth="0.6" opacity="0.2" strokeDasharray="4 5"/>
             ))}
 
-            {/* Prefecture nodes */}
             {prefXY.map(p=>{
               const hit=aSet.has(p.id), tsHit=tsSet.has(p.id)
               const info=ana?.affected_prefectures?.find(a=>a.id===p.id)
@@ -483,7 +490,6 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
               </g>)
             })}
 
-            {/* Nuclear markers */}
             {NUCLEAR.map(n=>{
               const [x,y]=proj.current([n.lon,n.lat])
               const ar=nSet.has(n.id)
@@ -501,7 +507,6 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
               </g>)
             })}
 
-            {/* Tsunami propagation pulses */}
             {epi&&tsunamiOn&&ana?.affected_prefectures?.filter(ap=>(ap.risk==="tsunami"||ap.risk==="both")&&PREFS.find(p=>p.id===ap.id)?.coast!=="inland").map(ap=>{
               const pf=PREFS.find(p=>p.id===ap.id); if(!pf) return null
               const [px,py]=proj.current([pf.lon,pf.lat])
@@ -514,26 +519,22 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
               </g>)
             })}
 
-            {/* Nuclear cascade lines */}
             {epi&&ana?.nuclear_risk?.filter(n=>n.risk!=="none").map(nr=>{
               const pl=NUCLEAR.find(n=>n.id===nr.id); if(!pl) return null
               const [nx,ny]=proj.current([pl.lon,pl.lat])
               return <line key={nr.id} x1={epi.x} y1={epi.y} x2={nx} y2={ny} stroke="#ff4422" strokeWidth="0.9" strokeDasharray="5 3" opacity="0.65"/>
             })}
 
-            {/* Seismic waves */}
             {epi&&[0,1,2].map(i=>(<circle key={`sw${wk}${i}`} cx={epi.x} cy={epi.y} r="4" fill="none" stroke="#ff4422" strokeWidth={2-i*0.5}>
               <animate attributeName="r" from="4" to={wR} dur={`${2.8+i*0.5}s`} begin={`${i*0.9}s`} repeatCount="indefinite"/>
               <animate attributeName="opacity" from="0.9" to="0" dur={`${2.8+i*0.5}s`} begin={`${i*0.9}s`} repeatCount="indefinite"/>
             </circle>))}
 
-            {/* Tsunami waves */}
             {epi&&tsunamiOn&&[0,1,2,3].map(i=>(<circle key={`tw${wk}${i}`} cx={epi.x} cy={epi.y} r="12" fill="none" stroke="#00b4d8" strokeWidth={1.8-i*0.3}>
               <animate attributeName="r" from="12" to={tsR} dur={`${6+i*1.6}s`} begin={`${i*1.6}s`} repeatCount="indefinite"/>
               <animate attributeName="opacity" from="0.7" to="0" dur={`${6+i*1.6}s`} begin={`${i*1.6}s`} repeatCount="indefinite"/>
             </circle>))}
 
-            {/* Destruction flash icons */}
             {epi&&ana?.affected_prefectures?.map(ap=>{
               const pf=PREFS.find(p=>p.id===ap.id); if(!pf) return null
               const [px,py]=proj.current([pf.lon,pf.lat])
@@ -561,7 +562,6 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
               </g>)
             })}
 
-            {/* Nuclear flash icons */}
             {epi&&ana?.nuclear_risk?.filter(n=>n.risk==="critical"||n.risk==="elevated").map(nr=>{
               const pl=NUCLEAR.find(n=>n.id===nr.id); if(!pl) return null
               const [nx,ny]=proj.current([pl.lon,pl.lat])
@@ -581,7 +581,6 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
               </g>)
             })}
 
-            {/* Epicenter */}
             {epi&&<g filter="url(#epiGlow)">
               <circle cx={epi.x} cy={epi.y} r={6} fill="#ff3322"/>
               <line x1={epi.x-18} y1={epi.y} x2={epi.x-10} y2={epi.y} stroke="#ff3322" strokeWidth={2.5}/>
@@ -589,10 +588,9 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
               <line x1={epi.x} y1={epi.y-18} x2={epi.x} y2={epi.y-10} stroke="#ff3322" strokeWidth={2.5}/>
               <line x1={epi.x} y1={epi.y+10} x2={epi.x} y2={epi.y+18} stroke="#ff3322" strokeWidth={2.5}/>
             </g>}
-          </g>{/* end zoomable group */}
+          </g>
         </svg>
 
-        {/* Map overlay UI */}
         <div style={{position:"absolute",bottom:10,left:10,fontSize:11,color:"#0099bb",lineHeight:1.9,pointerEvents:"auto"}}>
           <div style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",opacity:showFaults?1:0.4}}
             onClick={e=>{e.stopPropagation();setShowFaults(f=>!f)}}>
@@ -609,7 +607,7 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
             <span>NUCLEAR</span>
           </div>
         </div>
-        {/* Zoom controls */}
+
         <div style={{position:"absolute",top:10,right:10,display:"inline-flex",flexDirection:"column",gap:3,width:"fit-content"}}>
           {[{l:"+",s:1.5},{l:"−",s:1/1.5},{l:"⌂",s:null}].map(({l,s})=>(
             <button key={l} onClick={e=>{
@@ -623,6 +621,7 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
             </button>
           ))}
         </div>
+
         {epi&&<div style={{position:"absolute",bottom:10,right:10,fontSize:11,color:"#00aacc",textAlign:"right",lineHeight:1.7}}>
           <div>{epi.lat.toFixed(2)}°N {epi.lon.toFixed(2)}°E</div>
           <div>M{mag.toFixed(1)} · {dep}km · ×{mapT.k.toFixed(1)}</div>
@@ -638,37 +637,45 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
         flexDirection:"column",
         overflow:"hidden",
       }}>
-        {/* Header + controls */}
         <div style={{padding:"10px 12px 8px",borderBottom:"1px solid #001a33",background:"#000b1a",flexShrink:0}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:8}}>
             <span style={{fontSize:14,fontWeight:700,letterSpacing:"0.06em",color:"#00e5ff",textShadow:"0 0 12px rgba(0,229,255,0.5)"}}>震度</span>
             <span style={{fontSize:10,color:"#0099bb",letterSpacing:"0.1em",fontWeight:600}}>SEISMIC INTEL</span>
           </div>
-          {[["MAG",4,9.1,0.1,mag,v=>setMag(parseFloat(v)),mag.toFixed(1)],["DEPTH",5,100,5,dep,v=>setDep(parseInt(v)),dep+"km"]].map(([l,mn,mx,st,val,fn,d])=>(
-            <div key={l} style={{display:"flex",alignItems:"center",gap:6,marginBottom:l==="MAG"?4:0}}>
-              <span style={{fontSize:11,color:"#00aacc",letterSpacing:"0.07em",minWidth:42,fontWeight:600}}>{l}</span>
-              <input type="range" min={mn} max={mx} step={st} value={val} onChange={e=>fn(e.target.value)}
-                style={{flex:1,accentColor:"#00e5ff",height:3}}/>
-              <span style={{fontSize:11,fontWeight:700,minWidth:32,textAlign:"right",color:"#00e5ff"}}>{d}</span>
+          {/* Magnitude slider only — depth removed, now auto from GEBCO */}
+          <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:0}}>
+            <span style={{fontSize:11,color:"#00aacc",letterSpacing:"0.07em",minWidth:42,fontWeight:600}}>MAG</span>
+            <input type="range" min={4} max={9.1} step={0.1} value={mag} onChange={e=>setMag(parseFloat(e.target.value))}
+              style={{flex:1,accentColor:"#00e5ff",height:3}}/>
+            <span style={{fontSize:11,fontWeight:700,minWidth:32,textAlign:"right",color:"#00e5ff"}}>{mag.toFixed(1)}</span>
+          </div>
+          {/* Show auto sea floor depth from Neo4j if available */}
+          {predictData?.sea_floor_depth_m != null && (
+            <div style={{fontSize:10,color:"#004466",marginTop:4,letterSpacing:"0.05em"}}>
+              DEPTH AUTO: {predictData.sea_floor_depth_m > 0 ? "+" : ""}{predictData.sea_floor_depth_m}m
+              <span style={{marginLeft:6,color: predictData.is_offshore ? "#0077aa" : "#006633"}}>
+                {predictData.is_offshore ? "OFFSHORE" : "ONSHORE"}
+              </span>
             </div>
-          ))}
+          )}
         </div>
 
-        {/* Analysis content */}
         <div style={{flex:1,overflowY:"auto",padding:"10px 12px"}}>
           {!epi&&!loading&&<div style={{paddingTop:32,textAlign:"center"}}>
             <div style={{fontSize:28,marginBottom:8,color:"#00e5ff",opacity:0.15,fontWeight:700}}>震</div>
             <div style={{fontSize:12,color:"#0099bb",letterSpacing:"0.08em",fontWeight:600}}>CLICK MAP TO SIMULATE</div>
             <div style={{fontSize:11,marginTop:6,color:"#006688"}}>Scroll to zoom · Drag to pan</div>
           </div>}
+
           {loading&&<div style={{paddingTop:32,textAlign:"center",lineHeight:2.4}}>
             <div style={{fontSize:12,color:"#00e5ff",marginBottom:4,letterSpacing:"0.08em",fontWeight:700}}>ANALYSING</div>
-            {["FAULT ZONES","TREMOR EXTENT","TSUNAMI PATH","NUCLEAR RISK"].map(s=>(
+            {["FAULT ZONES","TREMOR EXTENT","TSUNAMI PATH","NUCLEAR RISK","NEO4J INFERENCE"].map(s=>(
               <div key={s} style={{fontSize:11,color:"#0077aa",fontWeight:600}}>{s}</div>
             ))}
           </div>}
 
           {ana&&!loading&&<div style={{fontSize:12}}>
+
             {/* Severity badge */}
             <div style={{padding:"6px 10px",borderRadius:5,marginBottom:9,background:sev[0],border:`1px solid ${sev[1]}40`,
               display:"flex",justifyContent:"space-between",alignItems:"center",boxShadow:`0 0 14px ${sev[1]}22`}}>
@@ -715,6 +722,65 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
                   {p.tsunami_height_m&&<span style={{fontSize:12,color:"#00e5ff",fontWeight:700}}>{p.tsunami_height_m}m</span>}
                 </div>
               ))}
+
+              {/* ── NEW: Neo4j historical basis section ─────────── */}
+              {predictData?.nearest_events?.length > 0 && (
+                <div style={{marginTop:8,borderTop:"1px solid #002244",paddingTop:7}}>
+                  <div style={{fontSize:10,color:"#005577",letterSpacing:"0.06em",fontWeight:600,marginBottom:5,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                    <span>NEO4J HISTORICAL BASIS</span>
+                    <span style={{color:"#003344"}}>{predictData.historical_basis} events</span>
+                  </div>
+
+                  {/* JMA warning from Neo4j */}
+                  {predictData.jma_warning_ja && (
+                    <div style={{marginBottom:6,padding:"4px 8px",background:"#1a0005",border:"1px solid #440011",borderRadius:4,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <span style={{fontSize:10,color:"#883333",fontWeight:600}}>JMA</span>
+                      <span style={{fontSize:11,color:"#ff4444",fontWeight:700}}>{predictData.jma_warning_ja}</span>
+                    </div>
+                  )}
+
+                  {/* Wave range from real data */}
+                  <div style={{display:"flex",gap:8,marginBottom:6}}>
+                    <div>
+                      <div style={{fontSize:10,color:"#005577",fontWeight:600}}>OBSERVED RANGE</div>
+                      <div style={{fontSize:13,color:"#00ccdd",fontWeight:700}}>
+                        {predictData.wave_height_min_m}–{predictData.wave_height_max_m}m
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{fontSize:10,color:"#005577",fontWeight:600}}>AVG</div>
+                      <div style={{fontSize:13,color:"#00ccdd",fontWeight:700}}>
+                        {predictData.wave_height_avg_m}m
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Nearest historical events */}
+                  {predictData.nearest_events.slice(0,3).map((ev,i) => (
+                    <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",
+                      padding:"3px 7px",marginBottom:2,
+                      background:"#00050f",border:"1px solid #001a2e",borderRadius:3}}>
+                      <span style={{fontSize:10,color:"#006688",fontWeight:600,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                        {ev.location || "Unknown"}
+                      </span>
+                      <span style={{fontSize:10,color:"#004455",marginLeft:4,whiteSpace:"nowrap"}}>
+                        M{ev.magnitude}
+                      </span>
+                      <span style={{fontSize:10,color:"#00aacc",fontWeight:700,marginLeft:4,whiteSpace:"nowrap"}}>
+                        {ev.waveHeight}m
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Show loading indicator while Neo4j data is incoming */}
+              {!predictData && tsunamiOn && (
+                <div style={{marginTop:8,borderTop:"1px solid #001a33",paddingTop:6,fontSize:10,color:"#003344",letterSpacing:"0.06em"}}>
+                  NEO4J INFERENCE LOADING...
+                </div>
+              )}
+              {/* ── end Neo4j section ────────────────────────────── */}
             </div>}
 
             {/* Shaking */}
@@ -759,8 +825,6 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
           </div>}
         </div>
       </div>
-
-
 
       {/* ══════════════════════════════════════════════════════════
           震度 CHAT PANEL

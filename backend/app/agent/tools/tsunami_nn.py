@@ -1,5 +1,3 @@
-from app.db import Neo4jService
-
 DEFINITION = {
     "name": "get_tsunami_nearest_neighbours",
     "description": (
@@ -7,7 +5,6 @@ DEFINITION = {
         "historical tsunami events based on magnitude, sea floor depth, "
         "and latitude. Returns measured wave heights, casualties, and "
         "building damage from real past events. "
-        "Use this to infer likely tsunami impact for a simulated event. "
         "Only call this when a tsunami warning has been issued."
     ),
     "input_schema": {
@@ -30,39 +27,38 @@ DEFINITION = {
     }
 }
 
+QUERY = """
+    MATCH (e:Earthquake)-[:TRIGGERED]->(t:Tsunami)
+    WHERE t.waveHeightAtShoreM IS NOT NULL
+      AND t.waveHeightAtShoreM > 0.1
+      AND abs(e.momentMagnitude - $mag) < 1.5
+      AND abs(e.seaFloorDepthM  - $depth) < 1000
+      AND abs(e.epicentreLat    - $lat) < 5.0
+    WITH e, t,
+         abs(e.momentMagnitude - $mag) * 2.0     AS magScore,
+         abs(e.seaFloorDepthM  - $depth) / 500.0 AS depthScore,
+         abs(e.epicentreLat    - $lat)            AS latScore
+    RETURN t.waveHeightAtShoreM   AS waveHeight,
+           t.tsunamiFatalities    AS fatalities,
+           t.buildingsWashedAway  AS buildingsDestroyed,
+           t.numberOfRunups       AS observationPoints,
+           t.locationName         AS location,
+           e.momentMagnitude      AS magnitude,
+           e.seaFloorDepthM       AS seaFloorDepth,
+           e.hypocentralDepthKm   AS hypocentralDepth,
+           round(magScore + depthScore + latScore, 3) AS similarity
+    ORDER BY similarity / log(t.numberOfRunups + 2)
+    LIMIT 5
+"""
+
 async def get_tsunami_nearest_neighbours(
-    magnitude: float,
-    sea_floor_depth: float,
-    latitude: float
+    magnitude       : float,
+    sea_floor_depth : float,
+    latitude        : float,
+    db              = None
 ) -> dict:
-    db = Neo4jService()
-
-    query = """
-        MATCH (e:Earthquake)-[:TRIGGERED]->(t:Tsunami)
-        WHERE t.waveHeightAtShoreM IS NOT NULL
-          AND t.waveHeightAtShoreM > 0.1
-          AND abs(e.momentMagnitude - $mag) < 1.5
-          AND abs(e.seaFloorDepthM  - $depth) < 1000
-          AND abs(e.epicentreLat    - $lat) < 5.0
-        WITH e, t,
-             abs(e.momentMagnitude - $mag) * 2.0     AS magScore,
-             abs(e.seaFloorDepthM  - $depth) / 500.0 AS depthScore,
-             abs(e.epicentreLat    - $lat)            AS latScore
-        RETURN t.waveHeightAtShoreM   AS waveHeight,
-               t.tsunamiFatalities    AS fatalities,
-               t.buildingsWashedAway  AS buildingsDestroyed,
-               t.numberOfRunups       AS observationPoints,
-               t.locationName         AS location,
-               e.momentMagnitude      AS magnitude,
-               e.seaFloorDepthM       AS seaFloorDepth,
-               e.hypocentralDepthKm   AS hypocentralDepth,
-               round(magScore + depthScore + latScore, 3) AS similarity
-        ORDER BY similarity / log(t.numberOfRunups + 2)
-        LIMIT 5
-    """
-
     rows = await db.cypher_read(
-        query,
+        QUERY,
         params={"mag": magnitude, "depth": sea_floor_depth, "lat": latitude}
     )
 

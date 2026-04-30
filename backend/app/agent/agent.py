@@ -16,11 +16,16 @@ TOOL_FUNCTIONS = {
 }
 
 async def run_impact_agent(
-    latitude: float,
-    longitude: float,
-    magnitude: float = 7.5
+    latitude  : float,
+    longitude : float,
+    magnitude : float = 7.5,
+    db        = None
 ) -> dict:
-
+    """
+    Runs the earthquake impact agent for a given lat/lon + magnitude.
+    db is the Neo4jService instance injected from the FastAPI route
+    so tools don't need to create their own driver in a thread.
+    """
     client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
     messages = [{
@@ -48,7 +53,8 @@ async def run_impact_agent(
             for block in response.content:
                 if block.type == "tool_use":
                     fn     = TOOL_FUNCTIONS[block.name]
-                    result = await fn(**block.input)
+                    # Pass the shared db instance to every tool
+                    result = await fn(**block.input, db=db)
                     tool_results.append({
                         "type"       : "tool_result",
                         "tool_use_id": block.id,
@@ -63,14 +69,11 @@ async def run_impact_agent(
                 (b.text for b in response.content if hasattr(b, "text")), "{}"
             )
             try:
-                clean = (
-                    final_text.strip()
-                    .removeprefix("```json")
-                    .removeprefix("```")
-                    .removesuffix("```")
-                    .strip()
-                )
-                return json.loads(clean)
+                start = final_text.find("{")
+                end   = final_text.rfind("}") + 1
+                if start != -1 and end > start:
+                    return json.loads(final_text[start:end])
+                return {"error": "No JSON found in response"}
             except json.JSONDecodeError:
                 return {
                     "damage_summary": final_text,

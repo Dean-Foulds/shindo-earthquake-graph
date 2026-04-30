@@ -114,5 +114,13 @@ class Neo4jService:
         return {r["type"]: r["count"] for r in rows if r["type"]}
 
 
-def get_db():
-    return Neo4jService()
+
+
+# With:
+_db_instance: Optional["Neo4jService"] = None
+
+def get_db() -> "Neo4jService":
+    global _db_instance
+    if _db_instance is None:
+        _db_instance = Neo4jService()
+    return _db_instance

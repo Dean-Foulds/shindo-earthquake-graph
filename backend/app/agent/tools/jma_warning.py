@@ -22,8 +22,11 @@ DEFINITION = {
     }
 }
 
-async def get_jma_warning_level(magnitude: float,
-                                 sea_floor_depth: float) -> dict:
+async def get_jma_warning_level(
+    magnitude       : float,
+    sea_floor_depth : float,
+    db              = None   # accepted but not used — rule-based logic only
+) -> dict:
     if sea_floor_depth >= 0:
         return {
             "warning_issued"     : False,
