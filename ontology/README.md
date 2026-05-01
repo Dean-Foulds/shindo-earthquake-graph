@@ -185,6 +185,64 @@ Magnitude is weighted 2× — because a M7 and M9 are fundamentally different ev
 
 ---
 
+## Perseus Knowledge Graph Enrichment
+
+The ontology was used to build a knowledge graph via [Lettria Perseus](https://docs.perseus.lettria.net), enriching the database with detailed damage chain data extracted from natural language event reports.
+
+### Source document
+
+`data/japanese_earthquake_events.txt` — prose reports covering six major historical earthquakes:
+
+| Event | Date | Magnitude |
+|---|---|---|
+| Tōhoku Earthquake and Tsunami | 11 March 2011 | M9.1 |
+| Great Hanshin Earthquake (Kobe) | 17 January 1995 | M6.9 |
+| Noto Peninsula Earthquake | 1 January 2024 | M7.6 |
+| Fukushima Aftershock | 11 April 2011 | M7.1 |
+| Kumamoto Earthquakes | 14–16 April 2016 | M6.2 / M7.0 |
+| Tokachi-Oki Earthquake | 26 September 2003 | M8.3 |
+
+### Extraction pipeline
+
+1. TTL ontology uploaded to Perseus console as the extraction schema
+2. Source text file uploaded to Perseus Files
+3. Graph built — Perseus extracted entities and relationships from prose
+4. Graph exported as CQL and migrated to Neo4j Aura
+5. 15 duplicate Prefecture nodes merged using `apoc.refactor.mergeNodes`
+6. All new node types embedded with Voyage AI `voyage-3` via `04_embed_graph.py`
+
+### Nodes added to Neo4j
+
+| Node label | Count | Key properties |
+|---|---|---|
+| `ShakingDamage` | 6 | shakingFatalities, shakingInjuries, buildingsTotallyDestroyed |
+| `TsunamiEvent` | 5 | tsunamiGenerated, minutesToShore |
+| `InundationZone` | 5 | inundationDistanceKm, maxInlandElevationM, inundationAreaKm2 |
+| `LandslideRisk` | 5 | landslideRiskLevel, landslideOccurred, numberOfLandslides, terrainType |
+| `FireAfterQuake` | 4 | numberOfFires, fireCause, areaBurnedHectares, buildingsBurnedDown |
+| `TsunamiWarning` | 4 | warningLevel, minutesFromQuakeToWarning |
+| `WaveProfile` | 3 | waveHeightAtSourceM, waveHeightAtShoreM, waveSpeedKmh |
+| `TsunamiDamage` | 3 | tsunamiFatalities, tsunamiMissing, buildingsWashedAway |
+| `NuclearIncident` | 3 | facilityName, inesLevel, scramActivated, coolingSystemIntact |
+| `DamageReport` | 3 | reportDateTime, reportedBy |
+| `City` | 33 | cityName, distanceFromEpicentreKm |
+
+### Prefecture enrichment
+
+Perseus also added `prefectureCode` (JIS 2-digit codes) to 15 existing Prefecture nodes, enabling standard administrative lookup by code.
+
+### Updated database statistics
+
+| Metric | Value |
+|---|---|
+| Total earthquake nodes | 33,875 |
+| Prefecture nodes | 47 (with JIS codes on 15) |
+| City nodes | 33 (new — sub-prefecture granularity) |
+| Damage chain node types | 10 |
+| Vector indexes | 12 (5 original + 7 new) |
+
+---
+
 ## Author
 
 Dean Foulds — deanfoulds.xyz  

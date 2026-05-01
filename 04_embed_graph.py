@@ -1,8 +1,9 @@
 """
 SHINDO — Step 4: Generate vector embeddings for graph nodes
 ============================================================
-Embeds Earthquake, FaultZone, NuclearFacility, and Prefecture nodes
-using Voyage AI (Anthropic's recommended embedding partner).
+Embeds Earthquake, FaultZone, NuclearFacility, Prefecture, Tsunami,
+ShakingDamage, TsunamiEvent, InundationZone, LandslideRisk,
+FireAfterQuake, NuclearIncident, and City nodes using Voyage AI.
 
 Stores embeddings as an `embedding` property on each node and creates
 Neo4j vector indexes so the AURA agent can do similarity search.
@@ -15,10 +16,11 @@ Env vars (add to .env):
     NEO4J_URI / NEO4J_USER / NEO4J_PASSWORD
 
 Usage:
-    python 04_embed_graph.py                    # embed all node types
-    python 04_embed_graph.py --type earthquake  # only earthquakes
-    python 04_embed_graph.py --dry-run          # preview text, no API calls
-    python 04_embed_graph.py --limit 50         # embed first 50 per type
+    python 04_embed_graph.py                       # embed all node types
+    python 04_embed_graph.py --type earthquake     # only earthquakes
+    python 04_embed_graph.py --type damage         # all Perseus damage nodes
+    python 04_embed_graph.py --dry-run             # preview text, no API calls
+    python 04_embed_graph.py --limit 50            # embed first 50 per type
 """
 
 import os
@@ -133,6 +135,105 @@ def tsunami_text(ts: dict) -> str:
     return " ".join(parts) + "."
 
 
+def _n(v):
+    """Format a numeric value from Neo4j (may be int, float, or str) with commas."""
+    try:
+        return f"{int(v):,}"
+    except (TypeError, ValueError):
+        return str(v)
+
+
+def shaking_damage_text(sd: dict) -> str:
+    parts = ["Shaking damage report."]
+    if sd.get("shakingFatalities"):
+        parts.append(f"{_n(sd['shakingFatalities'])} fatalities from ground shaking.")
+    if sd.get("shakingInjuries"):
+        parts.append(f"{_n(sd['shakingInjuries'])} injuries.")
+    if sd.get("buildingsTotallyDestroyed"):
+        parts.append(f"{_n(sd['buildingsTotallyDestroyed'])} buildings totally destroyed.")
+    if sd.get("buildingsHalfDestroyed"):
+        parts.append(f"{_n(sd['buildingsHalfDestroyed'])} buildings half destroyed.")
+    if sd.get("buildingsPartiallyDamaged"):
+        parts.append(f"{_n(sd['buildingsPartiallyDamaged'])} buildings partially damaged.")
+    if sd.get("reportedBy"):
+        parts.append(f"Reported by {sd['reportedBy']}.")
+    return " ".join(parts)
+
+
+def tsunami_event_text(te: dict) -> str:
+    parts = ["Tsunami event."]
+    generated = te.get("tsunamiGenerated")
+    if generated is not None:
+        parts.append("Tsunami was generated." if generated else "No tsunami generated.")
+    if te.get("minutesToShore"):
+        parts.append(f"Reached nearest shore in {te['minutesToShore']} minutes.")
+    return " ".join(parts)
+
+
+def inundation_zone_text(iz: dict) -> str:
+    parts = ["Tsunami inundation zone."]
+    if iz.get("inundationDistanceKm"):
+        parts.append(f"Inundation reached {iz['inundationDistanceKm']} km inland.")
+    if iz.get("maxInlandElevationM"):
+        parts.append(f"Maximum elevation reached: {iz['maxInlandElevationM']} m above sea level.")
+    if iz.get("inundationAreaKm2"):
+        parts.append(f"Total inundated area: {iz['inundationAreaKm2']} km².")
+    return " ".join(parts)
+
+
+def landslide_risk_text(lr: dict) -> str:
+    parts = ["Landslide risk assessment."]
+    if lr.get("landslideRiskLevel"):
+        parts.append(f"Risk level: {lr['landslideRiskLevel']}.")
+    occurred = lr.get("landslideOccurred")
+    if occurred is not None:
+        parts.append("Landslides occurred." if occurred else "No landslides confirmed.")
+    if lr.get("numberOfLandslides"):
+        parts.append(f"{lr['numberOfLandslides']} slope failures recorded.")
+    if lr.get("terrainType"):
+        parts.append(f"Terrain type: {lr['terrainType']}.")
+    if lr.get("volumeDisplacedM3"):
+        parts.append(f"Volume of material displaced: {lr['volumeDisplacedM3']} m³.")
+    return " ".join(parts)
+
+
+def fire_text(f: dict) -> str:
+    parts = ["Post-earthquake fire report."]
+    if f.get("numberOfFires"):
+        parts.append(f"{f['numberOfFires']} fires ignited.")
+    if f.get("fireCause"):
+        parts.append(f"Primary cause: {f['fireCause']}.")
+    if f.get("areaBurnedHectares"):
+        parts.append(f"Area burned: {f['areaBurnedHectares']} hectares.")
+    if f.get("buildingsBurnedDown"):
+        parts.append(f"{f['buildingsBurnedDown']} buildings destroyed by fire.")
+    return " ".join(parts)
+
+
+def nuclear_incident_text(ni: dict) -> str:
+    parts = ["Nuclear facility incident."]
+    if ni.get("facilityName"):
+        parts.append(f"Facility: {ni['facilityName']}.")
+    if ni.get("inesLevel") is not None:
+        parts.append(f"INES level {ni['inesLevel']}.")
+    scram = ni.get("scramActivated")
+    if scram is not None:
+        parts.append("SCRAM activated." if scram else "SCRAM not triggered.")
+    cooling = ni.get("coolingSystemIntact")
+    if cooling is not None:
+        parts.append("Cooling system intact." if cooling else "Cooling system lost.")
+    if ni.get("distanceFromEpicentreKm"):
+        parts.append(f"Facility located {ni['distanceFromEpicentreKm']} km from epicentre.")
+    return " ".join(parts)
+
+
+def city_text(c: dict) -> str:
+    parts = [f"{c.get('cityName', 'Unknown')} is a city in Japan."]
+    if c.get("distanceFromEpicentreKm"):
+        parts.append(f"Located {c['distanceFromEpicentreKm']} km from the earthquake epicentre.")
+    return " ".join(parts)
+
+
 # ── Neo4j helpers ─────────────────────────────────────────────────
 
 def neo4j_driver():
@@ -143,11 +244,18 @@ def neo4j_driver():
 def create_vector_indexes(driver):
     """Create Neo4j vector indexes for all embedded node types."""
     indexes = [
-        ("earthquake_embedding", "Earthquake"),
-        ("fault_zone_embedding", "FaultZone"),
-        ("nuclear_embedding",    "NuclearFacility"),
-        ("prefecture_embedding", "Prefecture"),
-        ("tsunami_embedding",    "Tsunami"),
+        ("earthquake_embedding",    "Earthquake"),
+        ("fault_zone_embedding",    "FaultZone"),
+        ("nuclear_embedding",       "NuclearFacility"),
+        ("prefecture_embedding",    "Prefecture"),
+        ("tsunami_embedding",       "Tsunami"),
+        ("shaking_damage_embedding","ShakingDamage"),
+        ("tsunami_event_embedding", "TsunamiEvent"),
+        ("inundation_embedding",    "InundationZone"),
+        ("landslide_embedding",     "LandslideRisk"),
+        ("fire_embedding",          "FireAfterQuake"),
+        ("nuclear_incident_embedding", "NuclearIncident"),
+        ("city_embedding",          "City"),
     ]
     with driver.session() as s:
         for idx_name, label in indexes:
@@ -206,6 +314,34 @@ def fetch_tsunamis(driver):
         )]
 
 
+def _fetch_by_elemid(driver, label):
+    with driver.session() as s:
+        return [
+            {"id": r["eid"], **dict(r["n"])}
+            for r in s.run(f"MATCH (n:{label}) RETURN n, elementId(n) AS eid")
+        ]
+
+def fetch_shaking_damage(driver):    return _fetch_by_elemid(driver, "ShakingDamage")
+def fetch_tsunami_events(driver):    return _fetch_by_elemid(driver, "TsunamiEvent")
+def fetch_inundation_zones(driver):  return _fetch_by_elemid(driver, "InundationZone")
+def fetch_landslide_risks(driver):   return _fetch_by_elemid(driver, "LandslideRisk")
+def fetch_fires(driver):             return _fetch_by_elemid(driver, "FireAfterQuake")
+def fetch_nuclear_incidents(driver): return _fetch_by_elemid(driver, "NuclearIncident")
+def fetch_cities(driver):            return _fetch_by_elemid(driver, "City")
+
+
+def write_embeddings_by_elemid(driver, label, records_with_embeddings):
+    q = f"""
+        UNWIND $rows AS row
+        MATCH (n:{label})
+        WHERE elementId(n) = row.id
+        SET n.embedding = row.embedding,
+            n.embedding_text = row.text
+    """
+    with driver.session() as s:
+        s.run(q, rows=records_with_embeddings)
+
+
 def write_embeddings(driver, label, id_field, records_with_embeddings):
     """Batch-write embedding vectors back to Neo4j nodes."""
     q = f"""
@@ -262,7 +398,7 @@ def save_progress(label: str, done_ids: set):
         json.dump(data, f)
 
 
-def embed_nodes(driver, label, id_field, records, text_fn, dry_run=False, limit=None):
+def embed_nodes(driver, label, id_field, records, text_fn, dry_run=False, limit=None, by_elem_id=False):
     """Embed a list of node dicts and write back to Neo4j. Resumes from progress file."""
     if limit:
         records = records[:limit]
@@ -299,7 +435,10 @@ def embed_nodes(driver, label, id_field, records, text_fn, dry_run=False, limit=
 
         # Write each batch immediately so progress is never lost
         if not dry_run:
-            write_embeddings(driver, label, id_field, batch_rows)
+            if by_elem_id:
+                write_embeddings_by_elemid(driver, label, batch_rows)
+            else:
+                write_embeddings(driver, label, id_field, batch_rows)
             save_progress(label, done_ids)
 
         all_rows.extend(batch_rows)
@@ -359,7 +498,9 @@ def semantic_search(driver, query_text: str, label: str = "Earthquake",
 
 def main():
     parser = argparse.ArgumentParser(description="SHINDO — Embed graph nodes")
-    parser.add_argument("--type",    choices=["earthquake","faultzone","nuclear","prefecture","tsunami","all"], default="all")
+    parser.add_argument("--type",    choices=["earthquake","faultzone","nuclear","prefecture","tsunami",
+                                              "damage","shaking","tsunamievent","inundation","landslide",
+                                              "fire","nuclearincident","city","all"], default="all")
     parser.add_argument("--dry-run", action="store_true", help="Preview text without calling Voyage AI")
     parser.add_argument("--limit",   type=int, default=None, help="Max nodes per type (useful for testing)")
     parser.add_argument("--search",  type=str, default=None, help="Run a semantic search test after embedding")
@@ -415,6 +556,36 @@ def main():
         eqs = fetch_earthquakes(driver, limit=args.limit)
         embed_nodes(driver, "Earthquake", "id", eqs, earthquake_text,
                     dry_run=args.dry_run)
+
+    run_damage = run_all or args.type == "damage"
+
+    if run_damage or args.type == "shaking":
+        embed_nodes(driver, "ShakingDamage", "id", fetch_shaking_damage(driver),
+                    shaking_damage_text, dry_run=args.dry_run, limit=args.limit, by_elem_id=True)
+
+    if run_damage or args.type == "tsunamievent":
+        embed_nodes(driver, "TsunamiEvent", "id", fetch_tsunami_events(driver),
+                    tsunami_event_text, dry_run=args.dry_run, limit=args.limit, by_elem_id=True)
+
+    if run_damage or args.type == "inundation":
+        embed_nodes(driver, "InundationZone", "id", fetch_inundation_zones(driver),
+                    inundation_zone_text, dry_run=args.dry_run, limit=args.limit, by_elem_id=True)
+
+    if run_damage or args.type == "landslide":
+        embed_nodes(driver, "LandslideRisk", "id", fetch_landslide_risks(driver),
+                    landslide_risk_text, dry_run=args.dry_run, limit=args.limit, by_elem_id=True)
+
+    if run_damage or args.type == "fire":
+        embed_nodes(driver, "FireAfterQuake", "id", fetch_fires(driver),
+                    fire_text, dry_run=args.dry_run, limit=args.limit, by_elem_id=True)
+
+    if run_damage or args.type == "nuclearincident":
+        embed_nodes(driver, "NuclearIncident", "id", fetch_nuclear_incidents(driver),
+                    nuclear_incident_text, dry_run=args.dry_run, limit=args.limit, by_elem_id=True)
+
+    if run_damage or args.type == "city":
+        embed_nodes(driver, "City", "id", fetch_cities(driver),
+                    city_text, dry_run=args.dry_run, limit=args.limit, by_elem_id=True)
 
     if args.search and not args.dry_run:
         print(f"\n🔍  Semantic search: '{args.search}'")
