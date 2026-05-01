@@ -1,0 +1,472 @@
+JAPANESE EARTHQUAKE EVENT REPORTS
+Compiled for seismic risk analysis. Sources: JMA, Cabinet Office of Japan, IAEA, USGS.
+
+================================================================================
+EVENT 1: 2011 TOHOKU EARTHQUAKE AND TSUNAMI (東北地方太平洋沖地震)
+================================================================================
+
+On 11 March 2011 at 14:46 JST (05:46 UTC), a catastrophic earthquake occurred off the
+Pacific coast of the Tohoku region of Japan. The earthquake had a moment magnitude of 9.1
+and a hypocentral depth of approximately 29 kilometres. The epicentre was located at
+latitude 38.297 degrees north and longitude 142.373 degrees east, within the Japan Trench
+subduction zone approximately 70 kilometres east of the Oshika Peninsula, Miyagi Prefecture.
+The fault type was subduction. The sea floor depth at the epicentre was approximately
+minus 1,565 metres below sea level. JMA recorded a seismic intensity of 7 in parts of
+Miyagi Prefecture, making it the strongest shaking level on the Japanese intensity scale.
+
+Affected Prefectures and Cities
+
+Miyagi Prefecture (JIS code 04) is a coastal prefecture on the Pacific coast of the
+Tohoku region. It was the most severely affected prefecture. The city of Sendai, located
+approximately 97 kilometres southwest of the epicentre, experienced intense shaking and
+coastal inundation. The town of Minamisanriku, approximately 78 kilometres from the
+epicentre, was almost entirely destroyed by the subsequent tsunami. The city of Ishinomaki,
+approximately 80 kilometres from the epicentre, suffered catastrophic tsunami inundation.
+
+Iwate Prefecture (JIS code 03) is a coastal prefecture north of Miyagi. The city of
+Kamaishi, approximately 110 kilometres from the epicentre, was severely flooded. The town
+of Rikuzentakata, approximately 125 kilometres from the epicentre, was almost completely
+destroyed. Miyako city, approximately 145 kilometres north of the epicentre, also
+experienced significant tsunami inundation.
+
+Fukushima Prefecture (JIS code 07) is a coastal prefecture south of Miyagi. Coastal
+communities including Iwaki and Soma experienced tsunami damage. The Futaba District,
+approximately 180 kilometres from the epicentre, was severely affected by both the tsunami
+and the subsequent nuclear incident at the Fukushima Daiichi power station.
+
+Ibaraki Prefecture (JIS code 08) and Chiba Prefecture (JIS code 12) also experienced
+damaging tsunami waves. Tokyo Prefecture (JIS code 13) and Kanagawa Prefecture (JIS code 14)
+recorded lower shaking intensity but some coastal impacts.
+
+Tsunami Warning and Event
+
+The Japan Meteorological Agency issued a major tsunami warning (大津波警報) at 14:49 JST,
+just three minutes after the earthquake occurred. This is consistent with JMA's target
+response time of under three minutes. The warning was the highest level, indicating
+expected wave heights greater than three metres.
+
+The earthquake triggered a large-scale tsunami. Tsunami generation was confirmed across
+the entire Pacific coast of Tohoku. The tsunami reached the nearest shore in approximately
+ten minutes after generation. Travel time to the coast of Miyagi Prefecture was estimated
+at between ten and fifteen minutes.
+
+The wave profile was extreme. The wave height at the source was estimated at between
+three and five metres. However, topographic amplification along the ria coastline of
+Iwate and Miyagi dramatically increased wave heights at shore. The maximum wave runup
+height recorded at shore was approximately 40.1 metres at Miyako, Iwate Prefecture.
+Wave heights of 15 to 20 metres were recorded across wide sections of the Sanriku coast.
+The average wave height at shore along the worst-affected coastline exceeded 10 metres.
+Wave propagation speed across the open ocean was approximately 700 kilometres per hour.
+The average distance from the epicentre to the nearest shore was approximately 130 kilometres.
+
+Inundation Zones
+
+In Miyagi Prefecture, the tsunami inundated an area of approximately 327 square kilometres.
+Inundation distances inland reached up to 5 kilometres in low-lying coastal plains near
+Sendai. The maximum inland elevation reached by the tsunami in Miyagi was approximately
+12 metres above sea level. The cities of Sendai, Ishinomaki, and Natori were among the
+most extensively inundated.
+
+In Iwate Prefecture, the tsunami inundated approximately 58 square kilometres. The
+inundation distance inland varied by location, reaching up to 3 kilometres in some valleys.
+Maximum elevation reached was approximately 40 metres in Miyako. Kamaishi, Ofunato, and
+Rikuzentakata were inundated.
+
+In Fukushima Prefecture, the tsunami inundated approximately 112 square kilometres.
+Coastal cities including Soma and Iwaki experienced tsunami flooding. Inundation reached
+up to 3 kilometres inland in some coastal lowlands.
+
+Tsunami Damage
+
+The total number of fatalities attributed to the tsunami is estimated at approximately
+19,500 persons. The number of persons reported missing after the tsunami was approximately
+2,500. An estimated 129,225 buildings were washed away by the tsunami. An additional
+254,204 buildings were reported flooded to varying degrees. These figures represent one
+of the most destructive tsunami events in recorded Japanese history.
+
+A formal tsunami damage report was published by the Cabinet Office of Japan on
+11 April 2011, with subsequent revisions. The report was also contributed to by JMA
+and the National Police Agency.
+
+Shaking Damage
+
+Damage caused directly by ground shaking, separate from the tsunami, included
+approximately 130 fatalities. Injuries from shaking across the Tohoku and Kanto regions
+numbered approximately 6,150. Buildings totally destroyed by shaking alone were
+estimated at 11,000. An additional 144,000 buildings were classified as half destroyed.
+Over 640,000 buildings reported partial damage from shaking.
+
+A shaking damage report was compiled by the Cabinet Office on 12 March 2011.
+
+Fire After Earthquake
+
+Multiple fires broke out following the earthquake and tsunami. An estimated 330 fires
+were recorded across affected prefectures, many ignited by gas line ruptures and
+electrical faults caused by the shaking. In Kesennuma, Miyagi Prefecture, large fires
+burned for several days, fed by oil from a fish processing facility ignited by the tsunami.
+The estimated area burned in major post-earthquake fires totalled approximately 80 hectares
+across the region. Buildings destroyed by fire after the earthquake numbered approximately
+300. The fire in Kesennuma occurred in the coastal district of the city.
+
+Landslide Risk
+
+The earthquake triggered a critical landslide risk across much of the Tohoku interior.
+Landslides did occur at multiple locations. The number of landslide events recorded
+across the Tohoku region was approximately 150. The total volume of displaced material
+was estimated in the tens of millions of cubic metres. Terrain types involved included
+volcanic and sedimentary formations. Particular risk was noted in steep river valleys
+in Iwate Prefecture.
+
+Nuclear Incident
+
+The Fukushima Daiichi Nuclear Power Station, operated by Tokyo Electric Power Company
+(TEPCO), is located in Okuma and Futaba towns, Fukushima Prefecture, approximately
+180 kilometres south of the epicentre. The earthquake triggered an automatic SCRAM,
+activating the emergency shutdown of the reactors. The SCRAM was activated successfully.
+However, the tsunami that arrived approximately 51 minutes after the earthquake destroyed
+the backup diesel generators, leading to a station blackout. The cooling systems were
+subsequently lost. Units 1, 2, and 3 experienced core meltdowns. The event was rated INES
+level 7, the maximum level on the International Nuclear Event Scale, equivalent in
+classification to the 1986 Chernobyl disaster. The cooling system integrity was lost
+within hours of the tsunami impact. Cooling was ultimately restored only after several
+days of emergency intervention.
+
+The Fukushima Daini Nuclear Power Station, also located in Fukushima Prefecture,
+approximately 185 kilometres from the epicentre, experienced cooling difficulties but
+achieved cold shutdown. Its INES level was rated 3. SCRAM was activated. Cooling systems
+were ultimately maintained.
+
+The Onagawa Nuclear Power Station, operated by Tohoku Electric Power Company, is located
+in Onagawa town, Miyagi Prefecture, approximately 120 kilometres west of the epicentre.
+Despite being closer to the epicentre than Fukushima Daiichi, the plant survived without
+major damage due to a higher seawall. SCRAM was activated. Cooling systems remained intact.
+The INES level was rated 0.
+
+================================================================================
+EVENT 2: 1995 GREAT HANSHIN EARTHQUAKE (阪神・淡路大震災)
+================================================================================
+
+On 17 January 1995 at 05:46 JST (20:46 UTC on 16 January), a major earthquake struck the
+southern part of Hyogo Prefecture, Japan. The earthquake had a moment magnitude of 6.9 and
+a hypocentral depth of approximately 16 kilometres. The epicentre was located at latitude
+34.583 degrees north and longitude 135.035 degrees east, directly beneath Awaji Island.
+The fault type was strike-slip, occurring on the Nojima Fault. The sea floor depth in the
+vicinity of the epicentre was approximately minus 30 metres. JMA recorded a seismic
+intensity of 7 in parts of Kobe and Ashiya, the first time in Japan's modern instrumented
+history that intensity 7 was recorded.
+
+Affected Prefectures and Cities
+
+Hyogo Prefecture (JIS code 28) is a coastal prefecture on Osaka Bay. It was the most
+severely affected prefecture. The city of Kobe, approximately 20 kilometres from the
+epicentre, experienced catastrophic damage to its urban core. Ashiya city,
+approximately 15 kilometres from the epicentre, also suffered severe structural damage.
+The city of Nishinomiya, approximately 18 kilometres from the epicentre, and the city of
+Takarazuka, approximately 22 kilometres from the epicentre, were heavily damaged.
+Awaji Island, directly above the epicentre, experienced extreme shaking.
+
+Osaka Prefecture (JIS code 27) is a coastal prefecture east of Hyogo. Parts of Osaka,
+approximately 35 kilometres from the epicentre, experienced strong shaking and some
+structural damage.
+
+Tsunami Warning and Event
+
+The earthquake did not generate a significant tsunami. No major tsunami warning was issued.
+The shallow crustal nature of the fault rupture on a strike-slip mechanism did not produce
+the vertical sea floor displacement required to generate a large tsunami. Tsunami generation
+was not confirmed.
+
+Shaking Damage
+
+The Great Hanshin Earthquake caused catastrophic damage through direct ground shaking.
+The total number of fatalities attributed to shaking and fire was 6,434. The number of
+persons injured was approximately 43,792. Buildings totally destroyed by shaking numbered
+approximately 104,906. Buildings classified as half destroyed totalled approximately 144,274.
+Buildings partially damaged numbered over 390,000. Many of the destroyed buildings were
+older wooden structures built before modern earthquake resistance standards were introduced.
+The elevated Hanshin Expressway collapsed along a section of approximately 635 metres
+in Higashinada Ward, Kobe. The Port of Kobe, a major international container terminal,
+was severely damaged. A shaking damage report was published by the Cabinet Office of Japan
+on 20 January 1995 and by the Hyogo Prefecture Government.
+
+Fire After Earthquake
+
+The Great Hanshin Earthquake triggered approximately 285 fires across the affected area,
+the majority in Kobe. Many fires were caused by gas line ruptures and electrical faults.
+In the Nagata Ward of Kobe, fires spread through densely packed wooden residential
+districts and burned for over two days. The estimated area burned across Kobe totalled
+approximately 83 hectares. Buildings destroyed by fire numbered approximately 7,000.
+The fires in Nagata Ward, Kobe, were particularly severe, destroying entire residential
+blocks. Gas line rupture was the primary cause identified for the majority of fires.
+A fire damage report was published by the Kobe City Fire Department in February 1995.
+
+Landslide Risk
+
+The earthquake triggered numerous slope failures across Awaji Island and the hillside
+residential areas of Kobe. The landslide risk level across steep terrain was assessed as
+high to critical. Landslides did occur at multiple locations. Approximately 400 slope
+failures were recorded across the affected region. Terrain types involved were primarily
+weathered granite and volcanic formations common in the Rokko Mountain range. A landslide
+risk assessment was compiled by the Ministry of Land, Infrastructure, Transport and Tourism.
+
+================================================================================
+EVENT 3: 2024 NOTO PENINSULA EARTHQUAKE (令和6年能登半島地震)
+================================================================================
+
+On 1 January 2024 at 16:10 JST (07:10 UTC), a major earthquake struck the Noto Peninsula
+of Ishikawa Prefecture, Japan. The earthquake had a moment magnitude of 7.6 and a
+hypocentral depth of approximately 10 kilometres. The epicentre was located at latitude
+37.486 degrees north and longitude 137.270 degrees east, on the Japan Sea side of Honshu.
+The fault type was reverse, related to compressional tectonics beneath the Noto Peninsula.
+The sea floor depth at the epicentre was approximately minus 200 metres. JMA recorded a
+seismic intensity of 7 in parts of the Noto Peninsula, the first intensity-7 recording
+in the Japan Sea coastal region.
+
+Affected Prefectures and Cities
+
+Ishikawa Prefecture (JIS code 17) is a coastal prefecture on the Japan Sea side of
+central Honshu. It was the most severely affected prefecture. The city of Wajima,
+approximately 45 kilometres from the epicentre, experienced catastrophic structural damage
+and fire. The town of Suzu, approximately 55 kilometres from the epicentre, was severely
+damaged with many buildings collapsed. The town of Anamizu, approximately 30 kilometres
+from the epicentre, also suffered major damage. The city of Nanao, approximately 40
+kilometres from the epicentre, was significantly affected.
+
+Niigata Prefecture (JIS code 15) is a coastal prefecture northeast of Ishikawa. Coastal
+communities in Niigata experienced minor tsunami waves and some shaking damage.
+
+Toyama Prefecture (JIS code 16) is a coastal prefecture on the Japan Sea, bordering
+Ishikawa. Some communities in Toyama experienced strong shaking.
+
+Tsunami Warning and Event
+
+The Japan Meteorological Agency issued a tsunami warning (津波警報) at 16:11 JST, within
+one minute of the earthquake. For coastal areas of the Noto Peninsula and Toyama Bay,
+a major tsunami warning (大津波警報) was issued. The warning indicated expected wave heights
+of one to three metres along the Ishikawa coast and greater than three metres along the
+Noto outer coast.
+
+The earthquake triggered a tsunami. Tsunami generation was confirmed. The tsunami reached
+the nearest shore of the Noto Peninsula in approximately five to seven minutes after
+generation. This very short warning time presented a significant challenge for coastal
+evacuation.
+
+The wave height at the source was estimated at approximately one to two metres. Wave heights
+at shore ranged from approximately 0.8 to 1.2 metres at tide gauges, though runup heights
+at exposed coastal locations exceeded four metres in some areas. Wave speed across the
+shallow Japan Sea was approximately 500 kilometres per hour. The average distance from the
+epicentre to the outer Noto coastline was approximately 20 kilometres.
+
+Inundation Zones
+
+In Ishikawa Prefecture, the tsunami inundated approximately 10 square kilometres of coastal
+lowland. Inundation distances inland reached up to 0.5 kilometres in the most exposed areas.
+The maximum inland elevation reached was approximately 5 metres above sea level.
+The town of Suzu and parts of Wajima coastline were inundated.
+
+Tsunami Damage
+
+The number of fatalities attributed to the tsunami was approximately 15 persons. Several
+persons were reported missing in coastal areas. Buildings washed away by the tsunami
+numbered approximately 100. Buildings flooded by the tsunami numbered several hundred.
+A tsunami damage report was published by the Ishikawa Prefecture Government on 5 January 2024,
+with subsequent updates. JMA also contributed to the report.
+
+Shaking Damage
+
+The earthquake caused extensive shaking damage across the Noto Peninsula. The number of
+fatalities from shaking and building collapse was approximately 241. Injuries numbered
+approximately 1,300. Buildings totally destroyed by shaking numbered approximately 8,000.
+Buildings classified as half destroyed totalled approximately 20,000. Partial damage was
+reported to over 100,000 buildings across Ishikawa Prefecture. Many structures destroyed
+were traditional wooden townhouses in Wajima and Suzu. A shaking damage report was
+published by the Cabinet Office of Japan on 3 January 2024.
+
+Fire After Earthquake
+
+Following the earthquake, a major fire broke out in the Asaichi-dori market district
+of Wajima city. The fire, ignited by electrical faults and gas line ruptures from the
+shaking, burned through a densely packed area of traditional wooden commercial buildings.
+Approximately 7 fires were recorded across the Noto Peninsula in the immediate aftermath.
+The Wajima market fire burned approximately 4.9 hectares and destroyed approximately 200
+buildings. Electrical fault was identified as the primary cause of the Wajima fire.
+The fire occurred in the Kawai-machi district of Wajima city. A fire damage report was
+published by the Wajima City Fire Department in January 2024.
+
+Landslide Risk
+
+The earthquake triggered widespread slope failures across the Noto Peninsula, which is
+characterised by steep terrain and weathered sedimentary and volcanic rock. Landslide risk
+level across the peninsula was assessed as critical following the event. Landslides did
+occur at many locations. Approximately 240 major slope failures were recorded on or near
+the Noto Peninsula. The volume of displaced material from larger landslides was estimated
+in the hundreds of thousands of cubic metres. Terrain types were predominantly sedimentary
+with some volcanic formations. Several roads were blocked for weeks. A landslide risk
+report was published by the Ministry of Land, Infrastructure, Transport and Tourism in
+January 2024.
+
+================================================================================
+EVENT 4: 2011 FUKUSHIMA AFTERSHOCK SEQUENCE (2011年4月)
+================================================================================
+
+On 11 April 2011 at 17:16 JST, a significant aftershock struck Fukushima Prefecture
+following the March 9.1 mainshock. The earthquake had a moment magnitude of 7.1 and a
+hypocentral depth of approximately 13 kilometres. The epicentre was located at latitude
+36.945 degrees north and longitude 140.676 degrees east, inland in Fukushima Prefecture.
+The fault type was normal. The sea floor depth at the epicentre was approximately positive
+200 metres above sea level, as the epicentre was onshore. JMA recorded a seismic intensity
+of 6 lower in parts of Fukushima Prefecture.
+
+Affected Prefectures and Cities
+
+Fukushima Prefecture (JIS code 07) was the most directly affected. The city of Iwaki,
+approximately 20 kilometres from the aftershock epicentre, experienced significant shaking.
+Tomioka town, approximately 30 kilometres from the epicentre, was also affected.
+Ibaraki Prefecture (JIS code 08) experienced moderate shaking at sites approximately
+60 kilometres from the epicentre.
+
+Shaking Damage
+
+This aftershock caused additional casualties and building damage in a region already
+severely weakened by the March mainshock and tsunami. Shaking fatalities from this event
+numbered approximately 3. Injuries were approximately 60. Buildings totally destroyed by
+this aftershock numbered approximately 400. Buildings half destroyed numbered approximately
+1,200. Partial damage was reported to thousands of additional structures across Fukushima
+and Ibaraki. A shaking damage report was contributed to by the Cabinet Office and
+Fukushima Prefecture Government.
+
+Nuclear Incident
+
+The Fukushima Daiichi Nuclear Power Station, located approximately 38 kilometres north
+of the aftershock epicentre, had already been in a severe accident state since March 11.
+The aftershock did not trigger a new SCRAM as reactors were already shutdown. The cooling
+system was not intact at this time, with units 1 through 3 experiencing ongoing meltdown
+management. The INES level remained 7. This event is recorded as an additional seismic
+challenge to an ongoing nuclear emergency.
+
+================================================================================
+EVENT 5: 2016 KUMAMOTO EARTHQUAKES (熊本地震)
+================================================================================
+
+A major earthquake sequence affected Kumamoto Prefecture, Kyushu, in April 2016. The
+first significant event occurred on 14 April 2016 at 21:26 JST with a moment magnitude
+of 6.2 and a hypocentral depth of approximately 11 kilometres. The epicentre was at
+latitude 32.742 degrees north and longitude 130.809 degrees east near Mashiki town.
+Fault type was strike-slip on the Futagawa Fault. JMA recorded intensity 7 at Mashiki.
+
+Two days later, on 16 April 2016 at 01:25 JST, the main shock occurred with a moment
+magnitude of 7.0 and a hypocentral depth of approximately 12 kilometres. The epicentre
+was located at latitude 32.755 degrees north and longitude 130.757 degrees east.
+Fault type was strike-slip. JMA recorded intensity 7 at Mashiki and Nishihara village,
+the second intensity-7 recording within 28 hours at the same location.
+
+Affected Prefectures and Cities
+
+Kumamoto Prefecture (JIS code 43) was the most severely affected. Mashiki town,
+approximately 5 kilometres from the mainshock epicentre, was almost entirely destroyed.
+Minami-Aso village, approximately 20 kilometres southeast of the epicentre, was severely
+damaged and experienced catastrophic landslides. The city of Kumamoto, approximately
+15 kilometres from the epicentre, experienced significant damage particularly to the
+historic Kumamoto Castle. Nishihara village, approximately 18 kilometres from the
+epicentre, was also severely damaged.
+
+Oita Prefecture (JIS code 44) experienced strong shaking and some structural damage,
+approximately 50 kilometres from the mainshock epicentre.
+
+Tsunami Warning and Event
+
+No tsunami warning was issued. The inland, continental fault mechanism of the Kumamoto
+earthquakes did not produce a tsunami. Tsunami generation was not confirmed.
+
+Shaking Damage
+
+The combined damage from the foreshock and mainshock sequence resulted in approximately
+273 fatalities. Injuries numbered approximately 2,809. Buildings totally destroyed numbered
+approximately 8,667. Buildings half destroyed totalled approximately 34,719. Partial damage
+was reported to over 160,000 structures across Kumamoto Prefecture. Many historic wooden
+structures and older buildings suffered collapse. A shaking damage report was published
+by the Cabinet Office of Japan on 18 April 2016.
+
+Fire After Earthquake
+
+Approximately 15 fires were recorded across Kumamoto Prefecture following the earthquake
+sequence. Gas line ruptures and electrical faults were the primary causes. The estimated
+area burned was approximately 2 hectares. Buildings destroyed by fire numbered approximately
+40. Several fires occurred in the city of Kumamoto.
+
+Landslide Risk
+
+The earthquake sequence triggered catastrophic landslides in the steep volcanic terrain
+of the Aso Caldera region. Landslide risk was assessed as critical across the mountainous
+zones of southern Kumamoto Prefecture. Landslides did occur at many locations.
+Approximately 190 major slope failures were recorded. A massive landslide in Minami-Aso
+village blocked National Route 57 and caused the collapse of the Aso Bridge. Volume of
+displaced material was estimated in the millions of cubic metres. Terrain types were
+primarily volcanic, with pyroclastic deposits common in the Aso region. A landslide risk
+assessment was published by the Ministry of Land, Infrastructure, Transport and Tourism
+in May 2016.
+
+================================================================================
+EVENT 6: 2003 TOKACHI-OKI EARTHQUAKE (十勝沖地震)
+================================================================================
+
+On 26 September 2003 at 04:50 JST (19:50 UTC on 25 September), a major earthquake struck
+off the coast of Tokachi, Hokkaido. The earthquake had a moment magnitude of 8.3 and a
+hypocentral depth of approximately 27 kilometres. The epicentre was at latitude 41.779
+degrees north and longitude 144.079 degrees east, within the Kuril-Kamchatka subduction
+zone. Fault type was subduction. The sea floor depth at the epicentre was approximately
+minus 2,100 metres below sea level. JMA recorded a seismic intensity of 6 upper in parts
+of Tokachi and Kushiro.
+
+Affected Prefectures and Cities
+
+Hokkaido Prefecture (JIS code 01) was the most severely affected. The city of Obihiro,
+approximately 130 kilometres from the epicentre, experienced strong shaking and
+significant damage to older structures. Kushiro city, approximately 100 kilometres from
+the epicentre, also experienced strong shaking. The town of Taiki, approximately 80
+kilometres from the epicentre, was affected by both shaking and small tsunami waves.
+
+Tsunami Warning and Event
+
+JMA issued a tsunami warning (津波警報) within three minutes of the earthquake. The warning
+indicated expected wave heights of one to two metres on the Pacific coast of Hokkaido.
+The earthquake triggered a tsunami. Tsunami generation was confirmed. The tsunami reached
+the coast of Tokachi in approximately 10 minutes after generation.
+
+The wave height at the source was estimated at approximately 1.5 metres. Wave heights at
+shore on the Tokachi coast ranged from approximately 1.0 to 2.0 metres. Wave speed was
+approximately 700 kilometres per hour across the open Pacific Ocean. Distance from the
+epicentre to the Tokachi coast was approximately 80 kilometres.
+
+Inundation Zones
+
+In Hokkaido, the tsunami inundated approximately 5 square kilometres of low-lying coastal
+land near the Tokachi River mouth. Inundation distances inland reached up to 0.3 kilometres.
+The maximum inland elevation reached was approximately 2 metres above sea level.
+Taiki town coastline and the Tokachi River lowlands were inundated.
+
+Tsunami Damage
+
+No fatalities were directly attributed to the tsunami. Buildings washed away were
+negligible. Approximately 50 buildings experienced flooding from the tsunami.
+A tsunami damage report was published by the Hokkaido Prefecture Government in October 2003.
+
+Shaking Damage
+
+Shaking damage resulted in approximately 2 fatalities. Injuries numbered approximately 849.
+Buildings totally destroyed by shaking numbered approximately 116. Buildings half destroyed
+totalled approximately 368. Partial damage was reported to approximately 9,800 structures.
+Agricultural facilities, storage tanks, and older buildings were the most affected. A
+shaking damage report was published by the Cabinet Office in October 2003.
+
+Landslide Risk
+
+The earthquake triggered slope failures in the hilly terrain south and east of Obihiro.
+Landslide risk was assessed as moderate across the Tokachi interior. Landslides did occur.
+Approximately 20 slope failures were recorded. Terrain types were predominantly sedimentary
+with glacial deposits. A landslide assessment was contributed to by the Ministry of Land,
+Infrastructure, Transport and Tourism.
+
+================================================================================
+END OF REPORT COMPILATION
+================================================================================
