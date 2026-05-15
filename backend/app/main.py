@@ -1,10 +1,12 @@
+import asyncio
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from .routes import router
 from .analysis import router as analysis_router
 from .live import router as live_router
-import os
 
 load_dotenv()
 
@@ -23,10 +25,27 @@ app.include_router(router)
 app.include_router(analysis_router)
 app.include_router(live_router)
 
+_poller_task: asyncio.Task = None
+
+
 @app.on_event("startup")
 async def startup():
     from .db import get_db
-    get_db()
+    from .poller import run_poller
+    db = get_db()
+    global _poller_task
+    _poller_task = asyncio.create_task(run_poller(db))
+
+
+@app.on_event("shutdown")
+async def shutdown():
+    if _poller_task:
+        _poller_task.cancel()
+        try:
+            await _poller_task
+        except asyncio.CancelledError:
+            pass
+
 
 @app.get("/")
 def root():
