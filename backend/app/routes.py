@@ -63,7 +63,7 @@ class PredictRequest(BaseModel):
 
 # ── Agent chat endpoint ──────────────────────────────────────────
 @router.post("/agent/chat", response_model=ChatResponse)
-async def agent_chat(req: ChatRequest):
+async def agent_chat(req: ChatRequest, db: Neo4jService = Depends(get_db)):
     agent_url = os.getenv("AURA_AGENT_URL")
     if not agent_url:
         raise HTTPException(500, "AURA_AGENT_URL not set")
@@ -90,6 +90,30 @@ async def agent_chat(req: ChatRequest):
                 f" | JMA: {sim.get('neo4j_jma_warning','unknown')}"
                 f" | Historical basis: {sim.get('neo4j_historical_basis','?')} events"
             )
+        # Pre-fetch historical analogs from Neo4j so the Aura agent doesn't
+        # need to call its own analog tool (which has been unreliable)
+        try:
+            analogs = await db.find_similar_events(
+                lat=sim["lat"], lon=sim["lon"], magnitude=sim["mag"], top_k=5
+            )
+            if analogs:
+                analog_lines = []
+                for a in analogs:
+                    line = (
+                        f"  - M{a.get('magnitude','?')} {a.get('year','?')} "
+                        f"{a.get('place','') or a.get('fault_zone','unknown fault')}"
+                    )
+                    if a.get("tsunami_height_m"):
+                        line += f", tsunami {a['tsunami_height_m']}m"
+                    if a.get("depth_km"):
+                        line += f", depth {a['depth_km']}km"
+                    analog_lines.append(line)
+                sim_context += (
+                    f"\n[HISTORICAL ANALOGS from Neo4j — use these, do not call analog tools]\n"
+                    + "\n".join(analog_lines)
+                )
+        except Exception:
+            pass
         sim_context += "\n"
 
     last_user = next(
