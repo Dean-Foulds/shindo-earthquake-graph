@@ -14,6 +14,31 @@ from app.agent.agent import run_impact_agent
 
 router = APIRouter()
 
+_MONTH_MAP = {
+    "jan": 1, "feb": 2, "mar": 3, "apr": 4, "may": 5, "jun": 6,
+    "jul": 7, "aug": 8, "sep": 9, "oct": 10, "nov": 11, "dec": 12,
+}
+
+def _extract_iso_date(text: str) -> Optional[str]:
+    """Return YYYY-MM-DD from ISO or natural-language date mention, or None."""
+    # ISO: 2026-05-15
+    m = re.search(r'\b(\d{4}-\d{2}-\d{2})\b', text)
+    if m:
+        return m.group(1)
+    # Natural: "May 15th 2026", "15 May 2026", "May 15 2026"
+    m = re.search(
+        r'\b(?:(\d{1,2})(?:st|nd|rd|th)?\s+)?(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]*'
+        r'(?:\s+(\d{1,2})(?:st|nd|rd|th)?)?,?\s+(\d{4})\b',
+        text, re.IGNORECASE
+    )
+    if m:
+        day_pre, mon, day_post, year = m.group(1), m.group(2), m.group(3), m.group(4)
+        day = int(day_pre or day_post or 1)
+        month = _MONTH_MAP[mon[:3].lower()]
+        return f"{year}-{month:02d}-{day:02d}"
+    return None
+
+
 # ── OAuth token cache ────────────────────────────────────────────
 _token_cache: dict = {"token": None, "expires_at": 0}
 
@@ -137,8 +162,8 @@ async def agent_chat(req: ChatRequest, db: Neo4jService = Depends(get_db)):
 
     # If the user mentions a specific date, look it up in Neo4j
     recent_event_context = ""
-    date_match = re.search(r'\b(\d{4}-\d{2}-\d{2}|(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]* \d{1,2}(?:st|nd|rd|th)?,? \d{4})\b', last_user, re.IGNORECASE)
-    if date_match:
+    iso_date = _extract_iso_date(last_user)
+    if iso_date:
         try:
             rows = await db.cypher_read("""
                 MATCH (e:Earthquake)
@@ -155,7 +180,7 @@ async def agent_chat(req: ChatRequest, db: Neo4jService = Depends(get_db)):
                        e.source             AS source
                 ORDER BY e.momentMagnitude DESC
                 LIMIT 10
-            """, params={"prefix": date_match.group(0)[:10]})
+            """, params={"prefix": iso_date})
             if rows:
                 event_lines = [
                     f"  - M{r.get('magnitude','?')} at {r.get('lat','?')}°N {r.get('lon','?')}°E, "
@@ -165,7 +190,7 @@ async def agent_chat(req: ChatRequest, db: Neo4jService = Depends(get_db)):
                     for r in rows
                 ]
                 recent_event_context = (
-                    f"\n[EARTHQUAKES IN NEO4J FOR {date_match.group(0)[:10]}]\n"
+                    f"\n[EARTHQUAKES IN NEO4J FOR {iso_date}]\n"
                     + "\n".join(event_lines)
                     + "\n"
                 )
