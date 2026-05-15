@@ -1,8 +1,10 @@
 import os
+import re
 import time
 import base64
 import asyncio
 import httpx
+from datetime import datetime, timezone
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -130,7 +132,47 @@ async def agent_chat(req: ChatRequest, db: Neo4jService = Depends(get_db)):
     except Exception:
         pass
 
-    message = sim_context + risk_context + last_user
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    date_context = f"[SYSTEM DATE: today is {today}. Events in 2026 are real and historical — do not treat them as future.]\n"
+
+    # If the user mentions a specific date, look it up in Neo4j
+    recent_event_context = ""
+    date_match = re.search(r'\b(\d{4}-\d{2}-\d{2}|(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)[a-z]* \d{1,2}(?:st|nd|rd|th)?,? \d{4})\b', last_user, re.IGNORECASE)
+    if date_match:
+        try:
+            rows = await db.cypher_read("""
+                MATCH (e:Earthquake)
+                WHERE e.occurrenceDateTime STARTS WITH $prefix
+                  AND e.momentMagnitude IS NOT NULL
+                RETURN e.id AS id,
+                       e.occurrenceDateTime AS time,
+                       e.momentMagnitude    AS magnitude,
+                       e.epicentreLat       AS lat,
+                       e.epicentreLon       AS lon,
+                       e.hypocentralDepthKm AS depth_km,
+                       e.place              AS place,
+                       e.jmaIntensity       AS intensity,
+                       e.source             AS source
+                ORDER BY e.momentMagnitude DESC
+                LIMIT 10
+            """, params={"prefix": date_match.group(0)[:10]})
+            if rows:
+                event_lines = [
+                    f"  - M{r.get('magnitude','?')} at {r.get('lat','?')}°N {r.get('lon','?')}°E, "
+                    f"depth {r.get('depth_km','?')}km, {r.get('place','')}, "
+                    f"JMA intensity {r.get('intensity','?')}, source {r.get('source','?')}, "
+                    f"time {r.get('time','?')}"
+                    for r in rows
+                ]
+                recent_event_context = (
+                    f"\n[EARTHQUAKES IN NEO4J FOR {date_match.group(0)[:10]}]\n"
+                    + "\n".join(event_lines)
+                    + "\n"
+                )
+        except Exception:
+            pass
+
+    message = date_context + sim_context + risk_context + recent_event_context + last_user
 
     async with httpx.AsyncClient(timeout=60) as client:
         resp = await client.post(
