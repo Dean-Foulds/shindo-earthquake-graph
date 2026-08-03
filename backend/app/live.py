@@ -3,6 +3,8 @@ Live earthquake feed endpoints for the Shindo frontend.
 Serves recent JMA events to display on the map before simulation.
 """
 
+from datetime import datetime, timedelta, timezone
+
 from fastapi import APIRouter, Depends
 from .db import get_db, Neo4jService
 
@@ -11,16 +13,27 @@ router = APIRouter(prefix="/live")
 
 @router.get("/earthquakes")
 async def get_live_earthquakes(
-    limit: int = 20,
+    days: int = 30,
+    limit: int = 500,
     min_magnitude: float = 3.0,
     db: Neo4jService = Depends(get_db)
 ):
+    """
+    Recent events for the map. `days` bounds the window (0 = no date filter);
+    occurrenceDateTime is stored as an ISO-8601 string, so a lexicographic
+    comparison against an ISO cutoff is a correct chronological filter.
+    """
+    since = (
+        (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+        if days > 0 else "0000"
+    )
     return await db.cypher_read("""
         MATCH (e:Earthquake)
         WHERE e.momentMagnitude >= $min_mag
           AND e.epicentreLat IS NOT NULL
           AND e.epicentreLon IS NOT NULL
           AND e.occurrenceDateTime IS NOT NULL
+          AND e.occurrenceDateTime >= $since
         RETURN e.id                AS id,
                e.epicentreLat     AS lat,
                e.epicentreLon     AS lon,
@@ -33,7 +46,7 @@ async def get_live_earthquakes(
                e.jmaIntensity     AS intensity
         ORDER BY e.occurrenceDateTime DESC
         LIMIT $limit
-    """, params={"min_mag": min_magnitude, "limit": limit})
+    """, params={"min_mag": min_magnitude, "limit": limit, "since": since})
 
 
 @router.get("/status")

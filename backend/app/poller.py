@@ -7,6 +7,7 @@ Launched automatically by FastAPI on startup.
 """
 
 import asyncio
+import os
 import re
 import xml.etree.ElementTree as ET
 from datetime import datetime, timedelta, timezone
@@ -17,6 +18,9 @@ import httpx
 JMA_FEED_URL  = "https://www.data.jma.go.jp/developer/xml/feed/eqvol.xml"
 USGS_URL      = "https://earthquake.usgs.gov/fdsnws/event/1/query"
 POLL_INTERVAL = 60
+# How far back to backfill from USGS on startup. The JMA short feed only covers
+# ~2 hours, so without this the map is empty after any restart.
+BACKFILL_DAYS = int(os.getenv("BACKFILL_DAYS", "30"))
 ATOM_NS       = {"atom": "http://www.w3.org/2005/Atom"}
 JAPAN_BBOX    = {"minlatitude": 24, "maxlatitude": 46, "minlongitude": 122, "maxlongitude": 148}
 
@@ -143,17 +147,18 @@ async def _parse_jma_event(client: httpx.AsyncClient, url: str) -> Optional[dict
 
 # ── USGS 24-hour backfill ─────────────────────────────────────────────────────
 
-async def backfill_24h(db, client: httpx.AsyncClient):
-    """On startup, fetch the last 24 hours from USGS and write any missing events."""
-    start = (datetime.now(timezone.utc) - timedelta(hours=24)).strftime("%Y-%m-%dT%H:%M:%S")
+async def backfill_recent(db, client: httpx.AsyncClient, days: int = BACKFILL_DAYS):
+    """On startup, fetch the last `days` from USGS and write any missing events."""
+    start = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%dT%H:%M:%S")
     params = {
         "format":       "geojson",
         "starttime":    start,
         "minmagnitude": 3.0,
         "orderby":      "time-asc",
+        "limit":        20000,
         **JAPAN_BBOX,
     }
-    print("[poller] backfilling last 24h from USGS...")
+    print(f"[poller] backfilling last {days}d from USGS...")
     try:
         resp = await client.get(USGS_URL, params=params, timeout=30)
         resp.raise_for_status()
@@ -189,7 +194,8 @@ async def backfill_24h(db, client: httpx.AsyncClient):
         await _write_event(db, event)
         count += 1
 
-    print(f"[poller] backfill complete — {count} new events from USGS")
+    print(f"[poller] backfill complete — {count} new events from USGS "
+          f"({len(features)} in window)")
 
 
 # ── Main polling loop ─────────────────────────────────────────────────────────
@@ -198,7 +204,7 @@ async def run_poller(db):
     """Async polling loop — run as an asyncio background task."""
     print(f"[poller] started, polling JMA every {POLL_INTERVAL}s")
     async with httpx.AsyncClient() as client:
-        await backfill_24h(db, client)
+        await backfill_recent(db, client)
         while True:
             try:
                 urls = await _fetch_feed(client)
