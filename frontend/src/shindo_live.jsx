@@ -62,6 +62,55 @@ const API_HEADERS = {
 
 const makeProj = () => d3.geoMercator().center([135.5,35.5]).scale(1040).translate([MAP_W/2,MAP_H/2])
 
+// Enforced server-side via output_config.format, so the response is always parseable
+// JSON — no markdown fences to strip and no half-written object on a truncated reply.
+const ANA_SCHEMA = {
+  type:"object", additionalProperties:false,
+  required:["fault_zone","fault_type","severity","estimated_casualties","estimated_displaced",
+            "affected_prefectures","tsunami","nuclear_risk","historical_analogs","cascade_chain","insight"],
+  properties:{
+    fault_zone:{type:"string"},
+    fault_type:{type:"string",enum:["subduction","crustal","intraslab"]},
+    severity:{type:"string",enum:["minor","moderate","strong","major","catastrophic"]},
+    estimated_casualties:{type:"number"},
+    estimated_displaced:{type:["number","null"]},
+    affected_prefectures:{type:"array",items:{
+      type:"object", additionalProperties:false,
+      required:["id","name","intensity","distance_km","shindo","risk","tsunami_height_m"],
+      properties:{
+        id:{type:"string"}, name:{type:"string"},
+        intensity:{type:"integer"}, distance_km:{type:"number"},
+        shindo:{type:"string"},
+        risk:{type:"string",enum:["shaking","tsunami","both"]},
+        tsunami_height_m:{type:["number","null"]},
+      }}},
+    tsunami:{type:"object", additionalProperties:false,
+      required:["risk","max_height_m","warning_min","estimated_casualties"],
+      properties:{
+        risk:{type:"string",enum:["none","low","moderate","high","extreme"]},
+        max_height_m:{type:["number","null"]},
+        warning_min:{type:["number","null"]},
+        estimated_casualties:{type:["number","null"]},
+      }},
+    nuclear_risk:{type:"array",items:{
+      type:"object", additionalProperties:false,
+      required:["id","name","distance_km","risk"],
+      properties:{
+        id:{type:"string"}, name:{type:"string"}, distance_km:{type:"number"},
+        risk:{type:"string",enum:["none","monitoring","elevated","critical"]},
+      }}},
+    historical_analogs:{type:"array",items:{
+      type:"object", additionalProperties:false,
+      required:["name","year","magnitude","deaths"],
+      properties:{
+        name:{type:"string"}, year:{type:"integer"},
+        magnitude:{type:"number"}, deaths:{type:"integer"},
+      }}},
+    cascade_chain:{type:"array",items:{type:"string"}},
+    insight:{type:"string"},
+  },
+}
+
 const POP = {hokkaido:5.2,aomori:1.2,iwate:1.2,miyagi:2.3,akita:1.0,yamagata:1.1,fukushima:1.8,ibaraki:2.9,tochigi:2.0,gunma:2.0,saitama:7.3,chiba:6.3,tokyo:13.9,kanagawa:9.2,niigata:2.2,toyama:1.0,ishikawa:1.1,fukui:0.8,yamanashi:0.8,nagano:2.1,gifu:2.0,shizuoka:3.6,aichi:7.5,mie:1.8,shiga:1.4,kyoto:2.6,osaka:8.8,hyogo:5.5,nara:1.3,wakayama:0.9,tottori:0.6,shimane:0.7,okayama:1.9,hiroshima:2.8,yamaguchi:1.3,tokushima:0.7,kagawa:1.0,ehime:1.4,kochi:0.7,fukuoka:5.1,saga:0.8,nagasaki:1.3,kumamoto:1.8,oita:1.1,miyazaki:1.1,kagoshima:1.6,okinawa:1.5}
 
 const FAULT_LINES = [
@@ -294,12 +343,15 @@ export default function Shindo({ chat }) {
     try{
       const res=await fetch("https://api.anthropic.com/v1/messages",{
         method:"POST", headers:API_HEADERS,
-        body:JSON.stringify({model:"claude-sonnet-5",max_tokens:4096,
-          system:"You are Shindo, Japan seismic risk AI backed by a Neo4j graph. Return ONLY valid JSON, no markdown.",
+        body:JSON.stringify({model:"claude-sonnet-5",max_tokens:8192,
+          // Sonnet 5 runs adaptive thinking when `thinking` is omitted, and max_tokens caps
+          // thinking + output together — which truncated this large JSON object mid-write.
+          thinking:{type:"disabled"},
+          output_config:{format:{type:"json_schema",schema:ANA_SCHEMA}},
+          system:"You are Shindo, Japan seismic risk AI backed by a Neo4j graph.",
           messages:[{role:"user",content:
 `Earthquake: ${lat.toFixed(2)}°N ${lon.toFixed(2)}°E M${currentMag.toFixed(1)} depth ${currentDep}km.
-Return ONLY JSON:
-{"fault_zone":"str","fault_type":"subduction|crustal|intraslab","severity":"minor|moderate|strong|major|catastrophic","estimated_casualties":number,"estimated_displaced":number|null,"affected_prefectures":[{"id":"id","name":"Name","intensity":1-10,"distance_km":number,"shindo":"1-7","risk":"shaking|tsunami|both","tsunami_height_m":number|null}],"tsunami":{"risk":"none|low|moderate|high|extreme","max_height_m":number|null,"warning_min":number|null,"estimated_casualties":number|null},"nuclear_risk":[{"id":"id","name":"Name","distance_km":number,"risk":"none|monitoring|elevated|critical"}],"historical_analogs":[{"name":"str","year":number,"magnitude":number,"deaths":number}],"cascade_chain":["str"],"insight":"str"}
+intensity is shindo 1-10. shindo is the JMA scale "1"-"7".
 Pref IDs: hokkaido,aomori,iwate,miyagi,akita,yamagata,fukushima,ibaraki,tochigi,gunma,saitama,chiba,tokyo,kanagawa,niigata,toyama,ishikawa,fukui,yamanashi,nagano,gifu,shizuoka,aichi,mie,shiga,kyoto,osaka,hyogo,nara,wakayama,tottori,shimane,okayama,hiroshima,yamaguchi,tokushima,kagawa,ehime,kochi,fukuoka,saga,nagasaki,kumamoto,oita,miyazaki,kagoshima,okinawa
 Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_kariwa,shika,mihama,ohi,takahama,hamaoka,shimane_npp,ikata,genkai,sendai_npp,tomari
 4-8 prefectures. Always include tsunami_height_m for coastal prefs if tsunami risk exists.
@@ -307,8 +359,9 @@ ALWAYS give a top-level estimated_casualties (expected fatalities from ALL hazar
       })
       if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(`HTTP ${res.status}: ${e?.error?.message||res.statusText}`) }
       const d=await res.json()
-      const t=d.content.filter(c=>c.type==="text").map(c=>c.text).join("").replace(/```[a-z]*\n?|```/g,"").trim()
-      console.log("[Shindo raw response]", t); console.log("[Shindo stop_reason]", d.stop_reason); console.log("[Shindo raw response]", t); console.log("[Shindo stop_reason]", d.stop_reason); setAna(JSON.parse(t))
+      const t=d.content.filter(c=>c.type==="text").map(c=>c.text).join("")
+      if(d.stop_reason==="max_tokens") throw new Error("Response truncated — raise max_tokens")
+      setAna(JSON.parse(t))
     }catch(err){
       console.error("[Shindo]", err)
       setAna({fault_zone:err.message,severity:"minor",cascade_chain:["Check API key / console"],affected_prefectures:[],nuclear_risk:[],tsunami:{risk:"none"},historical_analogs:[],insight:err.message})
