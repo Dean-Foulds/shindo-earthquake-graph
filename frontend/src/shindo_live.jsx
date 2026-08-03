@@ -159,6 +159,8 @@ const SEV = {
   minor:        ["#e8f7ee","#0f9e4a"],
 }
 const iCol = v => v ? IC[Math.min(Math.floor(v)-1,9)] : null
+// hypocentral depth bands — shallow ruptures shake hardest, deep ones reach further
+const DEPTH_REGIME = d => d<=30 ? "SHALLOW CRUSTAL" : d<=70 ? "TRANSITION" : d<=150 ? "INTRASLAB" : "DEEP INTRASLAB"
 const cityR = (id, hit) => { const p=POP[id]||1; return hit ? Math.max(6,2.5+Math.sqrt(p)*1.8) : Math.max(1.8,1.2+Math.sqrt(p)*0.75) }
 const faultMatch = str => {
   if(!str) return null; const s=str.toLowerCase()
@@ -259,7 +261,7 @@ export default function Shindo({ chat }) {
     const fetchLive = async () => {
       try {
         const [eventsRes, statusRes] = await Promise.all([
-          fetch(`${import.meta.env.VITE_API_URL}/live/earthquakes?days=30&min_magnitude=4.5`),
+          fetch(`${import.meta.env.VITE_API_URL}/live/earthquakes?days=20&min_magnitude=4.0`),
           fetch(`${import.meta.env.VITE_API_URL}/live/status`)
         ])
         const events = await eventsRes.json()
@@ -699,7 +701,7 @@ ALWAYS give a top-level estimated_casualties (expected fatalities from ALL hazar
             <div style={{color:"#a35200"}}>
               {liveEvents.length} events · M{Math.min(...liveEvents.map(e=>e.magnitude)).toFixed(1)}–M{Math.max(...liveEvents.map(e=>e.magnitude)).toFixed(1)}
             </div>
-            <div style={{color:"#8a6a33",fontSize:9}}>last 30 days · hover dots for detail</div>
+            <div style={{color:"#8a6a33",fontSize:9}}>last 20 days · hover dots for detail</div>
             <div style={{color:"#8f7a52",fontSize:9,marginTop:1}}>CLICK MAP TO SIMULATE →</div>
           </div>
         )}
@@ -777,6 +779,16 @@ ALWAYS give a top-level estimated_casualties (expected fatalities from ALL hazar
             <input type="range" min={4} max={9.1} step={0.1} value={mag} onChange={e=>setMag(parseFloat(e.target.value))}
               style={{flex:1,accentColor:"#0369a1",height:3}}/>
             <span style={{fontSize:11,fontWeight:700,minWidth:32,textAlign:"right",color:"#0369a1"}}>{mag.toFixed(1)}</span>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:6,marginTop:5}}>
+            <span style={{fontSize:11,color:"#1d6d95",letterSpacing:"0.07em",minWidth:42,fontWeight:600}}>DEPTH</span>
+            <input type="range" min={0} max={700} step={5} value={dep} onChange={e=>setDep(parseInt(e.target.value,10))}
+              style={{flex:1,accentColor:"#0369a1",height:3}}/>
+            <span style={{fontSize:11,fontWeight:700,minWidth:32,textAlign:"right",color:"#0369a1"}}>{dep}km</span>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:"#8aa6b8",letterSpacing:"0.05em",marginTop:2,paddingLeft:48}}>
+            <span>{DEPTH_REGIME(dep)}</span>
+            <span>BELOW SURFACE</span>
           </div>
           {predictData?.sea_floor_depth_m != null && (
             <div style={{fontSize:10,color:"#8aa6b8",marginTop:4,letterSpacing:"0.05em"}}>
