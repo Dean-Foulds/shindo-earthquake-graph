@@ -5,5 +5,6 @@ neo4j
 python-dotenv
 pytest
 httpx
-anthropic
+anthropic>=0.40
 voyageai
+PyJWT

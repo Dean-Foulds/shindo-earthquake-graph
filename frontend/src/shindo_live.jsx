@@ -14,23 +14,23 @@ function useWindowWidth() {
 
 const MD_COMPONENTS = {
   p:      ({children}) => <p style={{margin:"0 0 8px",lineHeight:1.7}}>{children}</p>,
-  strong: ({children}) => <strong style={{color:"#00ffff",fontWeight:700}}>{children}</strong>,
-  em:     ({children}) => <em style={{color:"#7df9ff",fontStyle:"italic"}}>{children}</em>,
-  h1:     ({children}) => <div style={{fontSize:16,fontWeight:700,color:"#00e5ff",margin:"10px 0 5px",borderBottom:"1px solid #001a33",paddingBottom:3}}>{children}</div>,
-  h2:     ({children}) => <div style={{fontSize:15,fontWeight:700,color:"#00e5ff",margin:"8px 0 4px"}}>{children}</div>,
-  h3:     ({children}) => <div style={{fontSize:14,fontWeight:700,color:"#00ccdd",margin:"6px 0 3px"}}>{children}</div>,
+  strong: ({children}) => <strong style={{color:"#08365c",fontWeight:700}}>{children}</strong>,
+  em:     ({children}) => <em style={{color:"#12405f",fontStyle:"italic"}}>{children}</em>,
+  h1:     ({children}) => <div style={{fontSize:16,fontWeight:700,color:"#0369a1",margin:"10px 0 5px",borderBottom:"1px solid #cfe0f0",paddingBottom:3}}>{children}</div>,
+  h2:     ({children}) => <div style={{fontSize:15,fontWeight:700,color:"#0369a1",margin:"8px 0 4px"}}>{children}</div>,
+  h3:     ({children}) => <div style={{fontSize:14,fontWeight:700,color:"#0a5c8a",margin:"6px 0 3px"}}>{children}</div>,
   ul:     ({children}) => <ul style={{margin:"4px 0",paddingLeft:18}}>{children}</ul>,
   ol:     ({children}) => <ol style={{margin:"4px 0",paddingLeft:18}}>{children}</ol>,
-  li:     ({children}) => <li style={{margin:"3px 0",color:"#a0e4ff"}}>{children}</li>,
+  li:     ({children}) => <li style={{margin:"3px 0",color:"#1c4a6b"}}>{children}</li>,
   code:   ({inline,children}) => inline
-    ? <code style={{background:"#001a33",border:"1px solid #002244",borderRadius:3,padding:"1px 6px",fontSize:12,color:"#00ffff",fontFamily:"inherit"}}>{children}</code>
-    : <pre style={{background:"#00050f",border:"1px solid #001a33",borderRadius:5,padding:"10px 12px",margin:"6px 0",overflowX:"auto",fontSize:12,color:"#7df9ff",fontFamily:"inherit",lineHeight:1.6}}><code>{children}</code></pre>,
-  blockquote: ({children}) => <blockquote style={{borderLeft:"2px solid #003366",margin:"6px 0",paddingLeft:12,color:"#0099bb"}}>{children}</blockquote>,
-  hr:     () => <hr style={{border:"none",borderTop:"1px solid #001a33",margin:"8px 0"}}/>,
-  a:      ({href,children}) => <a href={href} target="_blank" rel="noreferrer" style={{color:"#00b4d8",textDecoration:"underline"}}>{children}</a>,
+    ? <code style={{background:"#cfe0f0",border:"1px solid #bdd6ea",borderRadius:3,padding:"1px 6px",fontSize:12,color:"#08365c",fontFamily:"inherit"}}>{children}</code>
+    : <pre style={{background:"#e9f1fa",border:"1px solid #cfe0f0",borderRadius:5,padding:"10px 12px",margin:"6px 0",overflowX:"auto",fontSize:12,color:"#12405f",fontFamily:"inherit",lineHeight:1.6}}><code>{children}</code></pre>,
+  blockquote: ({children}) => <blockquote style={{borderLeft:"2px solid #8fb6d8",margin:"6px 0",paddingLeft:12,color:"#35759b"}}>{children}</blockquote>,
+  hr:     () => <hr style={{border:"none",borderTop:"1px solid #cfe0f0",margin:"8px 0"}}/>,
+  a:      ({href,children}) => <a href={href} target="_blank" rel="noreferrer" style={{color:"#2b7ba8",textDecoration:"underline"}}>{children}</a>,
   table:  ({children}) => <table style={{borderCollapse:"collapse",width:"100%",margin:"6px 0",fontSize:13}}>{children}</table>,
-  th:     ({children}) => <th style={{padding:"5px 10px",background:"#001a33",color:"#00e5ff",textAlign:"left",borderBottom:"1px solid #002244"}}>{children}</th>,
-  td:     ({children}) => <td style={{padding:"4px 10px",borderBottom:"1px solid #001020",color:"#a0e4ff"}}>{children}</td>,
+  th:     ({children}) => <th style={{padding:"5px 10px",background:"#cfe0f0",color:"#0369a1",textAlign:"left",borderBottom:"1px solid #bdd6ea"}}>{children}</th>,
+  td:     ({children}) => <td style={{padding:"4px 10px",borderBottom:"1px solid #dce9f6",color:"#1c4a6b"}}>{children}</td>,
 }
 
 function ChatBubble({msg}) {
@@ -38,10 +38,10 @@ function ChatBubble({msg}) {
   return (
     <div style={{marginBottom:10}}>
       <div style={{fontSize:14,lineHeight:1.75,padding:"10px 14px",borderRadius:6,
-        background:isUser?"#001a33":"#000f1f",
-        border:`1px solid ${isUser?"#003366":"#001a2e"}`,
-        color:isUser?"#7df9ff":"#a0e4ff",wordBreak:"break-word"}}>
-        {isUser&&<div style={{fontSize:10,fontWeight:700,color:"#005577",letterSpacing:"0.1em",marginBottom:4}}>YOU</div>}
+        background:isUser?"#cfe0f0":"#eaf2fb",
+        border:`1px solid ${isUser?"#8fb6d8":"#d5e5f4"}`,
+        color:isUser?"#12405f":"#1c4a6b",wordBreak:"break-word"}}>
+        {isUser&&<div style={{fontSize:10,fontWeight:700,color:"#7398ac",letterSpacing:"0.1em",marginBottom:4}}>YOU</div>}
         {isUser
           ? <span style={{whiteSpace:"pre-wrap"}}>{msg.text}</span>
           : <ReactMarkdown components={MD_COMPONENTS}>{msg.text}</ReactMarkdown>
@@ -53,25 +53,23 @@ function ChatBubble({msg}) {
 
 const MAP_W = 390, MAP_H = 518
 const KM_PX = 1040 * Math.PI / 180 / 111.12
-const API_HEADERS = {
-  "Content-Type": "application/json",
-  "x-api-key": import.meta.env.VITE_ANTHROPIC_KEY,
-  "anthropic-version": "2023-06-01",
-  "anthropic-dangerous-direct-browser-access": "true",
-}
+// The model is called by the backend, not from here. Vite inlines VITE_* values
+// into the bundle, so an API key referenced in this file would be readable by
+// every visitor.
 
 const makeProj = () => d3.geoMercator().center([135.5,35.5]).scale(1040).translate([MAP_W/2,MAP_H/2])
+
 
 const POP = {hokkaido:5.2,aomori:1.2,iwate:1.2,miyagi:2.3,akita:1.0,yamagata:1.1,fukushima:1.8,ibaraki:2.9,tochigi:2.0,gunma:2.0,saitama:7.3,chiba:6.3,tokyo:13.9,kanagawa:9.2,niigata:2.2,toyama:1.0,ishikawa:1.1,fukui:0.8,yamanashi:0.8,nagano:2.1,gifu:2.0,shizuoka:3.6,aichi:7.5,mie:1.8,shiga:1.4,kyoto:2.6,osaka:8.8,hyogo:5.5,nara:1.3,wakayama:0.9,tottori:0.6,shimane:0.7,okayama:1.9,hiroshima:2.8,yamaguchi:1.3,tokushima:0.7,kagawa:1.0,ehime:1.4,kochi:0.7,fukuoka:5.1,saga:0.8,nagasaki:1.3,kumamoto:1.8,oita:1.1,miyazaki:1.1,kagoshima:1.6,okinawa:1.5}
 
 const FAULT_LINES = [
-  {id:"japan_trench",    name:"Japan Trench",       type:"subduction",  color:"#ff5544", coords:[[35.2,142.2],[36.2,142.5],[37.2,142.8],[38.2,143.3],[39.2,143.8],[40.2,144.2],[41.2,144.5],[42.2,144.6],[43.5,145.0]]},
-  {id:"nankai_trough",   name:"Nankai Trough",      type:"subduction",  color:"#ff9922", coords:[[31.0,131.0],[31.5,132.2],[32.0,133.6],[32.4,135.0],[32.8,136.3],[33.2,137.2],[33.5,137.8]]},
-  {id:"sagami_trough",   name:"Sagami Trough",      type:"subduction",  color:"#ff66aa", coords:[[33.8,138.5],[34.2,139.2],[34.6,140.0],[35.0,140.7]]},
-  {id:"ryukyu_trench",   name:"Ryukyu Trench",      type:"subduction",  color:"#ffcc22", coords:[[30.5,131.0],[29.5,130.0],[28.5,129.0],[27.5,128.2],[26.5,127.4],[25.5,126.6],[24.5,126.0]]},
-  {id:"median_tectonic_line",name:"Median Tectonic Line",type:"strike_slip",color:"#cc55ff",coords:[[33.4,130.2],[33.5,131.2],[33.6,132.2],[33.9,133.2],[34.1,134.2],[34.4,135.1],[34.7,135.6],[35.2,136.1],[35.6,136.6],[36.1,137.0]]},
-  {id:"itoigawa_shizuoka",name:"Itoigawa-Shizuoka",type:"strike_slip",color:"#44aaff",coords:[[37.2,137.8],[36.7,138.0],[36.2,138.0],[35.7,138.0],[35.2,138.1],[34.9,138.4]]},
-  {id:"noto_peninsula",  name:"Noto Fault System",  type:"reverse",     color:"#55ff99", coords:[[36.8,136.7],[37.1,137.0],[37.4,137.3],[37.6,137.5],[37.3,136.7],[37.0,136.5],[36.8,136.7]]},
+  {id:"japan_trench",    name:"Japan Trench",       type:"subduction",  color:"#d93d2b", coords:[[35.2,142.2],[36.2,142.5],[37.2,142.8],[38.2,143.3],[39.2,143.8],[40.2,144.2],[41.2,144.5],[42.2,144.6],[43.5,145.0]]},
+  {id:"nankai_trough",   name:"Nankai Trough",      type:"subduction",  color:"#cc7000", coords:[[31.0,131.0],[31.5,132.2],[32.0,133.6],[32.4,135.0],[32.8,136.3],[33.2,137.2],[33.5,137.8]]},
+  {id:"sagami_trough",   name:"Sagami Trough",      type:"subduction",  color:"#d8478f", coords:[[33.8,138.5],[34.2,139.2],[34.6,140.0],[35.0,140.7]]},
+  {id:"ryukyu_trench",   name:"Ryukyu Trench",      type:"subduction",  color:"#c99000", coords:[[30.5,131.0],[29.5,130.0],[28.5,129.0],[27.5,128.2],[26.5,127.4],[25.5,126.6],[24.5,126.0]]},
+  {id:"median_tectonic_line",name:"Median Tectonic Line",type:"strike_slip",color:"#8b3fd6",coords:[[33.4,130.2],[33.5,131.2],[33.6,132.2],[33.9,133.2],[34.1,134.2],[34.4,135.1],[34.7,135.6],[35.2,136.1],[35.6,136.6],[36.1,137.0]]},
+  {id:"itoigawa_shizuoka",name:"Itoigawa-Shizuoka",type:"strike_slip",color:"#2b7fd4",coords:[[37.2,137.8],[36.7,138.0],[36.2,138.0],[35.7,138.0],[35.2,138.1],[34.9,138.4]]},
+  {id:"noto_peninsula",  name:"Noto Fault System",  type:"reverse",     color:"#17a05e", coords:[[36.8,136.7],[37.1,137.0],[37.4,137.3],[37.6,137.5],[37.3,136.7],[37.0,136.5],[36.8,136.7]]},
 ]
 
 const ISLANDS = {
@@ -150,15 +148,17 @@ const NUCLEAR = [
   {id:"tomari",           name:"Tomari",           lat:43.046,lon:140.526,status:"suspended"},
 ]
 
-const IC = ["#c6dbef","#9ecae1","#fdeda5","#fec44f","#fe9929","#d95f0e","#c51b8a","#7a0177","#49006a","#1a0029"]
+const IC = ["#93bdd9","#6fa8cd","#e0c451","#f0a92b","#e8790a","#c94f06","#b0157c","#6e0169","#49006a","#2b0038"]
 const SEV = {
-  catastrophic: ["#2a0010","#ff2266"],
-  major:        ["#1f0800","#ff6600"],
-  strong:       ["#161000","#ffcc00"],
-  moderate:     ["#001020","#00aaff"],
-  minor:        ["#001a08","#00dd55"],
+  catastrophic: ["#fde8ee","#c2003f"],
+  major:        ["#fdeee2","#c25100"],
+  strong:       ["#fbf5dd","#a37800"],
+  moderate:     ["#dce9f6","#1f8ad4"],
+  minor:        ["#e8f7ee","#0f9e4a"],
 }
 const iCol = v => v ? IC[Math.min(Math.floor(v)-1,9)] : null
+// hypocentral depth bands — shallow ruptures shake hardest, deep ones reach further
+const DEPTH_REGIME = d => d<=30 ? "SHALLOW CRUSTAL" : d<=70 ? "TRANSITION" : d<=150 ? "INTRASLAB" : "DEEP INTRASLAB"
 const cityR = (id, hit) => { const p=POP[id]||1; return hit ? Math.max(6,2.5+Math.sqrt(p)*1.8) : Math.max(1.8,1.2+Math.sqrt(p)*0.75) }
 const faultMatch = str => {
   if(!str) return null; const s=str.toLowerCase()
@@ -175,7 +175,7 @@ const islandPath = (proj,coords) => "M "+coords.map(([lt,ln])=>proj([ln,lt]).map
 
 const INIT_MSG = "Hello — I'm 震度 (Shindo), your seismic risk assistant.\n\nClick anywhere on Japan to run a simulation, then ask me anything about the event, fault zones, or historical precedents."
 
-export default function Shindo({ chat }) {
+export default function Shindo({ chat, auth }) {
   const width     = useWindowWidth()
   const isMobile  = width < 768
   const intelRef  = useRef(null)
@@ -259,7 +259,7 @@ export default function Shindo({ chat }) {
     const fetchLive = async () => {
       try {
         const [eventsRes, statusRes] = await Promise.all([
-          fetch(`${import.meta.env.VITE_API_URL}/live/earthquakes?days=30&min_magnitude=4.5`),
+          fetch(`${import.meta.env.VITE_API_URL}/live/earthquakes?days=20&min_magnitude=4.0`),
           fetch(`${import.meta.env.VITE_API_URL}/live/status`)
         ])
         const events = await eventsRes.json()
@@ -290,25 +290,21 @@ export default function Shindo({ chat }) {
     .catch(err => console.warn("[predict]", err))
 
     try{
-      const res=await fetch("https://api.anthropic.com/v1/messages",{
-        method:"POST", headers:API_HEADERS,
-        body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1600,
-          system:"You are Shindo, Japan seismic risk AI backed by a Neo4j graph. Return ONLY valid JSON, no markdown.",
-          messages:[{role:"user",content:
-`Earthquake: ${lat.toFixed(2)}°N ${lon.toFixed(2)}°E M${currentMag.toFixed(1)} depth ${currentDep}km.
-Return ONLY JSON:
-{"fault_zone":"str","fault_type":"subduction|crustal|intraslab","severity":"minor|moderate|strong|major|catastrophic","affected_prefectures":[{"id":"id","name":"Name","intensity":1-10,"distance_km":number,"shindo":"1-7","risk":"shaking|tsunami|both","tsunami_height_m":number|null}],"tsunami":{"risk":"none|low|moderate|high|extreme","max_height_m":number|null,"warning_min":number|null,"estimated_casualties":number|null},"nuclear_risk":[{"id":"id","name":"Name","distance_km":number,"risk":"none|monitoring|elevated|critical"}],"historical_analogs":[{"name":"str","year":number,"magnitude":number,"deaths":number}],"cascade_chain":["str"],"insight":"str"}
-Pref IDs: hokkaido,aomori,iwate,miyagi,akita,yamagata,fukushima,ibaraki,tochigi,gunma,saitama,chiba,tokyo,kanagawa,niigata,toyama,ishikawa,fukui,yamanashi,nagano,gifu,shizuoka,aichi,mie,shiga,kyoto,osaka,hyogo,nara,wakayama,tottori,shimane,okayama,hiroshima,yamaguchi,tokushima,kagawa,ehime,kochi,fukuoka,saga,nagasaki,kumamoto,oita,miyazaki,kagoshima,okinawa
-Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_kariwa,shika,mihama,ohi,takahama,hamaoka,shimane_npp,ikata,genkai,sendai_npp,tomari
-4-8 prefectures. Always include tsunami_height_m for coastal prefs if tsunami risk exists.`}]})
+      const res=await fetch(`${import.meta.env.VITE_API_URL}/agent/analyze`,{
+        method:"POST",
+        headers:{"Content-Type":"application/json","Authorization":`Bearer ${auth.token}`},
+        body:JSON.stringify({lat, lon, magnitude:currentMag, depth:currentDep}),
       })
-      if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(`HTTP ${res.status}: ${e?.error?.message||res.statusText}`) }
-      const d=await res.json()
-      const t=d.content.filter(c=>c.type==="text").map(c=>c.text).join("").replace(/```[a-z]*\n?|```/g,"").trim()
-      setAna(JSON.parse(t))
+      if(res.status===401){ auth.signOut(); return }
+      const d=await res.json().catch(()=>({}))
+      if(!res.ok) throw new Error(d?.detail||`HTTP ${res.status}: ${res.statusText}`)
+      setAna(d)
     }catch(err){
       console.error("[Shindo]", err)
-      setAna({fault_zone:err.message,severity:"minor",cascade_chain:["Check API key / console"],affected_prefectures:[],nuclear_risk:[],tsunami:{risk:"none"},historical_analogs:[],insight:err.message})
+      const hint = err.message==="Failed to fetch"
+        ? "Backend unreachable — cd backend && uvicorn app.main:app --reload"
+        : err.message
+      setAna({fault_zone:"Analysis failed",severity:"minor",cascade_chain:[hint],affected_prefectures:[],nuclear_risk:[],tsunami:{risk:"none"},historical_analogs:[],insight:hint})
     }
     setLoading(false)
   }
@@ -370,7 +366,8 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
     } : null
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/agent/chat`, {
-        method:"POST", headers:{"Content-Type":"application/json"},
+        method:"POST",
+        headers:{"Content-Type":"application/json","Authorization":`Bearer ${auth.token}`},
         body:JSON.stringify({messages:next.slice(-12).map(m=>({role:m.role,text:m.text})),simulation}),
       })
       if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.detail||res.statusText)}
@@ -385,10 +382,12 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
   // ── DERIVED STATE ────────────────────────────────────────────
   const activeFault = faultMatch(ana?.fault_zone)
   const tsunamiOn   = ana?.tsunami?.risk && ana.tsunami.risk!=="none"
+  // total across all hazards; falls back to the tsunami-only figure for older responses
+  const casualties  = ana?.estimated_casualties ?? ana?.tsunami?.estimated_casualties ?? null
   const aSet  = new Set(ana?.affected_prefectures?.map(p=>p.id)||[])
   const tsSet = new Set(ana?.affected_prefectures?.filter(p=>p.risk==="tsunami"||p.risk==="both").map(p=>p.id)||[])
   const nSet  = new Set(ana?.nuclear_risk?.filter(n=>n.risk!=="none").map(n=>n.id)||[])
-  const sev   = SEV[ana?.severity]||["#050a14","#00e5ff"]
+  const sev   = SEV[ana?.severity]||["#eef5fc","#0369a1"]
   const wR    = Math.min(190,18+mag*21)
   const tsR   = Math.min(300,50+mag*30)
 
@@ -400,24 +399,23 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
   const tStr = `translate(${mapT.x},${mapT.y}) scale(${mapT.k})`
 
   return (
-    <div ref={outerRef} className="shindo-outer" style={{display:"flex",flexDirection:"row",height:"100vh",fontFamily:"'IBM Plex Mono',monospace",background:"#000510",overflow:"hidden"}}>
+    <div ref={outerRef} className="shindo-outer" style={{display:"flex",flexDirection:"row",height:"100vh",fontFamily:"'IBM Plex Mono',monospace",background:"#eef5fc",overflow:"hidden"}}>
 
       {/* MAP COLUMN */}
-      <div className="shindo-map" style={{flex:"0 0 640px",background:"#000510",position:"relative",userSelect:"none",borderRight:"1px solid #001a33"}}>
+      <div className="shindo-map" style={{flex:"0 0 640px",background:"#dbeafa",position:"relative",userSelect:"none",borderRight:"1px solid #cfe0f0"}}>
         <svg ref={svgRef} width="100%" height="100%" viewBox={`0 0 ${MAP_W} ${MAP_H}`}
           onClick={onClick} style={{display:"block",cursor:"crosshair",height:"100%"}}>
           <defs>
             <filter id="landGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="2.5" result="b"/>
-              <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+              <feDropShadow dx="0" dy="1.5" stdDeviation="2" floodColor="#1d4e73" floodOpacity="0.22"/>
             </filter>
             <filter id="nodeGlow" x="-150%" y="-150%" width="400%" height="400%">
               <feGaussianBlur stdDeviation="3" result="b"/>
               <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
             </filter>
             <filter id="nodeGlowHit" x="-200%" y="-200%" width="500%" height="500%">
-              <feGaussianBlur stdDeviation="6" result="b"/>
-              <feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+              <feGaussianBlur stdDeviation="4" result="b"/>
+              <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
             </filter>
             <filter id="faultGlow" x="-40%" y="-400%" width="180%" height="900%">
               <feGaussianBlur stdDeviation="3" result="b"/>
@@ -429,14 +427,14 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
             </filter>
           </defs>
 
-          <rect width={MAP_W} height={MAP_H} fill="#000510"/>
-          {Array.from({length:9},(_,i)=><line key={`h${i}`} x1={0} y1={(i+1)*MAP_H/10} x2={MAP_W} y2={(i+1)*MAP_H/10} stroke="#001525" strokeWidth="0.4"/>)}
-          {Array.from({length:7},(_,i)=><line key={`v${i}`} x1={(i+1)*MAP_W/8} y1={0} x2={(i+1)*MAP_W/8} y2={MAP_H} stroke="#001525" strokeWidth="0.4"/>)}
+          <rect width={MAP_W} height={MAP_H} fill="#dbeafa"/>
+          {Array.from({length:9},(_,i)=><line key={`h${i}`} x1={0} y1={(i+1)*MAP_H/10} x2={MAP_W} y2={(i+1)*MAP_H/10} stroke="#c9dcee" strokeWidth="0.4"/>)}
+          {Array.from({length:7},(_,i)=><line key={`v${i}`} x1={(i+1)*MAP_W/8} y1={0} x2={(i+1)*MAP_W/8} y2={MAP_H} stroke="#c9dcee" strokeWidth="0.4"/>)}
 
           <g transform={tStr}>
             {plexusLinks.map((lk,i)=>(
               <line key={i} x1={lk.x1} y1={lk.y1} x2={lk.x2} y2={lk.y2}
-                stroke="#00b4d8" strokeWidth="0.4" opacity={Math.max(0.04,0.2-lk.d/145*0.16)}/>
+                stroke="#2b7ba8" strokeWidth="0.45" opacity={Math.max(0.07,0.28-lk.d/145*0.21)}/>
             ))}
 
             {showFaults&&faultPaths.map(fl=>{
@@ -447,16 +445,16 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
                 {act&&<path d={fl.d} fill="none" stroke={fl.color} strokeWidth={3.5} opacity={0.5} filter="url(#faultGlow)">
                   <animate attributeName="opacity" values="0.3;0.85;0.3" dur="1.6s" repeatCount="indefinite"/>
                 </path>}
-                <path d={fl.d} fill="none" stroke={fl.color} strokeWidth={act?2.2:0.7} strokeDasharray={dash} opacity={act?1:0.28}/>
+                <path d={fl.d} fill="none" stroke={fl.color} strokeWidth={act?2.4:1.3} strokeDasharray={dash} opacity={act?1:0.55}/>
               </g>)
             })}
 
             {jpFeature&&<g filter="url(#landGlow)">
-              <path d={pg.current(jpFeature)} fill="#020d1a" stroke="#00e5ff" strokeWidth="1.2" opacity="0.9"/>
+              <path d={pg.current(jpFeature)} fill="#fdfeff" stroke="#2e6f9c" strokeWidth="1.1" opacity="1"/>
             </g>}
             {!jpFeature&&jpPolys&&jpPolys.map((d,i)=>(
               <g key={i} filter="url(#landGlow)">
-                <path d={d} fill="#020d1a" stroke="#00e5ff" strokeWidth="1.2" opacity="0.9"/>
+                <path d={d} fill="#fdfeff" stroke="#2e6f9c" strokeWidth="1.1" opacity="1"/>
               </g>
             ))}
 
@@ -482,8 +480,8 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
                   onMouseLeave={() => setTooltip(null)}
                   onClick={ev2 => ev2.stopPropagation()}
                 >
-                  <circle cx={x} cy={y} r={r * 2.5} fill="#ff8c00" opacity={opacity * 0.15}/>
-                  <circle cx={x} cy={y} r={r} fill="#ff8c00" opacity={opacity} stroke="#ff6600" strokeWidth="0.4"/>
+                  <circle cx={x} cy={y} r={r * 2.5} fill="#d97706" opacity={opacity * 0.15}/>
+                  <circle cx={x} cy={y} r={r} fill="#d97706" opacity={opacity} stroke="#c25100" strokeWidth="0.4"/>
                 </g>
               )
             })}
@@ -494,7 +492,7 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
                 .sort((a,b)=>(b.distance_km||0)-(a.distance_km||0))
                 .map(ap=>{
                   const r=(ap.distance_km||50)*KM_PX
-                  const col=iCol(ap.intensity)||"#884400"
+                  const col=iCol(ap.intensity)||"#8a5a12"
                   const op=0.04+(ap.intensity||3)*0.016
                   return (<circle key={`zone-${ap.id}`} cx={epi.x} cy={epi.y} r={r}
                     fill={col} fillOpacity={op} stroke={col} strokeOpacity={0.5} strokeWidth={0.7}/>)
@@ -514,13 +512,13 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
                 const cy=py+Math.sin(angle)*ry*0.45
                 const deg=angle*180/Math.PI-90
                 return (<g key={`flood-${ap.id}`}>
-                  <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="#0055cc" fillOpacity={0.32}
-                    stroke="#00aaff" strokeOpacity={0.6} strokeWidth={0.8} transform={`rotate(${deg},${cx},${cy})`}/>
-                  <ellipse cx={cx} cy={cy} rx={rx*0.55} ry={ry*0.55} fill="#0099ff" fillOpacity={0.18}
+                  <ellipse cx={cx} cy={cy} rx={rx} ry={ry} fill="#1d63c4" fillOpacity={0.32}
+                    stroke="#1f8ad4" strokeOpacity={0.6} strokeWidth={0.8} transform={`rotate(${deg},${cx},${cy})`}/>
+                  <ellipse cx={cx} cy={cy} rx={rx*0.55} ry={ry*0.55} fill="#1f7fd1" fillOpacity={0.18}
                     transform={`rotate(${deg},${cx},${cy})`}/>
                   {ap.tsunami_height_m&&(
-                    <text x={px+11} y={py-10} fontSize={9/mapT.k} fill="#00e5ff" fontFamily="inherit" fontWeight="700"
-                      style={{textShadow:"0 0 6px #00e5ff"}}>{ap.tsunami_height_m}m</text>
+                    <text x={px+11} y={py-10} fontSize={9/mapT.k} fill="#0b4a70" fontFamily="inherit" fontWeight="700"
+                      stroke="#ffffff" strokeWidth={2.2/mapT.k} paintOrder="stroke">{ap.tsunami_height_m}m</text>
                   )}
                 </g>)
               })
@@ -528,18 +526,19 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
 
             {epi&&ana&&prefXY.filter(p=>aSet.has(p.id)).map(p=>(
               <line key={`apl-${p.id}`} x1={p.x} y1={p.y} x2={epi.x} y2={epi.y}
-                stroke="#00e5ff" strokeWidth="0.6" opacity="0.2" strokeDasharray="4 5"/>
+                stroke="#0369a1" strokeWidth="0.6" opacity="0.2" strokeDasharray="4 5"/>
             ))}
 
             {prefXY.map(p=>{
               const hit=aSet.has(p.id), tsHit=tsSet.has(p.id)
               const info=ana?.affected_prefectures?.find(a=>a.id===p.id)
               const r=cityR(p.id,hit)
-              const col=hit?(tsHit?"#00ffff":(iCol(info?.intensity)||"#00e5ff")):"#00b4d8"
-              return (<g key={p.id} filter={hit?"url(#nodeGlowHit)":"url(#nodeGlow)"}>
-                <circle cx={p.x} cy={p.y} r={r*2.8} fill={col} opacity={hit?0.12:0.04}/>
-                <circle cx={p.x} cy={p.y} r={r*1.1} fill={col} opacity={hit?0.32:0.1}/>
-                <circle cx={p.x} cy={p.y} r={hit?r*0.6:r*0.5} fill={hit?"#ffffff":col} opacity={hit?0.95:0.45}/>
+              const col=hit?(tsHit?"#08365c":(iCol(info?.intensity)||"#0369a1")):"#2b7ba8"
+              // idle nodes stay unblurred — a gaussian halo vanishes against light land
+              return (<g key={p.id} filter={hit?"url(#nodeGlowHit)":undefined}>
+                <circle cx={p.x} cy={p.y} r={r*2.8} fill={col} opacity={hit?0.14:0.09}/>
+                <circle cx={p.x} cy={p.y} r={r*1.1} fill={col} opacity={hit?0.34:0.22}/>
+                <circle cx={p.x} cy={p.y} r={hit?r*0.6:r*0.5} fill={hit?"#0a3550":col} opacity={hit?0.95:0.8}/>
               </g>)
             })}
 
@@ -547,15 +546,15 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
               const [x,y]=proj.current([n.lon,n.lat])
               const ar=nSet.has(n.id)
               const ri=ana?.nuclear_risk?.find(r=>r.id===n.id)
-              const col=ar?(ri?.risk==="critical"?"#ff2020":ri?.risk==="elevated"?"#ff8800":"#ffdd00")
-                :(n.status==="active"?"#00cc66":n.status==="restarting"?"#00aaff":"#1a3344")
+              const col=ar?(ri?.risk==="critical"?"#d10a0a":ri?.risk==="elevated"?"#cc6d00":"#c79a00")
+                :(n.status==="active"?"#0f9e5c":n.status==="restarting"?"#1f8ad4":"#8fa6b5")
               return (<g key={n.id}>
                 {ar&&[0,1].map(i=>(<circle key={i} cx={x} cy={y} r="5" fill="none" stroke={col} strokeWidth="1.5" opacity="0">
                   <animate attributeName="r" values="5;24" dur="2.2s" begin={`${i*1.1}s`} repeatCount="indefinite"/>
                   <animate attributeName="opacity" values="0.9;0" dur="2.2s" begin={`${i*1.1}s`} repeatCount="indefinite"/>
                 </circle>))}
                 <polygon points={`${x},${y-6} ${x+5},${y+4} ${x-5},${y+4}`} fill={col}
-                  stroke="rgba(0,200,255,0.15)" strokeWidth="0.5"
+                  stroke="rgba(20,70,110,0.3)" strokeWidth="0.5"
                   opacity={(n.status==="shutdown"||n.status==="decommissioning")?0.25:0.9}/>
               </g>)
             })}
@@ -565,8 +564,8 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
               const [px,py]=proj.current([pf.lon,pf.lat])
               const len=Math.hypot(px-epi.x,py-epi.y), seg=len*0.14
               return (<g key={`tp-${ap.id}`}>
-                <line x1={epi.x} y1={epi.y} x2={px} y2={py} stroke="#00b4d8" strokeWidth="0.4" strokeDasharray="4 5" opacity="0.18"/>
-                <line x1={epi.x} y1={epi.y} x2={px} y2={py} stroke="#00e5ff" strokeWidth="1.8" strokeDasharray={`${seg} ${len}`} opacity="0.8">
+                <line x1={epi.x} y1={epi.y} x2={px} y2={py} stroke="#2b7ba8" strokeWidth="0.4" strokeDasharray="4 5" opacity="0.18"/>
+                <line x1={epi.x} y1={epi.y} x2={px} y2={py} stroke="#0369a1" strokeWidth="1.8" strokeDasharray={`${seg} ${len}`} opacity="0.8">
                   <animate attributeName="stroke-dashoffset" from={len+seg} to={-seg} dur="2.2s" repeatCount="indefinite"/>
                 </line>
               </g>)
@@ -575,15 +574,15 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
             {epi&&ana?.nuclear_risk?.filter(n=>n.risk!=="none").map(nr=>{
               const pl=NUCLEAR.find(n=>n.id===nr.id); if(!pl) return null
               const [nx,ny]=proj.current([pl.lon,pl.lat])
-              return <line key={nr.id} x1={epi.x} y1={epi.y} x2={nx} y2={ny} stroke="#ff4422" strokeWidth="0.9" strokeDasharray="5 3" opacity="0.65"/>
+              return <line key={nr.id} x1={epi.x} y1={epi.y} x2={nx} y2={ny} stroke="#d93b18" strokeWidth="0.9" strokeDasharray="5 3" opacity="0.65"/>
             })}
 
-            {epi&&[0,1,2].map(i=>(<circle key={`sw${wk}${i}`} cx={epi.x} cy={epi.y} r="4" fill="none" stroke="#ff4422" strokeWidth={2-i*0.5}>
+            {epi&&[0,1,2].map(i=>(<circle key={`sw${wk}${i}`} cx={epi.x} cy={epi.y} r="4" fill="none" stroke="#d93b18" strokeWidth={2-i*0.5}>
               <animate attributeName="r" from="4" to={wR} dur={`${2.8+i*0.5}s`} begin={`${i*0.9}s`} repeatCount="indefinite"/>
               <animate attributeName="opacity" from="0.9" to="0" dur={`${2.8+i*0.5}s`} begin={`${i*0.9}s`} repeatCount="indefinite"/>
             </circle>))}
 
-            {epi&&tsunamiOn&&[0,1,2,3].map(i=>(<circle key={`tw${wk}${i}`} cx={epi.x} cy={epi.y} r="12" fill="none" stroke="#00b4d8" strokeWidth={1.8-i*0.3}>
+            {epi&&tsunamiOn&&[0,1,2,3].map(i=>(<circle key={`tw${wk}${i}`} cx={epi.x} cy={epi.y} r="12" fill="none" stroke="#2b7ba8" strokeWidth={1.8-i*0.3}>
               <animate attributeName="r" from="12" to={tsR} dur={`${6+i*1.6}s`} begin={`${i*1.6}s`} repeatCount="indefinite"/>
               <animate attributeName="opacity" from="0.7" to="0" dur={`${6+i*1.6}s`} begin={`${i*1.6}s`} repeatCount="indefinite"/>
             </circle>))}
@@ -597,19 +596,19 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
               const dur=severe?"0.35s":"0.6s"
               return (<g key={`icon-${ap.id}`}>
                 {isShaking&&severe&&(<g>
-                  <polygon points={`${px},${py-20} ${px+8},${py-7} ${px-8},${py-7}`} fill="#ff3322">
+                  <polygon points={`${px},${py-20} ${px+8},${py-7} ${px-8},${py-7}`} fill="#d92211">
                     <animate attributeName="opacity" values="1;0;1;0;1" dur={dur} repeatCount="indefinite"/>
                   </polygon>
                 </g>)}
                 {isShaking&&!severe&&(ap.intensity||0)>=5&&(
-                  <circle cx={px} cy={py} r={cityR(pf.id,true)+3} fill="none" stroke="#00e5ff" strokeWidth="1.5" opacity="0.5">
+                  <circle cx={px} cy={py} r={cityR(pf.id,true)+3} fill="none" stroke="#0369a1" strokeWidth="1.5" opacity="0.5">
                     <animate attributeName="r" values={`${cityR(pf.id,true)+2};${cityR(pf.id,true)+7};${cityR(pf.id,true)+2}`} dur="1s" repeatCount="indefinite"/>
                     <animate attributeName="opacity" values="0.5;0.1;0.5" dur="1s" repeatCount="indefinite"/>
                   </circle>
                 )}
                 {isTS&&[0,1].map(w=>(<path key={w}
                   d={`M${px-9},${py-19+w*5} C${px-6},${py-24+w*5} ${px-2},${py-15+w*5} ${px+1},${py-19+w*5} C${px+4},${py-23+w*5} ${px+7},${py-15+w*5} ${px+9},${py-19+w*5}`}
-                  fill="none" stroke="#00e5ff" strokeWidth={2-w*0.4}>
+                  fill="none" stroke="#0369a1" strokeWidth={2-w*0.4}>
                   <animate attributeName="opacity" values="1;0.1;1" dur={`${0.7+w*0.15}s`} repeatCount="indefinite"/>
                 </path>))}
               </g>)
@@ -618,7 +617,7 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
             {epi&&ana?.nuclear_risk?.filter(n=>n.risk==="critical"||n.risk==="elevated").map(nr=>{
               const pl=NUCLEAR.find(n=>n.id===nr.id); if(!pl) return null
               const [nx,ny]=proj.current([pl.lon,pl.lat])
-              const col=nr.risk==="critical"?"#ff2020":"#ff8800"
+              const col=nr.risk==="critical"?"#d10a0a":"#cc6d00"
               const dur=nr.risk==="critical"?"0.28s":"0.55s"
               return (<g key={`nfl-${nr.id}`}>
                 {[0,60,120].map(a=>{ const r2=Math.PI*a/180
@@ -635,11 +634,11 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
             })}
 
             {epi&&<g filter="url(#epiGlow)">
-              <circle cx={epi.x} cy={epi.y} r={6} fill="#ff3322"/>
-              <line x1={epi.x-18} y1={epi.y} x2={epi.x-10} y2={epi.y} stroke="#ff3322" strokeWidth={2.5}/>
-              <line x1={epi.x+10} y1={epi.y} x2={epi.x+18} y2={epi.y} stroke="#ff3322" strokeWidth={2.5}/>
-              <line x1={epi.x} y1={epi.y-18} x2={epi.x} y2={epi.y-10} stroke="#ff3322" strokeWidth={2.5}/>
-              <line x1={epi.x} y1={epi.y+10} x2={epi.x} y2={epi.y+18} stroke="#ff3322" strokeWidth={2.5}/>
+              <circle cx={epi.x} cy={epi.y} r={6} fill="#d92211"/>
+              <line x1={epi.x-18} y1={epi.y} x2={epi.x-10} y2={epi.y} stroke="#d92211" strokeWidth={2.5}/>
+              <line x1={epi.x+10} y1={epi.y} x2={epi.x+18} y2={epi.y} stroke="#d92211" strokeWidth={2.5}/>
+              <line x1={epi.x} y1={epi.y-18} x2={epi.x} y2={epi.y-10} stroke="#d92211" strokeWidth={2.5}/>
+              <line x1={epi.x} y1={epi.y+10} x2={epi.x} y2={epi.y+18} stroke="#d92211" strokeWidth={2.5}/>
             </g>}
           </g>
         </svg>
@@ -650,29 +649,29 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
             position:"absolute",
             left: tooltip.x + 14,
             top:  tooltip.y - 12,
-            background:"rgba(0,5,16,0.93)",
-            border:"1px solid #ff8c00",
+            background:"rgba(255,255,255,0.95)",
+            border:"1px solid #d97706",
             borderRadius:4,
             padding:"5px 9px",
             fontSize:10,
-            color:"#ff8c00",
+            color:"#d97706",
             fontFamily:"'IBM Plex Mono',monospace",
             letterSpacing:"0.07em",
             lineHeight:1.8,
             pointerEvents:"none",
             zIndex:200,
             whiteSpace:"nowrap",
-            boxShadow:"0 0 12px rgba(255,140,0,0.2)"
+            boxShadow:"0 0 12px rgba(217,119,6,0.22)"
           }}>
             <div style={{fontWeight:700}}>M{tooltip.magnitude?.toFixed(1)}</div>
-            <div style={{color:"#cc6600",fontSize:9}}>
+            <div style={{color:"#a35200",fontSize:9}}>
               {tooltip.time ? new Date(tooltip.time).toLocaleString("ja-JP",{
                 month:"short", day:"numeric",
                 hour:"2-digit", minute:"2-digit"
               }) : "—"}
             </div>
             {tooltip.place && (
-              <div style={{color:"#884400",fontSize:9,maxWidth:180,overflow:"hidden",textOverflow:"ellipsis"}}>
+              <div style={{color:"#8a5a12",fontSize:9,maxWidth:180,overflow:"hidden",textOverflow:"ellipsis"}}>
                 {tooltip.place}
               </div>
             )}
@@ -683,21 +682,21 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
         {liveMode && liveEvents.length > 0 && (
           <div style={{
             position:"absolute", top:10, left:10,
-            background:"rgba(0,5,16,0.88)",
-            border:"1px solid #ff8c00",
+            background:"rgba(255,255,255,0.93)",
+            border:"1px solid #d97706",
             borderRadius:5, padding:"6px 10px",
-            fontSize:10, color:"#ff8c00",
+            fontSize:10, color:"#d97706",
             fontFamily:"'IBM Plex Mono',monospace",
             letterSpacing:"0.08em", lineHeight:1.9,
             pointerEvents:"none",
-            boxShadow:"0 0 14px rgba(255,140,0,0.18)"
+            boxShadow:"0 0 14px rgba(217,119,6,0.2)"
           }}>
             <div style={{fontWeight:700,marginBottom:1}}>● SEISMIC CONDITIONS</div>
-            <div style={{color:"#cc6600"}}>
+            <div style={{color:"#a35200"}}>
               {liveEvents.length} events · M{Math.min(...liveEvents.map(e=>e.magnitude)).toFixed(1)}–M{Math.max(...liveEvents.map(e=>e.magnitude)).toFixed(1)}
             </div>
-            <div style={{color:"#664400",fontSize:9}}>last 30 days · hover dots for detail</div>
-            <div style={{color:"#553300",fontSize:9,marginTop:1}}>CLICK MAP TO SIMULATE →</div>
+            <div style={{color:"#8a6a33",fontSize:9}}>last 20 days · hover dots for detail</div>
+            <div style={{color:"#8f7a52",fontSize:9,marginTop:1}}>CLICK MAP TO SIMULATE →</div>
           </div>
         )}
 
@@ -705,38 +704,38 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
         {!liveMode && (
           <button onClick={e=>{e.stopPropagation(); returnToLive()}} style={{
             position:"absolute", top:10, left:10,
-            background:"rgba(0,5,16,0.88)",
-            border:"1px solid #ff8c00",
+            background:"rgba(255,255,255,0.93)",
+            border:"1px solid #d97706",
             borderRadius:5, padding:"5px 10px",
-            fontSize:10, color:"#ff8c00",
+            fontSize:10, color:"#d97706",
             fontFamily:"'IBM Plex Mono',monospace",
             letterSpacing:"0.08em", cursor:"pointer",
-            boxShadow:"0 0 10px rgba(255,140,0,0.15)"
+            boxShadow:"0 0 10px rgba(217,119,6,0.18)"
           }}>
             ← LIVE CONDITIONS
           </button>
         )}
 
         {/* ── LEGEND ────────────────────────────────────────── */}
-        <div style={{position:"absolute",bottom:10,left:10,fontSize:11,color:"#0099bb",lineHeight:1.9,pointerEvents:"auto"}}>
+        <div style={{position:"absolute",bottom:10,left:10,fontSize:11,color:"#35759b",lineHeight:1.9,pointerEvents:"auto"}}>
           <div style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",opacity:showFaults?1:0.4}}
             onClick={e=>{e.stopPropagation();setShowFaults(f=>!f)}}>
-            <div style={{width:16,height:1.5,background:"#ff9922"}}/><span>FAULTS {showFaults?"▪":"▫"}</span>
+            <div style={{width:16,height:1.5,background:"#cc7000"}}/><span>FAULTS {showFaults?"▪":"▫"}</span>
           </div>
           {showFaults&&FAULT_LINES.slice(0,4).map(fl=>(
             <div key={fl.id} style={{display:"flex",alignItems:"center",gap:4,paddingLeft:3}}>
               <div style={{width:12,height:1.5,background:fl.color,opacity:0.7}}/>
-              <span style={{fontSize:10,opacity:0.7,color:"#007799"}}>{fl.name}</span>
+              <span style={{fontSize:10,opacity:0.7,color:"#5b859f"}}>{fl.name}</span>
             </div>
           ))}
           <div style={{marginTop:3,display:"flex",alignItems:"center",gap:5}}>
-            <svg width="8" height="8"><polygon points="4,0 8,8 0,8" fill="#00cc66"/></svg>
+            <svg width="8" height="8"><polygon points="4,0 8,8 0,8" fill="#0f9e5c"/></svg>
             <span>NUCLEAR</span>
           </div>
           {liveEvents.length > 0 && (
             <div style={{marginTop:3,display:"flex",alignItems:"center",gap:5}}>
-              <div style={{width:8,height:8,borderRadius:"50%",background:"#ff8c00"}}/>
-              <span style={{color:"#ff8c00"}}>RECENT EVENTS</span>
+              <div style={{width:8,height:8,borderRadius:"50%",background:"#d97706"}}/>
+              <span style={{color:"#d97706"}}>RECENT EVENTS</span>
             </div>
           )}
         </div>
@@ -749,14 +748,14 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
               const svg=d3.select(svgRef.current)
               if(s===null) svg.call(zoomRef.current.transform,d3.zoomIdentity)
               else svg.call(zoomRef.current.scaleBy,s)
-            }} style={{width:18,height:18,background:"#001a33",border:"1px solid #003366",color:"#00e5ff",
+            }} style={{width:18,height:18,background:"#cfe0f0",border:"1px solid #8fb6d8",color:"#0369a1",
               fontSize:l==="⌂"?8:12,cursor:"pointer",borderRadius:3,lineHeight:1,fontFamily:"inherit"}}>
               {l}
             </button>
           ))}
         </div>
 
-        {epi&&<div style={{position:"absolute",bottom:10,right:10,fontSize:11,color:"#00aacc",textAlign:"right",lineHeight:1.7}}>
+        {epi&&<div style={{position:"absolute",bottom:10,right:10,fontSize:11,color:"#1d6d95",textAlign:"right",lineHeight:1.7}}>
           <div>{epi.lat.toFixed(2)}°N {epi.lon.toFixed(2)}°E</div>
           <div>M{mag.toFixed(1)} · ×{mapT.k.toFixed(1)}</div>
         </div>}
@@ -764,21 +763,31 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
 
       {/* INTEL PANEL */}
       <div ref={intelRef} className="shindo-intel" style={{flex:"0 0 280px",display:"flex",flexDirection:"column",overflow:"hidden"}}>
-        <div style={{padding:"10px 12px 8px",borderBottom:"1px solid #001a33",background:"#000b1a",flexShrink:0}}>
+        <div style={{padding:"10px 12px 8px",borderBottom:"1px solid #cfe0f0",background:"#f7fbff",flexShrink:0}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:8}}>
-            <span style={{fontSize:14,fontWeight:700,letterSpacing:"0.06em",color:"#00e5ff",textShadow:"0 0 12px rgba(0,229,255,0.5)"}}>震度</span>
-            <span style={{fontSize:10,color:"#0099bb",letterSpacing:"0.1em",fontWeight:600}}>SEISMIC INTEL</span>
+            <span style={{fontSize:14,fontWeight:700,letterSpacing:"0.06em",color:"#0369a1"}}>震度</span>
+            <span style={{fontSize:10,color:"#35759b",letterSpacing:"0.1em",fontWeight:600}}>SEISMIC INTEL</span>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:0}}>
-            <span style={{fontSize:11,color:"#00aacc",letterSpacing:"0.07em",minWidth:42,fontWeight:600}}>MAG</span>
+            <span style={{fontSize:11,color:"#1d6d95",letterSpacing:"0.07em",minWidth:42,fontWeight:600}}>MAG</span>
             <input type="range" min={4} max={9.1} step={0.1} value={mag} onChange={e=>setMag(parseFloat(e.target.value))}
-              style={{flex:1,accentColor:"#00e5ff",height:3}}/>
-            <span style={{fontSize:11,fontWeight:700,minWidth:32,textAlign:"right",color:"#00e5ff"}}>{mag.toFixed(1)}</span>
+              style={{flex:1,accentColor:"#0369a1",height:3}}/>
+            <span style={{fontSize:11,fontWeight:700,minWidth:32,textAlign:"right",color:"#0369a1"}}>{mag.toFixed(1)}</span>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:6,marginTop:5}}>
+            <span style={{fontSize:11,color:"#1d6d95",letterSpacing:"0.07em",minWidth:42,fontWeight:600}}>DEPTH</span>
+            <input type="range" min={0} max={700} step={5} value={dep} onChange={e=>setDep(parseInt(e.target.value,10))}
+              style={{flex:1,accentColor:"#0369a1",height:3}}/>
+            <span style={{fontSize:11,fontWeight:700,minWidth:32,textAlign:"right",color:"#0369a1"}}>{dep}km</span>
+          </div>
+          <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:"#8aa6b8",letterSpacing:"0.05em",marginTop:2,paddingLeft:48}}>
+            <span>{DEPTH_REGIME(dep)}</span>
+            <span>BELOW SURFACE</span>
           </div>
           {predictData?.sea_floor_depth_m != null && (
-            <div style={{fontSize:10,color:"#004466",marginTop:4,letterSpacing:"0.05em"}}>
+            <div style={{fontSize:10,color:"#8aa6b8",marginTop:4,letterSpacing:"0.05em"}}>
               DEPTH AUTO: {predictData.sea_floor_depth_m > 0 ? "+" : ""}{predictData.sea_floor_depth_m}m
-              <span style={{marginLeft:6,color: predictData.is_offshore ? "#0077aa" : "#006633"}}>
+              <span style={{marginLeft:6,color: predictData.is_offshore ? "#557f9e" : "#157a45"}}>
                 {predictData.is_offshore ? "OFFSHORE" : "ONSHORE"}
               </span>
             </div>
@@ -787,14 +796,14 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
 
         <div style={{flex:1,overflowY:"auto",padding:"10px 12px"}}>
           {!epi&&!loading&&<div style={{paddingTop:32,textAlign:"center"}}>
-            <div style={{fontSize:28,marginBottom:8,color:"#00e5ff",opacity:0.15,fontWeight:700}}>震</div>
-            <div style={{fontSize:12,color:"#0099bb",letterSpacing:"0.08em",fontWeight:600}}>CLICK MAP TO SIMULATE</div>
-            <div style={{fontSize:11,marginTop:6,color:"#006688"}}>Scroll to zoom · Drag to pan</div>
+            <div style={{fontSize:28,marginBottom:8,color:"#0369a1",opacity:0.15,fontWeight:700}}>震</div>
+            <div style={{fontSize:12,color:"#35759b",letterSpacing:"0.08em",fontWeight:600}}>CLICK MAP TO SIMULATE</div>
+            <div style={{fontSize:11,marginTop:6,color:"#648ba4"}}>Scroll to zoom · Drag to pan</div>
             {liveEvents.length > 0 && (
-              <div style={{marginTop:16,fontSize:10,color:"#664400",letterSpacing:"0.06em"}}>
-                <div style={{color:"#ff8c00",marginBottom:6,fontWeight:700}}>● {liveEvents.length} RECENT EVENTS</div>
+              <div style={{marginTop:16,fontSize:10,color:"#8a6a33",letterSpacing:"0.06em"}}>
+                <div style={{color:"#d97706",marginBottom:6,fontWeight:700}}>● {liveEvents.length} RECENT EVENTS</div>
                 {liveEvents.slice(0,5).map(ev=>(
-                  <div key={ev.id} style={{marginBottom:3,color:"#553300",display:"flex",justifyContent:"space-between",padding:"2px 6px",background:"#0a0500",borderRadius:3}}>
+                  <div key={ev.id} style={{marginBottom:3,color:"#8f7a52",display:"flex",justifyContent:"space-between",padding:"2px 6px",background:"#fdf3e6",borderRadius:3}}>
                     <span>M{ev.magnitude?.toFixed(1)}</span>
                     <span style={{opacity:0.7,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:130,marginLeft:6}}>
                       {ev.place?.split(",")[0] || "Japan"}
@@ -806,183 +815,201 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
           </div>}
 
           {loading&&<div style={{paddingTop:32,textAlign:"center",lineHeight:2.4}}>
-            <div style={{fontSize:12,color:"#00e5ff",marginBottom:4,letterSpacing:"0.08em",fontWeight:700}}>ANALYSING</div>
+            <div style={{fontSize:12,color:"#0369a1",marginBottom:4,letterSpacing:"0.08em",fontWeight:700}}>ANALYSING</div>
             {["FAULT ZONES","TREMOR EXTENT","TSUNAMI PATH","NUCLEAR RISK","NEO4J INFERENCE"].map(s=>(
-              <div key={s} style={{fontSize:11,color:"#0077aa",fontWeight:600}}>{s}</div>
+              <div key={s} style={{fontSize:11,color:"#557f9e",fontWeight:600}}>{s}</div>
             ))}
           </div>}
 
           {ana&&!loading&&<div style={{fontSize:12}}>
             <div style={{padding:"6px 10px",borderRadius:5,marginBottom:9,background:sev[0],border:`1px solid ${sev[1]}40`,
               display:"flex",justifyContent:"space-between",alignItems:"center",boxShadow:`0 0 14px ${sev[1]}22`}}>
-              <span style={{fontSize:11,fontWeight:700,letterSpacing:"0.09em",color:sev[1],textShadow:`0 0 8px ${sev[1]}`}}>{(ana.severity||"").toUpperCase()}</span>
+              <span style={{fontSize:11,fontWeight:700,letterSpacing:"0.09em",color:sev[1]}}>{(ana.severity||"").toUpperCase()}</span>
               <span style={{fontSize:10,color:sev[1],opacity:0.8}}>{ana.fault_zone}</span>
             </div>
 
+            {/* ── ESTIMATED IMPACT — all hazards, not tsunami-gated ── */}
+            {casualties!=null&&<div style={{marginBottom:9,padding:"8px 10px",background:"#fdf0f2",border:"1px solid #e8b4bd",borderRadius:6}}>
+              <div style={{fontSize:11,color:"#a04a4a",letterSpacing:"0.1em",marginBottom:5,fontWeight:700}}>ESTIMATED IMPACT</div>
+              <div style={{display:"flex",gap:14,flexWrap:"wrap"}}>
+                <div>
+                  <div style={{fontSize:10,color:"#a34455",letterSpacing:"0.06em",fontWeight:600}}>CASUALTIES</div>
+                  <div style={{fontSize:18,color:"#c2003f",fontWeight:700,lineHeight:1.2}}>~{casualties.toLocaleString()}</div>
+                </div>
+                {ana.estimated_displaced!=null&&<div>
+                  <div style={{fontSize:10,color:"#a34455",letterSpacing:"0.06em",fontWeight:600}}>DISPLACED</div>
+                  <div style={{fontSize:18,color:"#c25100",fontWeight:700,lineHeight:1.2}}>~{ana.estimated_displaced.toLocaleString()}</div>
+                </div>}
+              </div>
+              <div style={{fontSize:9,color:"#a3453a",marginTop:5,letterSpacing:"0.04em"}}>MODEL ESTIMATE · NOT AN OFFICIAL FORECAST</div>
+            </div>}
+
             {ana.cascade_chain?.length>0&&<div style={{marginBottom:9}}>
-              <div style={{fontSize:11,color:"#0099bb",letterSpacing:"0.1em",marginBottom:4,fontWeight:700}}>CASCADE</div>
+              <div style={{fontSize:11,color:"#35759b",letterSpacing:"0.1em",marginBottom:4,fontWeight:700}}>CASCADE</div>
               <div style={{display:"flex",flexWrap:"wrap",gap:3,alignItems:"center"}}>
                 {ana.cascade_chain.map((s,i)=><span key={i} style={{display:"flex",alignItems:"center",gap:2}}>
-                  <span style={{fontSize:11,padding:"2px 7px",background:"#000b1a",border:"1px solid #002244",borderRadius:3,color:"#00ccdd",fontWeight:600}}>{s}</span>
-                  {i<ana.cascade_chain.length-1&&<span style={{fontSize:11,color:"#0055aa"}}>›</span>}
+                  <span style={{fontSize:11,padding:"2px 7px",background:"#f7fbff",border:"1px solid #bdd6ea",borderRadius:3,color:"#0a5c8a",fontWeight:600}}>{s}</span>
+                  {i<ana.cascade_chain.length-1&&<span style={{fontSize:11,color:"#6b8fb0"}}>›</span>}
                 </span>)}
               </div>
             </div>}
 
-            {tsunamiOn&&<div style={{marginBottom:9,padding:"8px 10px",background:"#000b1a",border:"1px solid #003366",borderRadius:6,boxShadow:"0 0 16px rgba(0,100,200,0.1)"}}>
+            {tsunamiOn&&<div style={{marginBottom:9,padding:"8px 10px",background:"#f7fbff",border:"1px solid #8fb6d8",borderRadius:6,boxShadow:"0 0 16px rgba(30,90,150,0.09)"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
-                <span style={{fontSize:12,color:"#00aadd",letterSpacing:"0.1em",fontWeight:700}}>TSUNAMI</span>
-                <span style={{fontSize:11,fontWeight:700,color:ana.tsunami.risk==="extreme"?"#ff4444":ana.tsunami.risk==="high"?"#ff8800":"#00ccff",
-                  textShadow:"0 0 8px currentColor"}}>{ana.tsunami.risk.toUpperCase()}</span>
+                <span style={{fontSize:12,color:"#14648f",letterSpacing:"0.1em",fontWeight:700}}>TSUNAMI</span>
+                <span style={{fontSize:11,fontWeight:700,color:ana.tsunami.risk==="extreme"?"#d42a2a":ana.tsunami.risk==="high"?"#cc6d00":"#0a7fb8"}}>{ana.tsunami.risk.toUpperCase()}</span>
               </div>
               <div style={{display:"flex",gap:10,marginBottom:6,flexWrap:"wrap"}}>
                 {ana.tsunami.max_height_m&&<div>
-                  <div style={{fontSize:10,color:"#0088aa",letterSpacing:"0.06em",fontWeight:600}}>WAVE HEIGHT</div>
-                  <div style={{fontSize:16,color:"#00e5ff",fontWeight:700,textShadow:"0 0 10px #00e5ff"}}>{ana.tsunami.max_height_m}m</div>
+                  <div style={{fontSize:10,color:"#4a7fa1",letterSpacing:"0.06em",fontWeight:600}}>WAVE HEIGHT</div>
+                  <div style={{fontSize:16,color:"#0369a1",fontWeight:700}}>{ana.tsunami.max_height_m}m</div>
                 </div>}
                 {ana.tsunami.warning_min&&<div>
-                  <div style={{fontSize:10,color:"#0088aa",letterSpacing:"0.06em",fontWeight:600}}>FIRST WAVE</div>
-                  <div style={{fontSize:16,color:"#00e5ff",fontWeight:700,textShadow:"0 0 10px #00e5ff"}}>{ana.tsunami.warning_min}min</div>
+                  <div style={{fontSize:10,color:"#4a7fa1",letterSpacing:"0.06em",fontWeight:600}}>FIRST WAVE</div>
+                  <div style={{fontSize:16,color:"#0369a1",fontWeight:700}}>{ana.tsunami.warning_min}min</div>
                 </div>}
               </div>
-              {ana.tsunami.estimated_casualties!=null&&<div style={{fontSize:11,color:"#ff7755",fontWeight:700,marginBottom:5,textShadow:"0 0 6px #ff5533"}}>
+              {ana.tsunami.estimated_casualties!=null&&<div style={{fontSize:11,color:"#c9503a",fontWeight:700,marginBottom:5}}>
                 ~{ana.tsunami.estimated_casualties.toLocaleString()} est. casualties
               </div>}
               {ana.affected_prefectures?.filter(p=>p.risk==="tsunami"||p.risk==="both").map(p=>(
                 <div key={p.id} style={{display:"flex",alignItems:"center",gap:5,marginBottom:2}}>
-                  <div style={{width:5,height:5,borderRadius:"50%",background:"#00b4d8",boxShadow:"0 0 5px #00b4d8",flexShrink:0}}/>
-                  <span style={{flex:1,fontSize:12,color:"#00ccee",fontWeight:600}}>{p.name}</span>
-                  <span style={{fontSize:11,color:"#0088aa"}}>{p.distance_km}km</span>
-                  {p.tsunami_height_m&&<span style={{fontSize:12,color:"#00e5ff",fontWeight:700}}>{p.tsunami_height_m}m</span>}
+                  <div style={{width:5,height:5,borderRadius:"50%",background:"#2b7ba8",flexShrink:0}}/>
+                  <span style={{flex:1,fontSize:12,color:"#0d6291",fontWeight:600}}>{p.name}</span>
+                  <span style={{fontSize:11,color:"#4a7fa1"}}>{p.distance_km}km</span>
+                  {p.tsunami_height_m&&<span style={{fontSize:12,color:"#0369a1",fontWeight:700}}>{p.tsunami_height_m}m</span>}
                 </div>
               ))}
               {predictData?.nearest_events?.length > 0 && (
-                <div style={{marginTop:8,borderTop:"1px solid #002244",paddingTop:7}}>
-                  <div style={{fontSize:10,color:"#005577",letterSpacing:"0.06em",fontWeight:600,marginBottom:5,display:"flex",justifyContent:"space-between"}}>
+                <div style={{marginTop:8,borderTop:"1px solid #bdd6ea",paddingTop:7}}>
+                  <div style={{fontSize:10,color:"#7398ac",letterSpacing:"0.06em",fontWeight:600,marginBottom:5,display:"flex",justifyContent:"space-between"}}>
                     <span>NEO4J HISTORICAL BASIS</span>
-                    <span style={{color:"#003344"}}>{predictData.historical_basis} events</span>
+                    <span style={{color:"#9db4c4"}}>{predictData.historical_basis} events</span>
                   </div>
                   {predictData.jma_warning_ja && (
-                    <div style={{marginBottom:6,padding:"4px 8px",background:"#1a0005",border:"1px solid #440011",borderRadius:4,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <span style={{fontSize:10,color:"#883333",fontWeight:600}}>JMA</span>
-                      <span style={{fontSize:11,color:"#ff4444",fontWeight:700}}>{predictData.jma_warning_ja}</span>
+                    <div style={{marginBottom:6,padding:"4px 8px",background:"#fdeef0",border:"1px solid #e8b4bd",borderRadius:4,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+                      <span style={{fontSize:10,color:"#a04a4a",fontWeight:600}}>JMA</span>
+                      <span style={{fontSize:11,color:"#d42a2a",fontWeight:700}}>{predictData.jma_warning_ja}</span>
                     </div>
                   )}
                   <div style={{display:"flex",gap:8,marginBottom:6}}>
                     <div>
-                      <div style={{fontSize:10,color:"#005577",fontWeight:600}}>OBSERVED RANGE</div>
-                      <div style={{fontSize:13,color:"#00ccdd",fontWeight:700}}>{predictData.wave_height_min_m}–{predictData.wave_height_max_m}m</div>
+                      <div style={{fontSize:10,color:"#7398ac",fontWeight:600}}>OBSERVED RANGE</div>
+                      <div style={{fontSize:13,color:"#0a5c8a",fontWeight:700}}>{predictData.wave_height_min_m}–{predictData.wave_height_max_m}m</div>
                     </div>
                     <div>
-                      <div style={{fontSize:10,color:"#005577",fontWeight:600}}>AVG</div>
-                      <div style={{fontSize:13,color:"#00ccdd",fontWeight:700}}>{predictData.wave_height_avg_m}m</div>
+                      <div style={{fontSize:10,color:"#7398ac",fontWeight:600}}>AVG</div>
+                      <div style={{fontSize:13,color:"#0a5c8a",fontWeight:700}}>{predictData.wave_height_avg_m}m</div>
                     </div>
                   </div>
                   {predictData.nearest_events.slice(0,3).map((ev,i) => (
-                    <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 7px",marginBottom:2,background:"#00050f",border:"1px solid #001a2e",borderRadius:3}}>
-                      <span style={{fontSize:10,color:"#006688",fontWeight:600,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.location||"Unknown"}</span>
-                      <span style={{fontSize:10,color:"#004455",marginLeft:4,whiteSpace:"nowrap"}}>M{ev.magnitude}</span>
-                      <span style={{fontSize:10,color:"#00aacc",fontWeight:700,marginLeft:4,whiteSpace:"nowrap"}}>{ev.waveHeight}m</span>
+                    <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 7px",marginBottom:2,background:"#e9f1fa",border:"1px solid #d5e5f4",borderRadius:3}}>
+                      <span style={{fontSize:10,color:"#648ba4",fontWeight:600,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.location||"Unknown"}</span>
+                      <span style={{fontSize:10,color:"#8ba7b9",marginLeft:4,whiteSpace:"nowrap"}}>M{ev.magnitude}</span>
+                      <span style={{fontSize:10,color:"#1d6d95",fontWeight:700,marginLeft:4,whiteSpace:"nowrap"}}>{ev.waveHeight}m</span>
                     </div>
                   ))}
                 </div>
               )}
               {!predictData && tsunamiOn && (
-                <div style={{marginTop:8,borderTop:"1px solid #001a33",paddingTop:6,fontSize:10,color:"#003344",letterSpacing:"0.06em"}}>
+                <div style={{marginTop:8,borderTop:"1px solid #cfe0f0",paddingTop:6,fontSize:10,color:"#9db4c4",letterSpacing:"0.06em"}}>
                   NEO4J INFERENCE LOADING...
                 </div>
               )}
             </div>}
 
             {ana.affected_prefectures?.filter(p=>p.risk==="shaking").length>0&&<div style={{marginBottom:9}}>
-              <div style={{fontSize:11,color:"#0099bb",letterSpacing:"0.1em",marginBottom:4,fontWeight:700}}>GROUND SHAKING</div>
+              <div style={{fontSize:11,color:"#35759b",letterSpacing:"0.1em",marginBottom:4,fontWeight:700}}>GROUND SHAKING</div>
               {ana.affected_prefectures.filter(p=>p.risk==="shaking").slice(0,6).map(p=>(
                 <div key={p.id} style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}>
-                  <div style={{width:6,height:6,borderRadius:"50%",background:iCol(p.intensity)||"#0088aa",flexShrink:0}}/>
-                  <span style={{flex:1,fontSize:12,color:"#00ccee",fontWeight:600}}>{p.name}</span>
-                  <span style={{fontSize:11,color:"#0088aa"}}>{p.distance_km}km</span>
-                  <span style={{fontSize:11,background:"#000b1a",border:"1px solid #002244",padding:"1px 6px",borderRadius:3,color:"#00e5ff",fontWeight:700,minWidth:16,textAlign:"center"}}>{p.shindo}</span>
+                  <div style={{width:6,height:6,borderRadius:"50%",background:iCol(p.intensity)||"#4a7fa1",flexShrink:0}}/>
+                  <span style={{flex:1,fontSize:12,color:"#0d6291",fontWeight:600}}>{p.name}</span>
+                  <span style={{fontSize:11,color:"#4a7fa1"}}>{p.distance_km}km</span>
+                  <span style={{fontSize:11,background:"#f7fbff",border:"1px solid #bdd6ea",padding:"1px 6px",borderRadius:3,color:"#0369a1",fontWeight:700,minWidth:16,textAlign:"center"}}>{p.shindo}</span>
                 </div>
               ))}
             </div>}
 
-            {ana.nuclear_risk?.filter(n=>n.risk!=="none").length>0&&<div style={{marginBottom:9,padding:"8px 10px",background:"#0c0005",border:"1px solid #440011",borderRadius:5}}>
-              <div style={{fontSize:11,color:"#ff4455",letterSpacing:"0.1em",marginBottom:4,fontWeight:700}}>NUCLEAR RISK</div>
+            {ana.nuclear_risk?.filter(n=>n.risk!=="none").length>0&&<div style={{marginBottom:9,padding:"8px 10px",background:"#fdf0f2",border:"1px solid #e8b4bd",borderRadius:5}}>
+              <div style={{fontSize:11,color:"#d42f3d",letterSpacing:"0.1em",marginBottom:4,fontWeight:700}}>NUCLEAR RISK</div>
               {ana.nuclear_risk.filter(n=>n.risk!=="none").map(n=>(
                 <div key={n.id} style={{display:"flex",alignItems:"center",gap:4,marginBottom:3}}>
-                  <svg width="8" height="8"><polygon points="4,0 8,8 0,8" fill="#ff2244"/></svg>
-                  <span style={{flex:1,fontSize:12,color:"#cc6655",fontWeight:600}}>{n.name}</span>
-                  <span style={{fontSize:11,color:"#882233"}}>{n.distance_km}km</span>
-                  <span style={{fontSize:11,color:"#ff3355",fontWeight:700,textShadow:"0 0 6px #ff2244"}}>{n.risk.toUpperCase()}</span>
+                  <svg width="8" height="8"><polygon points="4,0 8,8 0,8" fill="#d40f34"/></svg>
+                  <span style={{flex:1,fontSize:12,color:"#a3453a",fontWeight:600}}>{n.name}</span>
+                  <span style={{fontSize:11,color:"#a34455"}}>{n.distance_km}km</span>
+                  <span style={{fontSize:11,color:"#d41240",fontWeight:700}}>{n.risk.toUpperCase()}</span>
                 </div>
               ))}
             </div>}
 
             {ana.historical_analogs?.length>0&&<div style={{marginBottom:9}}>
-              <div style={{fontSize:11,color:"#0099bb",letterSpacing:"0.1em",marginBottom:4,fontWeight:700}}>HISTORICAL ANALOGS</div>
+              <div style={{fontSize:11,color:"#35759b",letterSpacing:"0.1em",marginBottom:4,fontWeight:700}}>HISTORICAL ANALOGS</div>
               {ana.historical_analogs.slice(0,3).map((a,i)=>(
-                <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"5px 9px",marginBottom:3,background:"#000b1a",border:"1px solid #002244",borderRadius:4}}>
-                  <span style={{fontSize:12,color:"#00ccdd",fontWeight:600}}>{a.name} <span style={{color:"#0077aa",fontSize:11}}>({a.year})</span></span>
-                  <span style={{color:"#0099bb",fontSize:12,fontWeight:700}}>M{a.magnitude}</span>
+                <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:6,padding:"5px 9px",marginBottom:3,background:"#f7fbff",border:"1px solid #bdd6ea",borderRadius:4}}>
+                  <span style={{fontSize:12,color:"#0a5c8a",fontWeight:600}}>{a.name} <span style={{color:"#557f9e",fontSize:11}}>({a.year})</span></span>
+                  <span style={{display:"flex",alignItems:"baseline",gap:7,flexShrink:0}}>
+                    {a.deaths!=null&&<span style={{fontSize:11,color:"#c2003f",fontWeight:700}}>{a.deaths.toLocaleString()} deaths</span>}
+                    <span style={{color:"#35759b",fontSize:12,fontWeight:700}}>M{a.magnitude}</span>
+                  </span>
                 </div>
               ))}
             </div>}
 
-            {ana.insight&&<div style={{fontSize:12,lineHeight:1.75,color:"#a0e4ff",fontWeight:500,padding:"9px 12px",borderLeft:"2px solid #0055aa",background:"#000f1f",borderRadius:"0 6px 6px 0"}}>{ana.insight}</div>}
+            {ana.insight&&<div style={{fontSize:12,lineHeight:1.75,color:"#1c4a6b",fontWeight:500,padding:"9px 12px",borderLeft:"2px solid #6b8fb0",background:"#eaf2fb",borderRadius:"0 6px 6px 0"}}>{ana.insight}</div>}
           </div>}
         </div>
       </div>
 
       {/* CHAT PANEL */}
-      <div className="shindo-chat" style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden",borderLeft:"1px solid #001a33"}}>
-        <div style={{padding:"14px 18px 12px",borderBottom:"1px solid #001a33",background:"#000b1a",flexShrink:0}}>
+      <div className="shindo-chat" style={{flex:1,display:"flex",flexDirection:"column",overflow:"hidden",borderLeft:"1px solid #cfe0f0"}}>
+        <div style={{padding:"14px 18px 12px",borderBottom:"1px solid #cfe0f0",background:"#f7fbff",flexShrink:0}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
-            <div style={{width:8,height:8,borderRadius:"50%",background:"#00e5ff",boxShadow:"0 0 10px #00e5ff"}}/>
+            <div style={{width:8,height:8,borderRadius:"50%",background:"#0369a1",boxShadow:"0 0 0 3px rgba(3,105,161,0.16)"}}/>
             <div>
-              <div style={{fontSize:15,fontWeight:800,letterSpacing:"0.08em",color:"#00e5ff",textShadow:"0 0 12px rgba(0,229,255,0.5)"}}>震度 SHINDO</div>
-              <div style={{fontSize:10,color:"#005577",letterSpacing:"0.12em",marginTop:1}}>SEISMIC INTELLIGENCE AGENT</div>
+              <div style={{fontSize:15,fontWeight:800,letterSpacing:"0.08em",color:"#0369a1"}}>震度 SHINDO</div>
+              <div style={{fontSize:10,color:"#7398ac",letterSpacing:"0.12em",marginTop:1}}>SEISMIC INTELLIGENCE AGENT</div>
             </div>
           </div>
         </div>
         <div style={{flex:1,overflowY:"auto",padding:"14px"}}>
           {chatMsgs.map((m,i)=><ChatBubble key={i} msg={m}/>)}
-          {chatLoading&&<div style={{padding:"10px 14px",background:"#000f1f",border:"1px solid #001a2e",borderRadius:6,color:"#004466",fontSize:13}}>
+          {chatLoading&&<div style={{padding:"10px 14px",background:"#eaf2fb",border:"1px solid #d5e5f4",borderRadius:6,color:"#8aa6b8",fontSize:13}}>
             <span>analyzing </span>
-            {[0,1,2].map(i=><span key={i} style={{display:"inline-block",width:4,height:4,borderRadius:"50%",background:"#00e5ff",margin:"0 2px",animation:`bounce 1.2s ${i*0.2}s infinite`}}/>)}
+            {[0,1,2].map(i=><span key={i} style={{display:"inline-block",width:4,height:4,borderRadius:"50%",background:"#0369a1",margin:"0 2px",animation:`bounce 1.2s ${i*0.2}s infinite`}}/>)}
           </div>}
           <div ref={chatEndRef}/>
         </div>
-        <div style={{padding:"10px 14px 14px",borderTop:"1px solid #001a33",flexShrink:0,background:"#000b1a"}}>
+        <div style={{padding:"10px 14px 14px",borderTop:"1px solid #cfe0f0",flexShrink:0,background:"#f7fbff"}}>
           <div style={{display:"flex",gap:6,alignItems:"flex-end"}}>
             <textarea value={chatInput} onChange={e=>setChatInput(e.target.value)}
               onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat()}}}
               placeholder="Ask about fault zones, tsunami risk, historical events…"
               rows={2}
-              style={{flex:1,background:"#000f1f",border:"1px solid #002244",borderRadius:6,
-                padding:"8px 10px",color:"#7df9ff",fontSize:14,fontFamily:"inherit",
+              style={{flex:1,background:"#eaf2fb",border:"1px solid #bdd6ea",borderRadius:6,
+                padding:"8px 10px",color:"#12405f",fontSize:14,fontFamily:"inherit",
                 resize:"none",outline:"none",lineHeight:1.5}}/>
             <button onClick={sendChat} disabled={!chatInput.trim()||chatLoading}
-              style={{height:50,padding:"0 14px",background:chatInput.trim()&&!chatLoading?"#003366":"#000f1f",
-                border:"1px solid #003366",borderRadius:6,
-                color:chatInput.trim()&&!chatLoading?"#00e5ff":"#002233",
+              style={{height:50,padding:"0 14px",background:chatInput.trim()&&!chatLoading?"#8fb6d8":"#eaf2fb",
+                border:"1px solid #8fb6d8",borderRadius:6,
+                color:chatInput.trim()&&!chatLoading?"#0369a1":"#b3c6d3",
                 cursor:chatInput.trim()&&!chatLoading?"pointer":"default",
                 fontSize:18,fontFamily:"inherit",transition:"all 0.2s"}}>›</button>
           </div>
-          <div style={{fontSize:10,color:"#003344",marginTop:5}}>Enter to send · Shift+Enter for newline</div>
+          <div style={{fontSize:10,color:"#9db4c4",marginTop:5}}>Enter to send · Shift+Enter for newline</div>
         </div>
       </div>
 
       <style>{`
         @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
-        textarea::placeholder { color: #003a55; }
+        textarea::placeholder { color: #93a9bb; }
         ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #000510; }
-        ::-webkit-scrollbar-thumb { background: #001a33; border-radius: 2px; }
+        ::-webkit-scrollbar-track { background: #eef5fc; }
+        ::-webkit-scrollbar-thumb { background: #cfe0f0; border-radius: 2px; }
         @media (max-width: 767px) {
           .shindo-outer { flex-direction: column !important; overflow-y: auto !important; overflow-x: hidden !important; }
-          .shindo-map { flex: 0 0 44vh !important; width: 100% !important; border-right: none !important; border-bottom: 1px solid #001a33 !important; }
-          .shindo-intel { flex: 0 0 auto !important; width: 100% !important; min-height: 280px !important; overflow-y: auto !important; border-bottom: 1px solid #001a33 !important; }
-          .shindo-chat { flex: 0 0 380px !important; width: 100% !important; border-left: none !important; border-top: 1px solid #001a33 !important; }
+          .shindo-map { flex: 0 0 44vh !important; width: 100% !important; border-right: none !important; border-bottom: 1px solid #cfe0f0 !important; }
+          .shindo-intel { flex: 0 0 auto !important; width: 100% !important; min-height: 280px !important; overflow-y: auto !important; border-bottom: 1px solid #cfe0f0 !important; }
+          .shindo-chat { flex: 0 0 380px !important; width: 100% !important; border-left: none !important; border-top: 1px solid #cfe0f0 !important; }
         }
       `}</style>
     </div>

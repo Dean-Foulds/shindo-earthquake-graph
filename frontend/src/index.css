@@ -1,16 +1,16 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body, #root { height: 100%; width: 100%; background: #000510; }
+html, body, #root { height: 100%; width: 100%; background: #eef5fc; }
 body {
   font-family: 'IBM Plex Mono', monospace;
-  color: #00b4d8;
+  color: #2b7ba8;
   min-width: 320px;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
-input[type=range] { cursor: pointer; accent-color: #00e5ff; }
+input[type=range] { cursor: pointer; accent-color: #0369a1; }
 ::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: #000510; }
-::-webkit-scrollbar-thumb { background: #001a33; border-radius: 2px; }
+::-webkit-scrollbar-track { background: #eef5fc; }
+::-webkit-scrollbar-thumb { background: #cfe0f0; border-radius: 2px; }
 
 /* ── Mobile layout ────────────────────────────────────────── */
 @media (max-width: 767px) {
@@ -23,19 +23,19 @@ input[type=range] { cursor: pointer; accent-color: #00e5ff; }
     flex: 0 0 52vh !important;
     width: 100% !important;
     border-right: none !important;
-    border-bottom: 1px solid #001a33 !important;
+    border-bottom: 1px solid #cfe0f0 !important;
   }
   .shindo-intel {
     flex: 0 0 auto !important;
     width: 100% !important;
     min-height: 260px !important;
     overflow-y: auto !important;
-    border-bottom: 1px solid #001a33 !important;
+    border-bottom: 1px solid #cfe0f0 !important;
   }
   .shindo-chat {
     flex: 0 0 380px !important;
     width: 100% !important;
     border-left: none !important;
-    border-top: 1px solid #001a33 !important;
+    border-top: 1px solid #cfe0f0 !important;
   }
 }

@@ -5,8 +5,11 @@
   "observability": {
     "enabled": true
   },
+  // Worker static-assets deploy — serves at
+  // https://shindo-earthquake-graph.deanfoulds.workers.dev/
+  // Must point at the Vite build output, not the source tree.
   "assets": {
-    "directory": "frontend"
+    "directory": "frontend/dist"
   },
   "compatibility_flags": [
     "nodejs_compat"
