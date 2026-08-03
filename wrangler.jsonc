@@ -2,15 +2,9 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "shindo-earthquake-graph",
   "compatibility_date": "2026-04-21",
-  "observability": {
-    "enabled": true
-  },
-  // Worker static-assets deploy — serves at
-  // https://shindo-earthquake-graph.deanfoulds.workers.dev/
-  // Must point at the Vite build output, not the source tree.
-  "assets": {
-    "directory": "frontend/dist"
-  },
+  // Cloudflare Pages project — serves at https://shindo-earthquake-graph.pages.dev/
+  // Points at the Vite build output, not the source tree.
+  "pages_build_output_dir": "frontend/dist",
   "compatibility_flags": [
     "nodejs_compat"
   ]
