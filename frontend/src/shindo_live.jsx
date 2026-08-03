@@ -297,10 +297,11 @@ export default function Shindo({ chat }) {
           messages:[{role:"user",content:
 `Earthquake: ${lat.toFixed(2)}°N ${lon.toFixed(2)}°E M${currentMag.toFixed(1)} depth ${currentDep}km.
 Return ONLY JSON:
-{"fault_zone":"str","fault_type":"subduction|crustal|intraslab","severity":"minor|moderate|strong|major|catastrophic","affected_prefectures":[{"id":"id","name":"Name","intensity":1-10,"distance_km":number,"shindo":"1-7","risk":"shaking|tsunami|both","tsunami_height_m":number|null}],"tsunami":{"risk":"none|low|moderate|high|extreme","max_height_m":number|null,"warning_min":number|null,"estimated_casualties":number|null},"nuclear_risk":[{"id":"id","name":"Name","distance_km":number,"risk":"none|monitoring|elevated|critical"}],"historical_analogs":[{"name":"str","year":number,"magnitude":number,"deaths":number}],"cascade_chain":["str"],"insight":"str"}
+{"fault_zone":"str","fault_type":"subduction|crustal|intraslab","severity":"minor|moderate|strong|major|catastrophic","estimated_casualties":number,"estimated_displaced":number|null,"affected_prefectures":[{"id":"id","name":"Name","intensity":1-10,"distance_km":number,"shindo":"1-7","risk":"shaking|tsunami|both","tsunami_height_m":number|null}],"tsunami":{"risk":"none|low|moderate|high|extreme","max_height_m":number|null,"warning_min":number|null,"estimated_casualties":number|null},"nuclear_risk":[{"id":"id","name":"Name","distance_km":number,"risk":"none|monitoring|elevated|critical"}],"historical_analogs":[{"name":"str","year":number,"magnitude":number,"deaths":number}],"cascade_chain":["str"],"insight":"str"}
 Pref IDs: hokkaido,aomori,iwate,miyagi,akita,yamagata,fukushima,ibaraki,tochigi,gunma,saitama,chiba,tokyo,kanagawa,niigata,toyama,ishikawa,fukui,yamanashi,nagano,gifu,shizuoka,aichi,mie,shiga,kyoto,osaka,hyogo,nara,wakayama,tottori,shimane,okayama,hiroshima,yamaguchi,tokushima,kagawa,ehime,kochi,fukuoka,saga,nagasaki,kumamoto,oita,miyazaki,kagoshima,okinawa
 Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_kariwa,shika,mihama,ohi,takahama,hamaoka,shimane_npp,ikata,genkai,sendai_npp,tomari
-4-8 prefectures. Always include tsunami_height_m for coastal prefs if tsunami risk exists.`}]})
+4-8 prefectures. Always include tsunami_height_m for coastal prefs if tsunami risk exists.
+ALWAYS give a top-level estimated_casualties (expected fatalities from ALL hazards combined — shaking, building collapse, landslide, fire, tsunami), never null. For shaking-dominant inland events this is driven by collapse and landslide, not tsunami. Also give historical_analogs[].deaths for every analog.`}]})
       })
       if(!res.ok){ const e=await res.json().catch(()=>({})); throw new Error(`HTTP ${res.status}: ${e?.error?.message||res.statusText}`) }
       const d=await res.json()
@@ -385,6 +386,8 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
   // ── DERIVED STATE ────────────────────────────────────────────
   const activeFault = faultMatch(ana?.fault_zone)
   const tsunamiOn   = ana?.tsunami?.risk && ana.tsunami.risk!=="none"
+  // total across all hazards; falls back to the tsunami-only figure for older responses
+  const casualties  = ana?.estimated_casualties ?? ana?.tsunami?.estimated_casualties ?? null
   const aSet  = new Set(ana?.affected_prefectures?.map(p=>p.id)||[])
   const tsSet = new Set(ana?.affected_prefectures?.filter(p=>p.risk==="tsunami"||p.risk==="both").map(p=>p.id)||[])
   const nSet  = new Set(ana?.nuclear_risk?.filter(n=>n.risk!=="none").map(n=>n.id)||[])
@@ -819,6 +822,22 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
               <span style={{fontSize:10,color:sev[1],opacity:0.8}}>{ana.fault_zone}</span>
             </div>
 
+            {/* ── ESTIMATED IMPACT — all hazards, not tsunami-gated ── */}
+            {casualties!=null&&<div style={{marginBottom:9,padding:"8px 10px",background:"#fdf0f2",border:"1px solid #e8b4bd",borderRadius:6}}>
+              <div style={{fontSize:11,color:"#a04a4a",letterSpacing:"0.1em",marginBottom:5,fontWeight:700}}>ESTIMATED IMPACT</div>
+              <div style={{display:"flex",gap:14,flexWrap:"wrap"}}>
+                <div>
+                  <div style={{fontSize:10,color:"#a34455",letterSpacing:"0.06em",fontWeight:600}}>CASUALTIES</div>
+                  <div style={{fontSize:18,color:"#c2003f",fontWeight:700,lineHeight:1.2}}>~{casualties.toLocaleString()}</div>
+                </div>
+                {ana.estimated_displaced!=null&&<div>
+                  <div style={{fontSize:10,color:"#a34455",letterSpacing:"0.06em",fontWeight:600}}>DISPLACED</div>
+                  <div style={{fontSize:18,color:"#c25100",fontWeight:700,lineHeight:1.2}}>~{ana.estimated_displaced.toLocaleString()}</div>
+                </div>}
+              </div>
+              <div style={{fontSize:9,color:"#a3453a",marginTop:5,letterSpacing:"0.04em"}}>MODEL ESTIMATE · NOT AN OFFICIAL FORECAST</div>
+            </div>}
+
             {ana.cascade_chain?.length>0&&<div style={{marginBottom:9}}>
               <div style={{fontSize:11,color:"#35759b",letterSpacing:"0.1em",marginBottom:4,fontWeight:700}}>CASCADE</div>
               <div style={{display:"flex",flexWrap:"wrap",gap:3,alignItems:"center"}}>
@@ -920,9 +939,12 @@ Nuclear IDs: fukushima_daiichi,fukushima_daini,onagawa,tokai_daini,kashiwazaki_k
             {ana.historical_analogs?.length>0&&<div style={{marginBottom:9}}>
               <div style={{fontSize:11,color:"#35759b",letterSpacing:"0.1em",marginBottom:4,fontWeight:700}}>HISTORICAL ANALOGS</div>
               {ana.historical_analogs.slice(0,3).map((a,i)=>(
-                <div key={i} style={{display:"flex",justifyContent:"space-between",padding:"5px 9px",marginBottom:3,background:"#f7fbff",border:"1px solid #bdd6ea",borderRadius:4}}>
+                <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:6,padding:"5px 9px",marginBottom:3,background:"#f7fbff",border:"1px solid #bdd6ea",borderRadius:4}}>
                   <span style={{fontSize:12,color:"#0a5c8a",fontWeight:600}}>{a.name} <span style={{color:"#557f9e",fontSize:11}}>({a.year})</span></span>
-                  <span style={{color:"#35759b",fontSize:12,fontWeight:700}}>M{a.magnitude}</span>
+                  <span style={{display:"flex",alignItems:"baseline",gap:7,flexShrink:0}}>
+                    {a.deaths!=null&&<span style={{fontSize:11,color:"#c2003f",fontWeight:700}}>{a.deaths.toLocaleString()} deaths</span>}
+                    <span style={{color:"#35759b",fontSize:12,fontWeight:700}}>M{a.magnitude}</span>
+                  </span>
                 </div>
               ))}
             </div>}
