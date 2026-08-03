@@ -10,7 +10,9 @@ from .live import router as live_router
 from .auth import router as auth_router, init_db
 from .simulate import router as simulate_router
 
-load_dotenv()
+# override=True so .env wins over anything already exported in the shell —
+# a stale ANTHROPIC_API_KEY in the environment otherwise silently shadows it.
+load_dotenv(override=True)
 
 app = FastAPI(title="Shindo API")
 
@@ -35,6 +37,10 @@ _poller_task: asyncio.Task = None
 @app.on_event("startup")
 async def startup():
     init_db()
+    key = os.getenv("ANTHROPIC_API_KEY") or ""
+    print(f"[startup] ANTHROPIC_API_KEY: "
+          f"{'...' + key[-6:] + f' ({len(key)} chars)' if key else 'NOT SET'}")
+    print(f"[startup] CORS origins: {CORS_ORIGINS}")
     from .db import get_db
     from .poller import run_poller
     db = get_db()
