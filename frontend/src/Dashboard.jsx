@@ -14,23 +14,23 @@ function useWindowWidth() {
 // ── Markdown renderer ───────────────────────────────────────────
 const MD = {
   p:      ({children}) => <p style={{margin:"0 0 8px",lineHeight:1.7}}>{children}</p>,
-  strong: ({children}) => <strong style={{color:"#00ffff",fontWeight:700}}>{children}</strong>,
-  em:     ({children}) => <em style={{color:"#7df9ff",fontStyle:"italic"}}>{children}</em>,
-  h1:     ({children}) => <div style={{fontSize:16,fontWeight:700,color:"#00e5ff",margin:"10px 0 5px",borderBottom:"1px solid #001a33",paddingBottom:3}}>{children}</div>,
-  h2:     ({children}) => <div style={{fontSize:15,fontWeight:700,color:"#00e5ff",margin:"8px 0 4px"}}>{children}</div>,
-  h3:     ({children}) => <div style={{fontSize:14,fontWeight:700,color:"#00ccdd",margin:"6px 0 3px"}}>{children}</div>,
+  strong: ({children}) => <strong style={{color:"#08365c",fontWeight:700}}>{children}</strong>,
+  em:     ({children}) => <em style={{color:"#12405f",fontStyle:"italic"}}>{children}</em>,
+  h1:     ({children}) => <div style={{fontSize:16,fontWeight:700,color:"#0369a1",margin:"10px 0 5px",borderBottom:"1px solid #cfe0f0",paddingBottom:3}}>{children}</div>,
+  h2:     ({children}) => <div style={{fontSize:15,fontWeight:700,color:"#0369a1",margin:"8px 0 4px"}}>{children}</div>,
+  h3:     ({children}) => <div style={{fontSize:14,fontWeight:700,color:"#0a5c8a",margin:"6px 0 3px"}}>{children}</div>,
   ul:     ({children}) => <ul style={{margin:"4px 0",paddingLeft:18}}>{children}</ul>,
   ol:     ({children}) => <ol style={{margin:"4px 0",paddingLeft:18}}>{children}</ol>,
-  li:     ({children}) => <li style={{margin:"3px 0",color:"#a0e4ff"}}>{children}</li>,
+  li:     ({children}) => <li style={{margin:"3px 0",color:"#1c4a6b"}}>{children}</li>,
   code:   ({inline,children}) => inline
-    ? <code style={{background:"#001a33",border:"1px solid #002244",borderRadius:3,padding:"1px 6px",fontSize:12,color:"#00ffff",fontFamily:"inherit"}}>{children}</code>
-    : <pre style={{background:"#00050f",border:"1px solid #001a33",borderRadius:5,padding:"10px 12px",margin:"6px 0",overflowX:"auto",fontSize:12,color:"#7df9ff",fontFamily:"inherit",lineHeight:1.6}}><code>{children}</code></pre>,
-  blockquote: ({children}) => <blockquote style={{borderLeft:"2px solid #003366",margin:"6px 0",paddingLeft:12,color:"#0099bb"}}>{children}</blockquote>,
-  hr:     () => <hr style={{border:"none",borderTop:"1px solid #001a33",margin:"8px 0"}}/>,
-  a:      ({href,children}) => <a href={href} target="_blank" rel="noreferrer" style={{color:"#00b4d8",textDecoration:"underline"}}>{children}</a>,
+    ? <code style={{background:"#cfe0f0",border:"1px solid #bdd6ea",borderRadius:3,padding:"1px 6px",fontSize:12,color:"#08365c",fontFamily:"inherit"}}>{children}</code>
+    : <pre style={{background:"#e9f1fa",border:"1px solid #cfe0f0",borderRadius:5,padding:"10px 12px",margin:"6px 0",overflowX:"auto",fontSize:12,color:"#12405f",fontFamily:"inherit",lineHeight:1.6}}><code>{children}</code></pre>,
+  blockquote: ({children}) => <blockquote style={{borderLeft:"2px solid #8fb6d8",margin:"6px 0",paddingLeft:12,color:"#35759b"}}>{children}</blockquote>,
+  hr:     () => <hr style={{border:"none",borderTop:"1px solid #cfe0f0",margin:"8px 0"}}/>,
+  a:      ({href,children}) => <a href={href} target="_blank" rel="noreferrer" style={{color:"#2b7ba8",textDecoration:"underline"}}>{children}</a>,
   table:  ({children}) => <table style={{borderCollapse:"collapse",width:"100%",margin:"6px 0",fontSize:13}}>{children}</table>,
-  th:     ({children}) => <th style={{padding:"5px 10px",background:"#001a33",color:"#00e5ff",textAlign:"left",borderBottom:"1px solid #002244"}}>{children}</th>,
-  td:     ({children}) => <td style={{padding:"4px 10px",borderBottom:"1px solid #001020",color:"#a0e4ff"}}>{children}</td>,
+  th:     ({children}) => <th style={{padding:"5px 10px",background:"#cfe0f0",color:"#0369a1",textAlign:"left",borderBottom:"1px solid #bdd6ea"}}>{children}</th>,
+  td:     ({children}) => <td style={{padding:"4px 10px",borderBottom:"1px solid #dce9f6",color:"#1c4a6b"}}>{children}</td>,
 }
 
 function ChatBubble({msg}) {
@@ -38,10 +38,10 @@ function ChatBubble({msg}) {
   return (
     <div style={{marginBottom:10}}>
       <div style={{fontSize:14,lineHeight:1.75,padding:"10px 14px",borderRadius:6,
-        background:isUser?"#001a33":"#000f1f",
-        border:`1px solid ${isUser?"#003366":"#001a2e"}`,
-        color:isUser?"#7df9ff":"#a0e4ff",wordBreak:"break-word"}}>
-        {isUser&&<div style={{fontSize:10,fontWeight:700,color:"#005577",letterSpacing:"0.1em",marginBottom:4}}>YOU</div>}
+        background:isUser?"#cfe0f0":"#eaf2fb",
+        border:`1px solid ${isUser?"#8fb6d8":"#d5e5f4"}`,
+        color:isUser?"#12405f":"#1c4a6b",wordBreak:"break-word"}}>
+        {isUser&&<div style={{fontSize:10,fontWeight:700,color:"#7398ac",letterSpacing:"0.1em",marginBottom:4}}>YOU</div>}
         {isUser
           ? <span style={{whiteSpace:"pre-wrap"}}>{msg.text}</span>
           : <ReactMarkdown components={MD}>{msg.text}</ReactMarkdown>
@@ -78,45 +78,45 @@ function ChatPanel({ chat, mobile }) {
 
   return (
     <div style={{width:mobile?"100%":360,flexShrink:0,display:"flex",flexDirection:"column",
-      borderLeft:mobile?"none":"1px solid #001a33",borderTop:mobile?"1px solid #001a33":"none",
-      background:"#000b1a",height:mobile?360:"auto"}}>
+      borderLeft:mobile?"none":"1px solid #cfe0f0",borderTop:mobile?"1px solid #cfe0f0":"none",
+      background:"#f7fbff",height:mobile?360:"auto"}}>
       {/* Header */}
-      <div style={{padding:"10px 18px",borderBottom:"1px solid #001a33",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+      <div style={{padding:"10px 18px",borderBottom:"1px solid #cfe0f0",flexShrink:0,display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <div style={{width:8,height:8,borderRadius:"50%",background:"#00e5ff",boxShadow:"0 0 10px #00e5ff"}}/>
+          <div style={{width:8,height:8,borderRadius:"50%",background:"#0369a1",boxShadow:"0 0 0 3px rgba(3,105,161,0.16)"}}/>
           <div>
-            <div style={{fontSize:15,fontWeight:800,letterSpacing:"0.08em",color:"#00e5ff",textShadow:"0 0 12px rgba(0,229,255,0.5)"}}>震度 SHINDO</div>
-            <div style={{fontSize:10,color:"#005577",letterSpacing:"0.12em",marginTop:1}}>SEISMIC INTELLIGENCE AGENT</div>
+            <div style={{fontSize:15,fontWeight:800,letterSpacing:"0.08em",color:"#0369a1"}}>震度 SHINDO</div>
+            <div style={{fontSize:10,color:"#7398ac",letterSpacing:"0.12em",marginTop:1}}>SEISMIC INTELLIGENCE AGENT</div>
           </div>
         </div>
       </div>
       {/* Messages */}
       <div style={{flex:1,overflowY:"auto",padding:"14px"}}>
         {msgs.map((m,i)=><ChatBubble key={i} msg={m}/>)}
-        {loading&&<div style={{padding:"10px 14px",background:"#000f1f",border:"1px solid #001a2e",borderRadius:6,color:"#004466",fontSize:13}}>
+        {loading&&<div style={{padding:"10px 14px",background:"#eaf2fb",border:"1px solid #d5e5f4",borderRadius:6,color:"#8aa6b8",fontSize:13}}>
           <span>analyzing </span>
-          {[0,1,2].map(i=><span key={i} style={{display:"inline-block",width:4,height:4,borderRadius:"50%",background:"#00e5ff",margin:"0 2px",animation:`bounce 1.2s ${i*0.2}s infinite`}}/>)}
+          {[0,1,2].map(i=><span key={i} style={{display:"inline-block",width:4,height:4,borderRadius:"50%",background:"#0369a1",margin:"0 2px",animation:`bounce 1.2s ${i*0.2}s infinite`}}/>)}
         </div>}
         <div ref={endRef}/>
       </div>
       {/* Input */}
-      <div style={{padding:"10px 14px 14px",borderTop:"1px solid #001a33",flexShrink:0}}>
+      <div style={{padding:"10px 14px 14px",borderTop:"1px solid #cfe0f0",flexShrink:0}}>
         <div style={{display:"flex",gap:6,alignItems:"flex-end"}}>
           <textarea value={input} onChange={e=>setInput(e.target.value)}
             onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}}}
             placeholder="Ask about fault zones, nuclear risk, historical events…"
             rows={2}
-            style={{flex:1,background:"#000f1f",border:"1px solid #002244",borderRadius:6,
-              padding:"8px 10px",color:"#7df9ff",fontSize:14,fontFamily:"inherit",
+            style={{flex:1,background:"#eaf2fb",border:"1px solid #bdd6ea",borderRadius:6,
+              padding:"8px 10px",color:"#12405f",fontSize:14,fontFamily:"inherit",
               resize:"none",outline:"none",lineHeight:1.5}}/>
           <button onClick={send} disabled={!input.trim()||loading}
-            style={{height:50,padding:"0 14px",background:input.trim()&&!loading?"#003366":"#000f1f",
-              border:"1px solid #003366",borderRadius:6,
-              color:input.trim()&&!loading?"#00e5ff":"#002233",
+            style={{height:50,padding:"0 14px",background:input.trim()&&!loading?"#8fb6d8":"#eaf2fb",
+              border:"1px solid #8fb6d8",borderRadius:6,
+              color:input.trim()&&!loading?"#0369a1":"#b3c6d3",
               cursor:input.trim()&&!loading?"pointer":"default",
               fontSize:18,fontFamily:"inherit",transition:"all 0.2s"}}>›</button>
         </div>
-        <div style={{fontSize:10,color:"#003344",marginTop:5}}>Enter to send · Shift+Enter for newline</div>
+        <div style={{fontSize:10,color:"#9db4c4",marginTop:5}}>Enter to send · Shift+Enter for newline</div>
       </div>
     </div>
   )
@@ -142,12 +142,12 @@ const DEPTH_DIST = [
   {bin:"300+",  count:138, pct:3, label:"Deep"},
 ]
 const FAULT_RISK = [
-  {name:"Japan Trench",     type:"subduction",  events:1240,deaths:22000,maxMag:9.1,col:"#ff5544"},
-  {name:"Nankai Trough",    type:"subduction",  events:380, deaths:8800, maxMag:8.4,col:"#ff9922"},
-  {name:"Sagami Trough",    type:"subduction",  events:210, deaths:99000,maxMag:7.9,col:"#ff66aa"},
-  {name:"Median Tectonic",  type:"strike_slip", events:180, deaths:6500, maxMag:7.2,col:"#cc55ff"},
-  {name:"Itoigawa-Shizuoka",type:"strike_slip", events:95,  deaths:2400, maxMag:7.1,col:"#44aaff"},
-  {name:"Noto System",      type:"reverse",     events:64,  deaths:245,  maxMag:7.6,col:"#55ff99"},
+  {name:"Japan Trench",     type:"subduction",  events:1240,deaths:22000,maxMag:9.1,col:"#d93d2b"},
+  {name:"Nankai Trough",    type:"subduction",  events:380, deaths:8800, maxMag:8.4,col:"#cc7000"},
+  {name:"Sagami Trough",    type:"subduction",  events:210, deaths:99000,maxMag:7.9,col:"#d8478f"},
+  {name:"Median Tectonic",  type:"strike_slip", events:180, deaths:6500, maxMag:7.2,col:"#8b3fd6"},
+  {name:"Itoigawa-Shizuoka",type:"strike_slip", events:95,  deaths:2400, maxMag:7.1,col:"#2b7fd4"},
+  {name:"Noto System",      type:"reverse",     events:64,  deaths:245,  maxMag:7.6,col:"#17a05e"},
 ]
 const TOP_PREFS = [
   {name:"Miyagi",   score:94,quakes:890,tsunamis:12,npp:2},
@@ -302,28 +302,28 @@ function BarChart({data, valueKey, labelKey, colorFn, maxVal}) {
     <div style={{display:"flex",flexDirection:"column",gap:7}}>
       {data.map((d,i)=>(
         <div key={i} style={{display:"flex",alignItems:"center",gap:8}}>
-          <div style={{width:80,fontSize:12,color:"#00aacc",textAlign:"right",flexShrink:0,fontWeight:600}}>{d[labelKey]}</div>
-          <div style={{flex:1,height:16,background:"#000f1f",borderRadius:2,overflow:"hidden",position:"relative"}}>
+          <div style={{width:80,fontSize:12,color:"#1d6d95",textAlign:"right",flexShrink:0,fontWeight:600}}>{d[labelKey]}</div>
+          <div style={{flex:1,height:16,background:"#eaf2fb",borderRadius:2,overflow:"hidden",position:"relative"}}>
             <div style={{
               height:"100%",borderRadius:2,transition:"width 0.6s ease",
               width:`${(d[valueKey]/max)*100}%`,
-              background:colorFn?colorFn(d,i):"#00b4d8",
-              boxShadow:`0 0 6px ${colorFn?colorFn(d,i):"#00b4d8"}44`,
+              background:colorFn?colorFn(d,i):"#2b7ba8",
+              boxShadow:`0 0 6px ${colorFn?colorFn(d,i):"#2b7ba8"}44`,
             }}/>
           </div>
-          <div style={{width:52,fontSize:12,color:"#00e5ff",textAlign:"right",flexShrink:0,fontWeight:600}}>{d[valueKey].toLocaleString()}</div>
+          <div style={{width:52,fontSize:12,color:"#0369a1",textAlign:"right",flexShrink:0,fontWeight:600}}>{d[valueKey].toLocaleString()}</div>
         </div>
       ))}
     </div>
   )
 }
 
-function StatCard({label,value,sub,color="#00e5ff"}) {
+function StatCard({label,value,sub,color="#0369a1"}) {
   return (
-    <div style={{background:"#000b1a",border:"1px solid #001a33",borderRadius:8,padding:"14px 18px",flex:1,minWidth:130}}>
-      <div style={{fontSize:11,color:"#0088aa",letterSpacing:"0.1em",marginBottom:6,fontWeight:600}}>{label}</div>
-      <div style={{fontSize:32,fontWeight:700,color,textShadow:`0 0 12px ${color}88`,lineHeight:1}}>{value}</div>
-      {sub&&<div style={{fontSize:12,color:"#006688",marginTop:6,fontWeight:500}}>{sub}</div>}
+    <div style={{background:"#f7fbff",border:"1px solid #cfe0f0",borderRadius:8,padding:"14px 18px",flex:1,minWidth:130}}>
+      <div style={{fontSize:11,color:"#4a7fa1",letterSpacing:"0.1em",marginBottom:6,fontWeight:600}}>{label}</div>
+      <div style={{fontSize:32,fontWeight:700,color,lineHeight:1}}>{value}</div>
+      {sub&&<div style={{fontSize:12,color:"#648ba4",marginTop:6,fontWeight:500}}>{sub}</div>}
     </div>
   )
 }
@@ -333,28 +333,28 @@ function QueryCard({q}) {
   const [copied,setCopied] = useState(false)
   const copy = () => { navigator.clipboard.writeText(q.cypher); setCopied(true); setTimeout(()=>setCopied(false),1600) }
   return (
-    <div style={{background:"#000b1a",border:"1px solid #001a33",borderRadius:8,marginBottom:12,overflow:"hidden"}}>
+    <div style={{background:"#f7fbff",border:"1px solid #cfe0f0",borderRadius:8,marginBottom:12,overflow:"hidden"}}>
       <div style={{padding:"14px 16px",cursor:"pointer",display:"flex",justifyContent:"space-between",alignItems:"center"}}
         onClick={()=>setOpen(o=>!o)}>
         <div>
           <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:5}}>
-            <span style={{fontSize:11,color:"#005577",fontWeight:700}}>#{q.id}</span>
-            <span style={{fontSize:14,color:"#00ccdd",fontWeight:700}}>{q.title}</span>
+            <span style={{fontSize:11,color:"#7398ac",fontWeight:700}}>#{q.id}</span>
+            <span style={{fontSize:14,color:"#0a5c8a",fontWeight:700}}>{q.title}</span>
           </div>
           <div style={{display:"flex",gap:5}}>
             {q.tags.map(t=>(
-              <span key={t} style={{fontSize:10,padding:"2px 7px",background:"#001a33",borderRadius:3,color:"#0088aa",letterSpacing:"0.05em"}}>{t}</span>
+              <span key={t} style={{fontSize:10,padding:"2px 7px",background:"#cfe0f0",borderRadius:3,color:"#4a7fa1",letterSpacing:"0.05em"}}>{t}</span>
             ))}
           </div>
         </div>
-        <span style={{fontSize:14,color:"#005577",flexShrink:0}}>{open?"▲":"▼"}</span>
+        <span style={{fontSize:14,color:"#7398ac",flexShrink:0}}>{open?"▲":"▼"}</span>
       </div>
-      {open&&<div style={{borderTop:"1px solid #001a33"}}>
-        <div style={{padding:"12px 16px",fontSize:12,color:"#0099bb",lineHeight:1.7}}>{q.desc}</div>
+      {open&&<div style={{borderTop:"1px solid #cfe0f0"}}>
+        <div style={{padding:"12px 16px",fontSize:12,color:"#35759b",lineHeight:1.7}}>{q.desc}</div>
         <div style={{position:"relative"}}>
-          <pre style={{margin:0,padding:"14px 16px",background:"#00050f",
-            color:"#7df9ff",fontSize:12,lineHeight:1.8,overflowX:"auto",
-            fontFamily:"'IBM Plex Mono',monospace",borderTop:"1px solid #001020"}}>
+          <pre style={{margin:0,padding:"14px 16px",background:"#e9f1fa",
+            color:"#12405f",fontSize:12,lineHeight:1.8,overflowX:"auto",
+            fontFamily:"'IBM Plex Mono',monospace",borderTop:"1px solid #dce9f6"}}>
             {q.cypher.split("\n").map((line,i)=>{
               const hl = line
                 .replace(/(MATCH|WHERE|RETURN|ORDER BY|WITH|LIMIT|OPTIONAL|UNION ALL|AS|AND|IN|NOT)/g, '<k>$1</k>')
@@ -364,8 +364,8 @@ function QueryCard({q}) {
               return <span key={i} dangerouslySetInnerHTML={{__html:hl+"\n"}}/>
             })}
           </pre>
-          <button onClick={copy} style={{position:"absolute",top:10,right:10,background:"#001a33",border:"1px solid #003366",
-            color:copied?"#00ff88":"#00aacc",padding:"4px 10px",borderRadius:4,fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>
+          <button onClick={copy} style={{position:"absolute",top:10,right:10,background:"#cfe0f0",border:"1px solid #8fb6d8",
+            color:copied?"#0d9b57":"#1d6d95",padding:"4px 10px",borderRadius:4,fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>
             {copied?"✓ copied":"copy"}
           </button>
         </div>
@@ -378,21 +378,21 @@ function QueryCard({q}) {
 function OverdueGauge({score}) {
   const clamped = Math.min(score ?? 0, 5)
   const angle = (clamped / 5) * 180
-  const color = clamped < 0.8 ? "#00cc66" : clamped < 1.5 ? "#ffcc00" : clamped < 2.5 ? "#ff9922" : "#ff3300"
+  const color = clamped < 0.8 ? "#0f9e5c" : clamped < 1.5 ? "#a37800" : clamped < 2.5 ? "#cc7000" : "#d63000"
   const rad = (angle - 180) * (Math.PI / 180)
   const cx = 60, cy = 54, r = 44
   const nx = cx + r * Math.cos(rad)
   const ny = cy + r * Math.sin(rad)
   return (
     <svg width={120} height={62} viewBox="0 0 120 62">
-      <path d={`M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${cx+r} ${cy}`} fill="none" stroke="#001a33" strokeWidth={10} strokeLinecap="round"/>
+      <path d={`M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${cx+r} ${cy}`} fill="none" stroke="#cfe0f0" strokeWidth={10} strokeLinecap="round"/>
       <path d={`M ${cx-r} ${cy} A ${r} ${r} 0 0 1 ${cx+r} ${cy}`} fill="none" stroke={color} strokeWidth={10}
         strokeLinecap="round" strokeDasharray={`${(clamped/5)*139} 139`} opacity={0.35}/>
       <line x1={cx} y1={cy} x2={nx} y2={ny} stroke={color} strokeWidth={2.5} strokeLinecap="round"/>
       <circle cx={cx} cy={cy} r={4} fill={color} opacity={0.8}/>
-      <text x={cx-r+2} y={cy+14} fontSize={8} fill="#003344">0</text>
-      <text x={cx+r-8} y={cy+14} fontSize={8} fill="#003344">5×</text>
-      <text x={cx} y={cy+14} textAnchor="middle" fontSize={8} fill="#003344">1×</text>
+      <text x={cx-r+2} y={cy+14} fontSize={8} fill="#9db4c4">0</text>
+      <text x={cx+r-8} y={cy+14} fontSize={8} fill="#9db4c4">5×</text>
+      <text x={cx} y={cy+14} textAnchor="middle" fontSize={8} fill="#9db4c4">1×</text>
       <text x={cx} y={cy-r-6} textAnchor="middle" fontSize={9} fontWeight="700" fill={color}>{score != null ? score.toFixed(2)+"×" : "—"}</text>
     </svg>
   )
@@ -400,35 +400,35 @@ function OverdueGauge({score}) {
 
 // ── RISK ANALYSIS TAB ───────────────────────────────────────────
 function RiskTab({data, loading, error}) {
-  const TYPE_COL = {subduction:"#ff5544", strike_slip:"#cc55ff", crustal:"#ffcc00", reverse:"#00ccff", intraslab:"#44aaff"}
+  const TYPE_COL = {subduction:"#d93d2b", strike_slip:"#8b3fd6", crustal:"#a37800", reverse:"#0a7fb8", intraslab:"#2b7fd4"}
   return (
     <div>
       {/* Disclaimer — always visible */}
-      <div style={{border:"1px solid #554400",background:"#0d0800",borderRadius:6,padding:"12px 16px",marginBottom:20,fontSize:12,color:"#aa8833",lineHeight:1.8}}>
-        <span style={{fontWeight:700,color:"#ffcc00",letterSpacing:"0.06em"}}>STATISTICAL ANALYSIS — NOT PREDICTION</span>
+      <div style={{border:"1px solid #e0d090",background:"#fdf8e8",borderRadius:6,padding:"12px 16px",marginBottom:20,fontSize:12,color:"#8a6d1f",lineHeight:1.8}}>
+        <span style={{fontWeight:700,color:"#a37800",letterSpacing:"0.06em"}}>STATISTICAL ANALYSIS — NOT PREDICTION</span>
         {"  "}These figures represent historical recurrence rates derived from 75 years of seismic records.
         Earthquake timing is inherently unpredictable. A ratio above 1.0× indicates a fault zone has exceeded its
         historical average recurrence interval — this does not imply imminent occurrence.
       </div>
 
-      {loading&&<div style={{color:"#004466",fontSize:13,padding:20}}>Loading recurrence data from graph…</div>}
-      {error&&<div style={{color:"#ff5533",fontSize:13,padding:20}}>Could not load risk data: {error}</div>}
+      {loading&&<div style={{color:"#8aa6b8",fontSize:13,padding:20}}>Loading recurrence data from graph…</div>}
+      {error&&<div style={{color:"#d84315",fontSize:13,padding:20}}>Could not load risk data: {error}</div>}
 
       {data&&<>
         {/* Summary ranking */}
-        <div style={{background:"#000b1a",border:"1px solid #001a33",borderRadius:8,padding:"14px 16px",marginBottom:16}}>
-          <div style={{fontSize:12,color:"#0088aa",letterSpacing:"0.1em",marginBottom:12,fontWeight:700}}>HISTORICAL OVERDUE RATIO — RANKED</div>
-          <div style={{fontSize:11,color:"#004455",marginBottom:10}}>
+        <div style={{background:"#f7fbff",border:"1px solid #cfe0f0",borderRadius:8,padding:"14px 16px",marginBottom:16}}>
+          <div style={{fontSize:12,color:"#4a7fa1",letterSpacing:"0.1em",marginBottom:12,fontWeight:700}}>HISTORICAL OVERDUE RATIO — RANKED</div>
+          <div style={{fontSize:11,color:"#8ba7b9",marginBottom:10}}>
             Based on {data.data_range?.total_events?.toLocaleString()} events · {data.data_range?.from_year}–{data.data_range?.to_year}
           </div>
           {data.ranked_by_overdue?.map((r,i)=>{
             const score = r.overdue_score
-            const col = score < 0.8 ? "#00cc66" : score < 1.5 ? "#ffcc00" : score < 2.5 ? "#ff9922" : "#ff3300"
+            const col = score < 0.8 ? "#0f9e5c" : score < 1.5 ? "#a37800" : score < 2.5 ? "#cc7000" : "#d63000"
             return (
               <div key={r.fault_id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
-                <div style={{width:16,fontSize:10,color:"#003344",textAlign:"right"}}>{i+1}.</div>
-                <div style={{flex:1,fontSize:12,color:"#00ccdd",fontWeight:600}}>{r.fault_name}</div>
-                <div style={{fontSize:11,color:col,fontWeight:700,textShadow:`0 0 6px ${col}66`}}>{r.display_label}</div>
+                <div style={{width:16,fontSize:10,color:"#9db4c4",textAlign:"right"}}>{i+1}.</div>
+                <div style={{flex:1,fontSize:12,color:"#0a5c8a",fontWeight:600}}>{r.fault_name}</div>
+                <div style={{fontSize:11,color:col,fontWeight:700}}>{r.display_label}</div>
               </div>
             )
           })}
@@ -436,22 +436,22 @@ function RiskTab({data, loading, error}) {
 
         {/* Per-fault cards */}
         {data.fault_zones?.map(fz=>(
-          <div key={fz.fault_id} style={{background:"#000b1a",border:"1px solid #001a33",borderRadius:8,padding:"14px 16px",marginBottom:12}}>
+          <div key={fz.fault_id} style={{background:"#f7fbff",border:"1px solid #cfe0f0",borderRadius:8,padding:"14px 16px",marginBottom:12}}>
             {/* Header */}
             <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:12}}>
               <div>
                 <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-                  <span style={{fontSize:14,fontWeight:700,color:"#00ccdd"}}>{fz.fault_name}</span>
+                  <span style={{fontSize:14,fontWeight:700,color:"#0a5c8a"}}>{fz.fault_name}</span>
                   <span style={{fontSize:9,padding:"2px 7px",borderRadius:3,
-                    background:"#001020",border:`1px solid ${TYPE_COL[fz.fault_type]||"#003344"}`,
-                    color:TYPE_COL[fz.fault_type]||"#003344",letterSpacing:"0.06em",fontWeight:700}}>
+                    background:"#dce9f6",border:`1px solid ${TYPE_COL[fz.fault_type]||"#9db4c4"}`,
+                    color:TYPE_COL[fz.fault_type]||"#9db4c4",letterSpacing:"0.06em",fontWeight:700}}>
                     {fz.fault_type}
                   </span>
                 </div>
-                <div style={{fontSize:11,color:"#005577"}}>
-                  Predicted max: <span style={{color:"#ff9922",fontWeight:700}}>M{fz.predicted_max_mag}</span>
-                  {fz.last_major_year&&<> · Last major: <span style={{color:"#0099bb"}}>{fz.last_major_year}</span></>}
-                  {" · "}<span style={{color:"#004466"}}>{fz.total_events?.toLocaleString()} total events</span>
+                <div style={{fontSize:11,color:"#7398ac"}}>
+                  Predicted max: <span style={{color:"#cc7000",fontWeight:700}}>M{fz.predicted_max_mag}</span>
+                  {fz.last_major_year&&<> · Last major: <span style={{color:"#35759b"}}>{fz.last_major_year}</span></>}
+                  {" · "}<span style={{color:"#8aa6b8"}}>{fz.total_events?.toLocaleString()} total events</span>
                 </div>
               </div>
               {/* Gauge for best tier */}
@@ -464,31 +464,31 @@ function RiskTab({data, loading, error}) {
             {/* Tier table */}
             <div style={{overflowX:"auto"}}><div style={{display:"grid",gridTemplateColumns:"auto 1fr 1fr 1fr 1fr 1fr",gap:0,fontSize:11,minWidth:380}}>
               {["TIER","EVENTS","AVG INTERVAL","LAST EVENT","YRS SINCE","OVERDUE RATIO"].map(h=>(
-                <div key={h} style={{padding:"5px 8px",color:"#0066aa",borderBottom:"1px solid #001525",fontWeight:700,letterSpacing:"0.06em",fontSize:10}}>{h}</div>
+                <div key={h} style={{padding:"5px 8px",color:"#5f88a6",borderBottom:"1px solid #c9dcee",fontWeight:700,letterSpacing:"0.06em",fontSize:10}}>{h}</div>
               ))}
               {["m6","m7","m8"].map(tier=>{
                 const t = fz.tiers?.[tier]
                 if (!t) return null
                 const score = t.overdue_score
-                const col = score == null ? "#003344" : score < 0.8 ? "#00cc66" : score < 1.5 ? "#ffcc00" : score < 2.5 ? "#ff9922" : "#ff3300"
+                const col = score == null ? "#9db4c4" : score < 0.8 ? "#0f9e5c" : score < 1.5 ? "#a37800" : score < 2.5 ? "#cc7000" : "#d63000"
                 return [
-                  <div key={`${tier}-l`} style={{padding:"5px 8px",color:"#00aacc",borderBottom:"1px solid #001020",fontWeight:700}}>
+                  <div key={`${tier}-l`} style={{padding:"5px 8px",color:"#1d6d95",borderBottom:"1px solid #dce9f6",fontWeight:700}}>
                     {tier.toUpperCase().replace("M","M")}+
                   </div>,
-                  <div key={`${tier}-ec`} style={{padding:"5px 8px",color:"#0099bb",borderBottom:"1px solid #001020"}}>
+                  <div key={`${tier}-ec`} style={{padding:"5px 8px",color:"#35759b",borderBottom:"1px solid #dce9f6"}}>
                     {t.event_count}
-                    {t.sample_size_warning&&<span style={{fontSize:9,padding:"1px 4px",background:"#1a0800",border:"1px solid #442200",borderRadius:3,color:"#aa6600",marginLeft:5}}>low n</span>}
+                    {t.sample_size_warning&&<span style={{fontSize:9,padding:"1px 4px",background:"#fdf1e3",border:"1px solid #e8c9a0",borderRadius:3,color:"#a35f00",marginLeft:5}}>low n</span>}
                   </div>,
-                  <div key={`${tier}-ar`} style={{padding:"5px 8px",color:"#0088aa",borderBottom:"1px solid #001020"}}>
+                  <div key={`${tier}-ar`} style={{padding:"5px 8px",color:"#4a7fa1",borderBottom:"1px solid #dce9f6"}}>
                     {t.avg_recurrence_years != null ? `${t.avg_recurrence_years} yr` : "—"}
                   </div>,
-                  <div key={`${tier}-le`} style={{padding:"5px 8px",color:"#0088aa",borderBottom:"1px solid #001020"}}>
+                  <div key={`${tier}-le`} style={{padding:"5px 8px",color:"#4a7fa1",borderBottom:"1px solid #dce9f6"}}>
                     {t.last_event_year ?? "—"}
                   </div>,
-                  <div key={`${tier}-ys`} style={{padding:"5px 8px",color:"#0088aa",borderBottom:"1px solid #001020"}}>
+                  <div key={`${tier}-ys`} style={{padding:"5px 8px",color:"#4a7fa1",borderBottom:"1px solid #dce9f6"}}>
                     {t.years_since_last != null ? `${t.years_since_last} yr` : "—"}
                   </div>,
-                  <div key={`${tier}-os`} style={{padding:"5px 8px",borderBottom:"1px solid #001020",fontWeight:700,color:col,textShadow:score!=null?`0 0 6px ${col}55`:"none"}}>
+                  <div key={`${tier}-os`} style={{padding:"5px 8px",borderBottom:"1px solid #dce9f6",fontWeight:700,color:col}}>
                     {score != null ? `${score.toFixed(2)}×` : "—"}
                   </div>,
                 ]
@@ -524,23 +524,23 @@ export default function Dashboard({onBack, chat}) {
   const col2 = isMobile ? "1fr" : "1fr 1fr"
 
   return (
-    <div style={{height:"100vh",background:"#000510",fontFamily:"'IBM Plex Mono',monospace",color:"#00b4d8",display:"flex",flexDirection:"column"}}>
+    <div style={{height:"100vh",background:"#eef5fc",fontFamily:"'IBM Plex Mono',monospace",color:"#2b7ba8",display:"flex",flexDirection:"column"}}>
       {/* Nav */}
-      <div style={{borderBottom:"1px solid #001a33",background:"#000b1a",padding:isMobile?"0 12px":"0 24px",
+      <div style={{borderBottom:"1px solid #cfe0f0",background:"#f7fbff",padding:isMobile?"0 12px":"0 24px",
         display:"flex",alignItems:"center",gap:isMobile?8:16,height:50,flexShrink:0,flexWrap:"wrap",minHeight:50}}>
-        <button onClick={onBack} style={{background:"none",border:"1px solid #002244",borderRadius:5,
-          color:"#0099bb",fontSize:11,padding:"5px 10px",cursor:"pointer",fontFamily:"inherit",letterSpacing:"0.06em",flexShrink:0}}>
+        <button onClick={onBack} style={{background:"none",border:"1px solid #bdd6ea",borderRadius:5,
+          color:"#35759b",fontSize:11,padding:"5px 10px",cursor:"pointer",fontFamily:"inherit",letterSpacing:"0.06em",flexShrink:0}}>
           ← SHINDO
         </button>
-        {!isMobile&&<div style={{fontSize:14,fontWeight:700,color:"#00e5ff",letterSpacing:"0.08em",textShadow:"0 0 10px rgba(0,229,255,0.4)"}}>
+        {!isMobile&&<div style={{fontSize:14,fontWeight:700,color:"#0369a1",letterSpacing:"0.08em"}}>
           DATA ANALYSIS DASHBOARD
         </div>}
         <div style={{marginLeft:"auto",display:"flex",gap:isMobile?2:4,flexShrink:0}}>
           {[["eda",isMobile?"EDA":"EDA CHARTS"],["risk",isMobile?"RISK":"RISK ANALYSIS"],["cypher",isMobile?"CYPHER":"CYPHER QUERIES"]].map(([t,label])=>(
             <button key={t} onClick={()=>selectTab(t)}
-              style={{background:activeTab===t?"#001a33":"none",border:"1px solid",
-                borderColor:activeTab===t?"#003366":"transparent",borderRadius:5,
-                color:activeTab===t?"#00e5ff":"#004466",fontSize:isMobile?10:11,padding:isMobile?"5px 8px":"5px 14px",
+              style={{background:activeTab===t?"#cfe0f0":"none",border:"1px solid",
+                borderColor:activeTab===t?"#8fb6d8":"transparent",borderRadius:5,
+                color:activeTab===t?"#0369a1":"#8aa6b8",fontSize:isMobile?10:11,padding:isMobile?"5px 8px":"5px 14px",
                 cursor:"pointer",fontFamily:"inherit",letterSpacing:"0.05em"}}>
               {label}
             </button>
@@ -556,37 +556,37 @@ export default function Dashboard({onBack, chat}) {
         {activeTab==="eda"&&<>
           {/* KPI strip */}
           <div style={{display:"flex",gap:10,marginBottom:24,flexWrap:"wrap"}}>
-            <StatCard label="TOTAL EVENTS (M4+)" value="4,720" sub="1900 – 2024" color="#00e5ff"/>
-            <StatCard label="DEADLIEST EVENT"    value="M9.1"  sub="Tohoku 2011 · 22k deaths" color="#ff5533"/>
-            <StatCard label="ACTIVE FAULT ZONES" value="7"     sub="monitored in graph" color="#ffcc00"/>
-            <StatCard label="NUCLEAR FACILITIES" value="15"    sub="tracked in graph" color="#00cc66"/>
-            <StatCard label="AVG ANNUAL M6+"     value="18.4"  sub="past 50 years" color="#cc55ff"/>
+            <StatCard label="TOTAL EVENTS (M4+)" value="4,720" sub="1900 – 2024" color="#0369a1"/>
+            <StatCard label="DEADLIEST EVENT"    value="M9.1"  sub="Tohoku 2011 · 22k deaths" color="#d84315"/>
+            <StatCard label="ACTIVE FAULT ZONES" value="7"     sub="monitored in graph" color="#a37800"/>
+            <StatCard label="NUCLEAR FACILITIES" value="15"    sub="tracked in graph" color="#0f9e5c"/>
+            <StatCard label="AVG ANNUAL M6+"     value="18.4"  sub="past 50 years" color="#8b3fd6"/>
           </div>
 
           <div style={{display:"grid",gridTemplateColumns:col2,gap:16,marginBottom:16}}>
             {/* Magnitude distribution */}
-            <div style={{background:"#000b1a",border:"1px solid #001a33",borderRadius:8,padding:"14px 16px"}}>
-              <div style={{fontSize:12,color:"#0088aa",letterSpacing:"0.1em",marginBottom:14,fontWeight:700}}>MAGNITUDE DISTRIBUTION</div>
+            <div style={{background:"#f7fbff",border:"1px solid #cfe0f0",borderRadius:8,padding:"14px 16px"}}>
+              <div style={{fontSize:12,color:"#4a7fa1",letterSpacing:"0.1em",marginBottom:14,fontWeight:700}}>MAGNITUDE DISTRIBUTION</div>
               <BarChart data={MAG_DIST} valueKey="count" labelKey="bin"
                 colorFn={(d,i)=>{
-                  const cols=["#006688","#007799","#0088aa","#ff9922","#ff7700","#ff5500","#ff3300","#cc0022"]
-                  return cols[i]||"#00b4d8"
+                  const cols=["#648ba4","#5b859f","#4a7fa1","#cc7000","#d16000","#d94a00","#d63000","#b0001c"]
+                  return cols[i]||"#2b7ba8"
                 }}/>
-              <div style={{fontSize:12,color:"#006688",marginTop:12,lineHeight:1.7}}>
+              <div style={{fontSize:12,color:"#648ba4",marginTop:12,lineHeight:1.7}}>
                 38% of events M4.0–4.4. Each magnitude step is ~31.6× more energy.
               </div>
             </div>
 
             {/* Depth distribution */}
-            <div style={{background:"#000b1a",border:"1px solid #001a33",borderRadius:8,padding:"14px 16px"}}>
-              <div style={{fontSize:12,color:"#0088aa",letterSpacing:"0.1em",marginBottom:14,fontWeight:700}}>DEPTH DISTRIBUTION (km)</div>
+            <div style={{background:"#f7fbff",border:"1px solid #cfe0f0",borderRadius:8,padding:"14px 16px"}}>
+              <div style={{fontSize:12,color:"#4a7fa1",letterSpacing:"0.1em",marginBottom:14,fontWeight:700}}>DEPTH DISTRIBUTION (km)</div>
               <BarChart data={DEPTH_DIST} valueKey="count" labelKey="bin"
                 colorFn={(d)=>{
-                  if(d.label==="Crustal") return "#ff9922"
-                  if(d.label==="Transition") return "#ffcc00"
-                  return "#0099cc"
+                  if(d.label==="Crustal") return "#cc7000"
+                  if(d.label==="Transition") return "#a37800"
+                  return "#2b7ba8"
                 }}/>
-              <div style={{fontSize:12,color:"#006688",marginTop:12,lineHeight:1.7}}>
+              <div style={{fontSize:12,color:"#648ba4",marginTop:12,lineHeight:1.7}}>
                 35% shallow crustal (10–30km) — highest surface shaking. Deep intraslab events less destructive but broader reach.
               </div>
             </div>
@@ -594,66 +594,66 @@ export default function Dashboard({onBack, chat}) {
 
           <div style={{display:"grid",gridTemplateColumns:col2,gap:16,marginBottom:16}}>
             {/* Decade trend */}
-            <div style={{background:"#000b1a",border:"1px solid #001a33",borderRadius:8,padding:"14px 16px"}}>
-              <div style={{fontSize:12,color:"#0088aa",letterSpacing:"0.1em",marginBottom:14,fontWeight:700}}>EVENTS PER DECADE (M4+)</div>
+            <div style={{background:"#f7fbff",border:"1px solid #cfe0f0",borderRadius:8,padding:"14px 16px"}}>
+              <div style={{fontSize:12,color:"#4a7fa1",letterSpacing:"0.1em",marginBottom:14,fontWeight:700}}>EVENTS PER DECADE (M4+)</div>
               <div style={{display:"flex",alignItems:"flex-end",gap:3,height:100}}>
                 {DECADE_DATA.map((d,i)=>{
                   const maxQ=Math.max(...DECADE_DATA.map(x=>x.quakes))
                   const h=`${Math.round((d.quakes/maxQ)*90)}px`
                   return (
                     <div key={i} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",gap:2}}>
-                      <div style={{width:"100%",height:h,background:d.tsunamis>=7?"#ff5533":"#00b4d8",borderRadius:"2px 2px 0 0",
-                        boxShadow:`0 0 6px ${d.tsunamis>=7?"#ff5533":"#00b4d8"}44`,
+                      <div style={{width:"100%",height:h,background:d.tsunamis>=7?"#d84315":"#2b7ba8",borderRadius:"2px 2px 0 0",
+                        boxShadow:`0 0 6px ${d.tsunamis>=7?"#d84315":"#2b7ba8"}44`,
                         transition:"height 0.6s ease",position:"relative"}}>
                         {d.tsunamis>=5&&<div style={{position:"absolute",bottom:"100%",left:"50%",transform:"translateX(-50%)",
-                          fontSize:7,color:"#ff8855",whiteSpace:"nowrap"}}>{d.tsunamis}ts</div>}
+                          fontSize:7,color:"#c05f38",whiteSpace:"nowrap"}}>{d.tsunamis}ts</div>}
                       </div>
-                      <div style={{fontSize:6,color:"#003344",transform:"rotate(-45deg)",transformOrigin:"top center",
+                      <div style={{fontSize:6,color:"#9db4c4",transform:"rotate(-45deg)",transformOrigin:"top center",
                         marginTop:4,whiteSpace:"nowrap"}}>{d.decade.slice(0,4)}s</div>
                     </div>
                   )
                 })}
               </div>
-              <div style={{fontSize:12,color:"#006688",marginTop:18,lineHeight:1.7}}>
+              <div style={{fontSize:12,color:"#648ba4",marginTop:18,lineHeight:1.7}}>
                 Increasing trend due to improved seismic network coverage (not actual increase). Red bars = high tsunami years.
               </div>
             </div>
 
             {/* Fault lethality */}
-            <div style={{background:"#000b1a",border:"1px solid #001a33",borderRadius:8,padding:"14px 16px"}}>
-              <div style={{fontSize:12,color:"#0088aa",letterSpacing:"0.1em",marginBottom:14,fontWeight:700}}>FAULT ZONE TOTAL DEATHS</div>
+            <div style={{background:"#f7fbff",border:"1px solid #cfe0f0",borderRadius:8,padding:"14px 16px"}}>
+              <div style={{fontSize:12,color:"#4a7fa1",letterSpacing:"0.1em",marginBottom:14,fontWeight:700}}>FAULT ZONE TOTAL DEATHS</div>
               <BarChart data={FAULT_RISK} valueKey="deaths" labelKey="name"
                 colorFn={(d)=>d.col} maxVal={150000}/>
-              <div style={{fontSize:12,color:"#006688",marginTop:12,lineHeight:1.7}}>
+              <div style={{fontSize:12,color:"#648ba4",marginTop:12,lineHeight:1.7}}>
                 Sagami Trough leads due to 1923 Great Kanto (99,000 deaths). Japan Trench second: 2011 Tohoku (22,000).
               </div>
             </div>
           </div>
 
           {/* Prefecture risk table */}
-          <div style={{background:"#000b1a",border:"1px solid #001a33",borderRadius:8,padding:"14px 16px"}}>
-            <div style={{fontSize:12,color:"#0088aa",letterSpacing:"0.1em",marginBottom:14,fontWeight:700}}>PREFECTURE COMPOSITE RISK INDEX (top 8)</div>
+          <div style={{background:"#f7fbff",border:"1px solid #cfe0f0",borderRadius:8,padding:"14px 16px"}}>
+            <div style={{fontSize:12,color:"#4a7fa1",letterSpacing:"0.1em",marginBottom:14,fontWeight:700}}>PREFECTURE COMPOSITE RISK INDEX (top 8)</div>
             <div style={{overflowX:"auto"}}><div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr 1fr 1fr",gap:0,minWidth:420}}>
               {["PREFECTURE","RISK SCORE","QUAKES","TSUNAMIS","NPP","RISK BAR"].map(h=>(
-                <div key={h} style={{fontSize:11,color:"#0088aa",padding:"6px 10px",borderBottom:"1px solid #001525",letterSpacing:"0.07em",fontWeight:700}}>{h}</div>
+                <div key={h} style={{fontSize:11,color:"#4a7fa1",padding:"6px 10px",borderBottom:"1px solid #c9dcee",letterSpacing:"0.07em",fontWeight:700}}>{h}</div>
               ))}
               {TOP_PREFS.map((p,i)=>{
                 const barW=`${p.score}%`
-                const col=p.score>85?"#ff5533":p.score>75?"#ff9922":"#00b4d8"
+                const col=p.score>85?"#d84315":p.score>75?"#cc7000":"#2b7ba8"
                 return [
-                  <div key={`n${i}`} style={{fontSize:12,color:"#00ccdd",padding:"7px 10px",borderBottom:"1px solid #001020",fontWeight:600}}>{p.name}</div>,
-                  <div key={`s${i}`} style={{fontSize:12,color:col,padding:"7px 10px",borderBottom:"1px solid #001020",fontWeight:700,textShadow:`0 0 6px ${col}88`}}>{p.score}</div>,
-                  <div key={`q${i}`} style={{fontSize:12,color:"#0099bb",padding:"7px 10px",borderBottom:"1px solid #001020"}}>{p.quakes}</div>,
-                  <div key={`t${i}`} style={{fontSize:12,color:"#00aacc",padding:"7px 10px",borderBottom:"1px solid #001020"}}>{p.tsunamis}</div>,
-                  <div key={`np${i}`} style={{fontSize:12,color:p.npp>0?"#ff8833":"#004455",padding:"7px 10px",borderBottom:"1px solid #001020"}}>{p.npp}</div>,
-                  <div key={`b${i}`} style={{padding:"7px 10px",borderBottom:"1px solid #001020",display:"flex",alignItems:"center"}}>
+                  <div key={`n${i}`} style={{fontSize:12,color:"#0a5c8a",padding:"7px 10px",borderBottom:"1px solid #dce9f6",fontWeight:600}}>{p.name}</div>,
+                  <div key={`s${i}`} style={{fontSize:12,color:col,padding:"7px 10px",borderBottom:"1px solid #dce9f6",fontWeight:700}}>{p.score}</div>,
+                  <div key={`q${i}`} style={{fontSize:12,color:"#35759b",padding:"7px 10px",borderBottom:"1px solid #dce9f6"}}>{p.quakes}</div>,
+                  <div key={`t${i}`} style={{fontSize:12,color:"#1d6d95",padding:"7px 10px",borderBottom:"1px solid #dce9f6"}}>{p.tsunamis}</div>,
+                  <div key={`np${i}`} style={{fontSize:12,color:p.npp>0?"#c96b1a":"#8ba7b9",padding:"7px 10px",borderBottom:"1px solid #dce9f6"}}>{p.npp}</div>,
+                  <div key={`b${i}`} style={{padding:"7px 10px",borderBottom:"1px solid #dce9f6",display:"flex",alignItems:"center"}}>
                     <div style={{height:10,width:barW,background:col,borderRadius:2,boxShadow:`0 0 4px ${col}44`,transition:"width 0.6s"}}/>
                   </div>,
                 ]
               })}
             </div>
             </div>
-            <div style={{fontSize:12,color:"#006688",marginTop:12}}>
+            <div style={{fontSize:12,color:"#648ba4",marginTop:12}}>
               Score = quake_count + tsunami_count×10 + npp_count×5 + subduction_zones×8
             </div>
           </div>
@@ -664,24 +664,24 @@ export default function Dashboard({onBack, chat}) {
 
         {/* ── CYPHER TAB ──────────────────────────────────────── */}
         {activeTab==="cypher"&&<>
-          <div style={{marginBottom:20,padding:"16px 20px",background:"#000b1a",border:"1px solid #001a33",borderRadius:8}}>
-            <div style={{fontSize:12,color:"#0088aa",letterSpacing:"0.08em",marginBottom:10,fontWeight:700}}>HOW TO USE</div>
-            <div style={{fontSize:13,color:"#0099bb",lineHeight:1.8}}>
-              Open <span style={{color:"#00ccdd"}}>Neo4j Aura Console</span> → your database → <span style={{color:"#00ccdd"}}>Query</span> tab.
+          <div style={{marginBottom:20,padding:"16px 20px",background:"#f7fbff",border:"1px solid #cfe0f0",borderRadius:8}}>
+            <div style={{fontSize:12,color:"#4a7fa1",letterSpacing:"0.08em",marginBottom:10,fontWeight:700}}>HOW TO USE</div>
+            <div style={{fontSize:13,color:"#35759b",lineHeight:1.8}}>
+              Open <span style={{color:"#0a5c8a"}}>Neo4j Aura Console</span> → your database → <span style={{color:"#0a5c8a"}}>Query</span> tab.
               Paste any query below and run it. Queries use the SHINDO graph schema:<br/>
-              <span style={{color:"#00e5ff"}}>Earthquake</span> · <span style={{color:"#00e5ff"}}>FaultZone</span> · <span style={{color:"#00e5ff"}}>Tsunami</span> · <span style={{color:"#00e5ff"}}>Prefecture</span> · <span style={{color:"#00e5ff"}}>NuclearFacility</span> · <span style={{color:"#00e5ff"}}>Decade</span>
+              <span style={{color:"#0369a1"}}>Earthquake</span> · <span style={{color:"#0369a1"}}>FaultZone</span> · <span style={{color:"#0369a1"}}>Tsunami</span> · <span style={{color:"#0369a1"}}>Prefecture</span> · <span style={{color:"#0369a1"}}>NuclearFacility</span> · <span style={{color:"#0369a1"}}>Decade</span>
             </div>
           </div>
 
           {/* schema diagram */}
-          <div style={{marginBottom:20,padding:"16px 20px",background:"#000b1a",border:"1px solid #001a33",borderRadius:8}}>
-            <div style={{fontSize:12,color:"#0088aa",letterSpacing:"0.08em",marginBottom:14,fontWeight:700}}>GRAPH SCHEMA</div>
-            <div style={{fontSize:12,fontFamily:"inherit",lineHeight:2.4,color:"#0088aa"}}>
-              <div><span style={{color:"#cc55ff"}}>(FaultZone)</span> <span style={{color:"#003a55"}}>←[:ORIGINATED_ON]—</span> <span style={{color:"#ff5533"}}>(Earthquake)</span> <span style={{color:"#003a55"}}>—[:TRIGGERED]→</span> <span style={{color:"#00aaff"}}>(Tsunami)</span> <span style={{color:"#003a55"}}>—[:INUNDATED]→</span> <span style={{color:"#00cc66"}}>(Prefecture)</span></div>
-              <div><span style={{color:"#ff5533"}}>(Earthquake)</span> <span style={{color:"#003a55"}}>—[:STRUCK]→</span> <span style={{color:"#00cc66"}}>(Prefecture)</span> <span style={{color:"#003a55"}}>—[:CONTAINS]→</span> <span style={{color:"#ffcc00"}}>(NuclearFacility)</span></div>
-              <div><span style={{color:"#ff5533"}}>(Earthquake)</span> <span style={{color:"#003a55"}}>—[:WITHIN_50KM_OF]→</span> <span style={{color:"#ffcc00"}}>(NuclearFacility)</span></div>
-              <div><span style={{color:"#ff5533"}}>(Earthquake)</span> <span style={{color:"#003a55"}}>—[:IN_DECADE]→</span> <span style={{color:"#00e5ff"}}>(Decade)</span></div>
-              <div><span style={{color:"#cc55ff"}}>(FaultZone)</span> <span style={{color:"#003a55"}}>—[:UNDERLIES]→</span> <span style={{color:"#00cc66"}}>(Prefecture)</span></div>
+          <div style={{marginBottom:20,padding:"16px 20px",background:"#f7fbff",border:"1px solid #cfe0f0",borderRadius:8}}>
+            <div style={{fontSize:12,color:"#4a7fa1",letterSpacing:"0.08em",marginBottom:14,fontWeight:700}}>GRAPH SCHEMA</div>
+            <div style={{fontSize:12,fontFamily:"inherit",lineHeight:2.4,color:"#4a7fa1"}}>
+              <div><span style={{color:"#8b3fd6"}}>(FaultZone)</span> <span style={{color:"#93a9bb"}}>←[:ORIGINATED_ON]—</span> <span style={{color:"#d84315"}}>(Earthquake)</span> <span style={{color:"#93a9bb"}}>—[:TRIGGERED]→</span> <span style={{color:"#1f8ad4"}}>(Tsunami)</span> <span style={{color:"#93a9bb"}}>—[:INUNDATED]→</span> <span style={{color:"#0f9e5c"}}>(Prefecture)</span></div>
+              <div><span style={{color:"#d84315"}}>(Earthquake)</span> <span style={{color:"#93a9bb"}}>—[:STRUCK]→</span> <span style={{color:"#0f9e5c"}}>(Prefecture)</span> <span style={{color:"#93a9bb"}}>—[:CONTAINS]→</span> <span style={{color:"#a37800"}}>(NuclearFacility)</span></div>
+              <div><span style={{color:"#d84315"}}>(Earthquake)</span> <span style={{color:"#93a9bb"}}>—[:WITHIN_50KM_OF]→</span> <span style={{color:"#a37800"}}>(NuclearFacility)</span></div>
+              <div><span style={{color:"#d84315"}}>(Earthquake)</span> <span style={{color:"#93a9bb"}}>—[:IN_DECADE]→</span> <span style={{color:"#0369a1"}}>(Decade)</span></div>
+              <div><span style={{color:"#8b3fd6"}}>(FaultZone)</span> <span style={{color:"#93a9bb"}}>—[:UNDERLIES]→</span> <span style={{color:"#0f9e5c"}}>(Prefecture)</span></div>
             </div>
           </div>
 
@@ -693,14 +693,14 @@ export default function Dashboard({onBack, chat}) {
       </div>{/* end body */}
 
       <style>{`
-        pre k { color: #cc55ff; font-weight: 700; }
-        pre t { color: #00cc66; }
-        pre s { color: #ffcc00; }
-        pre c { color: #004466; font-style: italic; }
+        pre k { color: #8b3fd6; font-weight: 700; }
+        pre t { color: #0f9e5c; }
+        pre s { color: #a37800; }
+        pre c { color: #8aa6b8; font-style: italic; }
         @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
         ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: #000510; }
-        ::-webkit-scrollbar-thumb { background: #001a33; border-radius: 2px; }
+        ::-webkit-scrollbar-track { background: #eef5fc; }
+        ::-webkit-scrollbar-thumb { background: #cfe0f0; border-radius: 2px; }
       `}</style>
     </div>
   )

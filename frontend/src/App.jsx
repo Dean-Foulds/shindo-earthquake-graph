@@ -21,10 +21,10 @@ export default function App() {
         onClick={() => setView("dashboard")}
         style={{
           position: "fixed", bottom: 16, right: 16, zIndex: 100,
-          background: "#000b1a", border: "1px solid #003366",
-          color: "#00e5ff", padding: "6px 14px", borderRadius: 6,
+          background: "#f7fbff", border: "1px solid #8fb6d8",
+          color: "#0369a1", padding: "6px 14px", borderRadius: 6,
           fontSize: 11, cursor: "pointer", fontFamily: "'IBM Plex Mono',monospace",
-          letterSpacing: "0.08em", boxShadow: "0 0 16px rgba(0,100,200,0.2)",
+          letterSpacing: "0.08em", boxShadow: "0 0 16px rgba(30,90,150,0.12)",
         }}
       >
         DATA DASHBOARD →
