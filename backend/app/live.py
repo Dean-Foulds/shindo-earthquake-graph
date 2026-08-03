@@ -22,6 +22,9 @@ router = APIRouter(prefix="/live")
 USGS_URL   = "https://earthquake.usgs.gov/fdsnws/event/1/query"
 JAPAN_BBOX = {"minlatitude": 24, "maxlatitude": 46, "minlongitude": 122, "maxlongitude": 148}
 CACHE_TTL  = 60  # the frontend polls every 60s; don't re-hit USGS per client
+# A slow or half-open Aura connection must never hold up the response. The graph
+# is optional enrichment here, so it gets a hard deadline and is dropped if late.
+GRAPH_TIMEOUT = 6.0
 
 _cache: dict[tuple, tuple[float, list]] = {}
 
@@ -109,7 +112,9 @@ async def get_live_earthquakes(
 
     usgs, graph = await asyncio.gather(
         _fetch_usgs(days, min_magnitude, limit),
-        _fetch_graph(days, min_magnitude, limit, db),
+        asyncio.wait_for(
+            _fetch_graph(days, min_magnitude, limit, db), timeout=GRAPH_TIMEOUT
+        ),
         return_exceptions=True,
     )
 
@@ -139,12 +144,12 @@ async def get_live_status(days: int = 20, db: Neo4jService = Depends(get_db)):
     events = await get_live_earthquakes(days=days, db=db)
     graph_ok, total_live = True, None
     try:
-        rows = await db.cypher_read("""
+        rows = await asyncio.wait_for(db.cypher_read("""
             MATCH (e:Earthquake) WHERE e.source = 'JMA_LIVE'
             RETURN count(e) AS total_live_events, max(e.fetchedAt) AS last_updated
-        """)
+        """), timeout=GRAPH_TIMEOUT)
         total_live = rows[0]["total_live_events"] if rows else 0
-    except Exception:
+    except (Exception, asyncio.TimeoutError):
         graph_ok = False
 
     return {
