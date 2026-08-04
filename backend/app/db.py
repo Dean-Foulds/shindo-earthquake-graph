@@ -7,10 +7,25 @@ EMBED_DIM    = 1024
 
 class Neo4jService:
     def __init__(self):
-        self.driver = AsyncGraphDatabase.driver(
-            os.getenv("NEO4J_URI"),
-            auth=(os.getenv("NEO4J_USER"), os.getenv("NEO4J_PASSWORD"))
-        )
+        uri = os.getenv("NEO4J_URI")
+        # Aura's console emits NEO4J_USERNAME, so accept either spelling — reading
+        # only NEO4J_USER meant a config pasted straight from Aura authenticated
+        # with username None and failed as an opaque routing timeout.
+        user = os.getenv("NEO4J_USER") or os.getenv("NEO4J_USERNAME")
+        password = os.getenv("NEO4J_PASSWORD")
+
+        missing = [
+            name for name, value in
+            (("NEO4J_URI", uri), ("NEO4J_USER/NEO4J_USERNAME", user),
+             ("NEO4J_PASSWORD", password))
+            if not value
+        ]
+        if missing:
+            raise RuntimeError(
+                "Neo4j is not configured — missing " + ", ".join(missing)
+            )
+
+        self.driver = AsyncGraphDatabase.driver(uri, auth=(user, password))
         self._vo = None
 
     def _voyage(self):

@@ -1,13 +1,17 @@
+import asyncio
+import logging
 import time
-import traceback
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from .db import get_db, Neo4jService
+
+log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/analysis")
 
 _predict_cache: dict = {"data": None, "expires_at": 0.0}
 CACHE_TTL = 3600
+GRAPH_TIMEOUT = 20.0  # this query aggregates ~33k events; allow more than the live feed
 
 _CYPHER = """
 MATCH (fz:FaultZone)
@@ -22,7 +26,10 @@ RETURN fz.id AS fault_id, fz.name AS fault_name, fz.type AS fault_type,
 ORDER BY fz.name
 """
 
-CURRENT_YEAR = 2025
+# Derived, not hardcoded: a fixed year silently staled every "years since last
+# event" and overdue ratio once the calendar rolled over.
+def _current_year() -> int:
+    return datetime.now(timezone.utc).year
 
 
 def _recurrence_stats(years: list) -> dict:
@@ -32,7 +39,7 @@ def _recurrence_stats(years: list) -> dict:
             "event_count": len(years),
             "avg_recurrence_years": None,
             "last_event_year": max(years) if years else None,
-            "years_since_last": (CURRENT_YEAR - max(years)) if years else None,
+            "years_since_last": (_current_year() - max(years)) if years else None,
             "overdue_score": None,
             "sample_size_warning": True,
         }
@@ -40,7 +47,7 @@ def _recurrence_stats(years: list) -> dict:
     gaps = [s[i + 1] - s[i] for i in range(len(s) - 1)]
     avg = round(sum(gaps) / len(gaps), 1)
     last = s[-1]
-    since = CURRENT_YEAR - last
+    since = _current_year() - last
     overdue = round(since / avg, 2) if avg else None
     return {
         "event_count": len(years),
@@ -67,7 +74,7 @@ def _build_response(rows: list[dict]) -> dict:
         all_years = (row.get("years_m6") or []) + (row.get("years_m7") or []) + (row.get("years_m8") or [])
         all_years = [y for y in all_years if y is not None]
         if all_years and total:
-            span = CURRENT_YEAR - min(all_years)
+            span = _current_year() - min(all_years)
             rate = round(total / span, 3) if span > 0 else None
         else:
             rate = None
@@ -121,7 +128,7 @@ def _build_response(rows: list[dict]) -> dict:
         ),
         "data_range": {
             "from_year": min(all_years) if all_years else 1950,
-            "to_year": CURRENT_YEAR,
+            "to_year": _current_year(),
             "total_events": sum(row.get("total_events", 0) for row in rows),
         },
         "fault_zones": fault_zones,
@@ -140,10 +147,17 @@ async def predict(db: Neo4jService = Depends(get_db)):
         return _predict_cache["data"]
 
     try:
-        rows = await db.cypher_read(_CYPHER)
+        rows = await asyncio.wait_for(db.cypher_read(_CYPHER), timeout=GRAPH_TIMEOUT)
         data = _build_response(rows)
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {e}\n{traceback.format_exc()}")
+    except (Exception, asyncio.TimeoutError) as e:
+        # Log the detail server-side; never return a traceback to the caller.
+        log.exception("analysis/predict failed")
+        raise HTTPException(
+            status_code=503,
+            detail="Risk analysis is unavailable — the seismic graph could not be "
+                   f"reached ({type(e).__name__}). Recent events on the map are "
+                   "unaffected.",
+        )
 
     _predict_cache["data"] = data
     _predict_cache["expires_at"] = now + CACHE_TTL
