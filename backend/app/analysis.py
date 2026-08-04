@@ -143,7 +143,9 @@ async def predict(db: Neo4jService = Depends(get_db)):
         rows = await db.cypher_read(_CYPHER)
         data = _build_response(rows)
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"{type(e).__name__}: {e}\n{traceback.format_exc()}")
+        error_msg = f"{type(e).__name__}: {e}\n{traceback.format_exc()}"
+        print(f"[ERROR] /analysis/predict failed: {error_msg}", flush=True)
+        raise HTTPException(status_code=500, detail=error_msg)
 
     _predict_cache["data"] = data
     _predict_cache["expires_at"] = now + CACHE_TTL
