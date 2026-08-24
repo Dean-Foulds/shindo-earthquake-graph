@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef, useMemo } from "react"
 import * as d3 from "d3"
 import ReactMarkdown from "react-markdown"
+import { useI18n } from "./i18n"
+import { MONO } from "./fonts"
 
 function useWindowWidth() {
   const [w, setW] = useState(window.innerWidth)
@@ -34,6 +36,7 @@ const MD_COMPONENTS = {
 }
 
 function ChatBubble({msg}) {
+  const { t } = useI18n()
   const isUser = msg.role === "user"
   return (
     <div style={{marginBottom:10}}>
@@ -41,7 +44,7 @@ function ChatBubble({msg}) {
         background:isUser?"#cfe0f0":"#eaf2fb",
         border:`1px solid ${isUser?"#8fb6d8":"#d5e5f4"}`,
         color:isUser?"#12405f":"#1c4a6b",wordBreak:"break-word"}}>
-        {isUser&&<div style={{fontSize:10,fontWeight:700,color:"#7398ac",letterSpacing:"0.1em",marginBottom:4}}>YOU</div>}
+        {isUser&&<div style={{fontSize:10,fontWeight:700,color:"#7398ac",letterSpacing:"0.1em",marginBottom:4}}>{t("chat.you")}</div>}
         {isUser
           ? <span style={{whiteSpace:"pre-wrap"}}>{msg.text}</span>
           : <ReactMarkdown components={MD_COMPONENTS}>{msg.text}</ReactMarkdown>
@@ -158,24 +161,25 @@ const SEV = {
 }
 const iCol = v => v ? IC[Math.min(Math.floor(v)-1,9)] : null
 // hypocentral depth bands — shallow ruptures shake hardest, deep ones reach further
-const DEPTH_REGIME = d => d<=30 ? "SHALLOW CRUSTAL" : d<=70 ? "TRANSITION" : d<=150 ? "INTRASLAB" : "DEEP INTRASLAB"
+const DEPTH_REGIME = d => d<=30 ? "depth.shallow" : d<=70 ? "depth.transition" : d<=150 ? "depth.intraslab" : "depth.deep"
 const cityR = (id, hit) => { const p=POP[id]||1; return hit ? Math.max(6,2.5+Math.sqrt(p)*1.8) : Math.max(1.8,1.2+Math.sqrt(p)*0.75) }
+// The fault name arrives as model prose, so it is matched in both languages —
+// in JA mode the model returns 南海トラフ, not "Nankai Trough".
 const faultMatch = str => {
   if(!str) return null; const s=str.toLowerCase()
-  if(s.includes("nankai"))    return "nankai_trough"
-  if(s.includes("japan trench")) return "japan_trench"
-  if(s.includes("sagami"))    return "sagami_trough"
-  if(s.includes("ryukyu"))    return "ryukyu_trench"
-  if(s.includes("median")||s.includes("tectonic")) return "median_tectonic_line"
-  if(s.includes("itoigawa")||s.includes("shizuoka")) return "itoigawa_shizuoka"
-  if(s.includes("noto"))      return "noto_peninsula"
+  if(s.includes("nankai")   ||s.includes("南海"))     return "nankai_trough"
+  if(s.includes("japan trench")||s.includes("日本海溝")) return "japan_trench"
+  if(s.includes("sagami")   ||s.includes("相模"))     return "sagami_trough"
+  if(s.includes("ryukyu")   ||s.includes("琉球"))     return "ryukyu_trench"
+  if(s.includes("median")||s.includes("tectonic")||s.includes("中央構造線")) return "median_tectonic_line"
+  if(s.includes("itoigawa")||s.includes("shizuoka")||s.includes("糸魚川")) return "itoigawa_shizuoka"
+  if(s.includes("noto")     ||s.includes("能登"))     return "noto_peninsula"
   return null
 }
 const islandPath = (proj,coords) => "M "+coords.map(([lt,ln])=>proj([ln,lt]).map(v=>v.toFixed(1)).join(",")).join(" L ")+" Z"
 
-const INIT_MSG = "Hello — I'm 震度 (Shindo), your seismic risk assistant.\n\nClick anywhere on Japan to run a simulation, then ask me anything about the event, fault zones, or historical precedents."
-
 export default function Shindo({ chat, auth }) {
+  const { t, lang, locale, num, pref, nuclear, fault } = useI18n()
   const width     = useWindowWidth()
   const isMobile  = width < 768
   const intelRef  = useRef(null)
@@ -282,7 +286,7 @@ export default function Shindo({ chat, auth }) {
 
     fetch(`${import.meta.env.VITE_API_URL}/agent/predict`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "Accept-Language": lang },
       body: JSON.stringify({ lat, lon, magnitude: currentMag })
     })
     .then(r => r.json())
@@ -292,7 +296,8 @@ export default function Shindo({ chat, auth }) {
     try{
       const res=await fetch(`${import.meta.env.VITE_API_URL}/agent/analyze`,{
         method:"POST",
-        headers:{"Content-Type":"application/json","Authorization":`Bearer ${auth.token}`},
+        headers:{"Content-Type":"application/json","Accept-Language":lang,
+                 "Authorization":`Bearer ${auth.token}`},
         body:JSON.stringify({lat, lon, magnitude:currentMag, depth:currentDep}),
       })
       if(res.status===401){ auth.signOut(); return }
@@ -301,10 +306,8 @@ export default function Shindo({ chat, auth }) {
       setAna(d)
     }catch(err){
       console.error("[Shindo]", err)
-      const hint = err.message==="Failed to fetch"
-        ? "Backend unreachable — cd backend && uvicorn app.main:app --reload"
-        : err.message
-      setAna({fault_zone:"Analysis failed",severity:"minor",cascade_chain:[hint],affected_prefectures:[],nuclear_risk:[],tsunami:{risk:"none"},historical_analogs:[],insight:hint})
+      const hint = err.message==="Failed to fetch" ? t("intel.backendDown") : err.message
+      setAna({fault_zone:t("intel.analysisFailed"),severity:"minor",cascade_chain:[hint],affected_prefectures:[],nuclear_risk:[],tsunami:{risk:"none"},historical_analogs:[],insight:hint})
     }
     setLoading(false)
   }
@@ -323,7 +326,7 @@ export default function Shindo({ chat, auth }) {
     setEpi({lat,lon,x:ex,y:ey}); setWk(k=>k+1); setAna(null); setPredictData(null)
     setLiveMode(false)
     setTooltip(null)
-    setChatMsgs([{role:"assistant", text:INIT_MSG}])
+    setChatMsgs([{role:"assistant", text:t("chat.greeting"), initial:true}])
     runAnalysis(lat, lon, mag, dep)
   }
 
@@ -334,7 +337,7 @@ export default function Shindo({ chat, auth }) {
     setAna(null)
     setPredictData(null)
     setTooltip(null)
-    setChatMsgs([{role:"assistant", text:INIT_MSG}])
+    setChatMsgs([{role:"assistant", text:t("chat.greeting"), initial:true}])
   }
 
   // ── SLIDER → RE-ANALYSE (debounced 800ms) ───────────────────
@@ -367,14 +370,15 @@ export default function Shindo({ chat, auth }) {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/agent/chat`, {
         method:"POST",
-        headers:{"Content-Type":"application/json","Authorization":`Bearer ${auth.token}`},
+        headers:{"Content-Type":"application/json","Accept-Language":lang,
+                 "Authorization":`Bearer ${auth.token}`},
         body:JSON.stringify({messages:next.slice(-12).map(m=>({role:m.role,text:m.text})),simulation}),
       })
       if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e?.detail||res.statusText)}
       const d=await res.json()
       setChatMsgs(m=>[...m,{role:"assistant",text:d.reply}])
     } catch(err) {
-      setChatMsgs(m=>[...m,{role:"assistant",text:`Error: ${err.message}\n\nIs the backend running? cd backend && uvicorn app.main:app --reload`}])
+      setChatMsgs(m=>[...m,{role:"assistant",text:`${t("chat.error",{msg:err.message})}\n\n${t("chat.backendHint")}`}])
     }
     setChatLoading(false)
   }
@@ -399,7 +403,7 @@ export default function Shindo({ chat, auth }) {
   const tStr = `translate(${mapT.x},${mapT.y}) scale(${mapT.k})`
 
   return (
-    <div ref={outerRef} className="shindo-outer" style={{display:"flex",flexDirection:"row",height:"100vh",fontFamily:"'IBM Plex Mono',monospace",background:"#eef5fc",overflow:"hidden"}}>
+    <div ref={outerRef} className="shindo-outer" style={{display:"flex",flexDirection:"row",height:"100vh",fontFamily:MONO,background:"#eef5fc",overflow:"hidden"}}>
 
       {/* MAP COLUMN */}
       <div className="shindo-map" style={{flex:"0 0 640px",background:"#dbeafa",position:"relative",userSelect:"none",borderRight:"1px solid #cfe0f0"}}>
@@ -655,7 +659,7 @@ export default function Shindo({ chat, auth }) {
             padding:"5px 9px",
             fontSize:10,
             color:"#d97706",
-            fontFamily:"'IBM Plex Mono',monospace",
+            fontFamily:MONO,
             letterSpacing:"0.07em",
             lineHeight:1.8,
             pointerEvents:"none",
@@ -665,7 +669,7 @@ export default function Shindo({ chat, auth }) {
           }}>
             <div style={{fontWeight:700}}>M{tooltip.magnitude?.toFixed(1)}</div>
             <div style={{color:"#a35200",fontSize:9}}>
-              {tooltip.time ? new Date(tooltip.time).toLocaleString("ja-JP",{
+              {tooltip.time ? new Date(tooltip.time).toLocaleString(locale,{
                 month:"short", day:"numeric",
                 hour:"2-digit", minute:"2-digit"
               }) : "—"}
@@ -686,17 +690,21 @@ export default function Shindo({ chat, auth }) {
             border:"1px solid #d97706",
             borderRadius:5, padding:"6px 10px",
             fontSize:10, color:"#d97706",
-            fontFamily:"'IBM Plex Mono',monospace",
+            fontFamily:MONO,
             letterSpacing:"0.08em", lineHeight:1.9,
             pointerEvents:"none",
             boxShadow:"0 0 14px rgba(217,119,6,0.2)"
           }}>
-            <div style={{fontWeight:700,marginBottom:1}}>● SEISMIC CONDITIONS</div>
+            <div style={{fontWeight:700,marginBottom:1}}>{t("live.title")}</div>
             <div style={{color:"#a35200"}}>
-              {liveEvents.length} events · M{Math.min(...liveEvents.map(e=>e.magnitude)).toFixed(1)}–M{Math.max(...liveEvents.map(e=>e.magnitude)).toFixed(1)}
+              {t("live.summary",{
+                n:   liveEvents.length,
+                min: Math.min(...liveEvents.map(e=>e.magnitude)).toFixed(1),
+                max: Math.max(...liveEvents.map(e=>e.magnitude)).toFixed(1),
+              })}
             </div>
-            <div style={{color:"#8a6a33",fontSize:9}}>last 20 days · hover dots for detail</div>
-            <div style={{color:"#8f7a52",fontSize:9,marginTop:1}}>CLICK MAP TO SIMULATE →</div>
+            <div style={{color:"#8a6a33",fontSize:9}}>{t("live.window")}</div>
+            <div style={{color:"#8f7a52",fontSize:9,marginTop:1}}>{t("live.cta")}</div>
           </div>
         )}
 
@@ -708,11 +716,11 @@ export default function Shindo({ chat, auth }) {
             border:"1px solid #d97706",
             borderRadius:5, padding:"5px 10px",
             fontSize:10, color:"#d97706",
-            fontFamily:"'IBM Plex Mono',monospace",
+            fontFamily:MONO,
             letterSpacing:"0.08em", cursor:"pointer",
             boxShadow:"0 0 10px rgba(217,119,6,0.18)"
           }}>
-            ← LIVE CONDITIONS
+            {t("live.back")}
           </button>
         )}
 
@@ -720,22 +728,22 @@ export default function Shindo({ chat, auth }) {
         <div style={{position:"absolute",bottom:10,left:10,fontSize:11,color:"#35759b",lineHeight:1.9,pointerEvents:"auto"}}>
           <div style={{display:"flex",alignItems:"center",gap:5,cursor:"pointer",opacity:showFaults?1:0.4}}
             onClick={e=>{e.stopPropagation();setShowFaults(f=>!f)}}>
-            <div style={{width:16,height:1.5,background:"#cc7000"}}/><span>FAULTS {showFaults?"▪":"▫"}</span>
+            <div style={{width:16,height:1.5,background:"#cc7000"}}/><span>{t("legend.faults")} {showFaults?"▪":"▫"}</span>
           </div>
           {showFaults&&FAULT_LINES.slice(0,4).map(fl=>(
             <div key={fl.id} style={{display:"flex",alignItems:"center",gap:4,paddingLeft:3}}>
               <div style={{width:12,height:1.5,background:fl.color,opacity:0.7}}/>
-              <span style={{fontSize:10,opacity:0.7,color:"#5b859f"}}>{fl.name}</span>
+              <span style={{fontSize:10,opacity:0.7,color:"#5b859f"}}>{fault(fl.id, fl.name)}</span>
             </div>
           ))}
           <div style={{marginTop:3,display:"flex",alignItems:"center",gap:5}}>
             <svg width="8" height="8"><polygon points="4,0 8,8 0,8" fill="#0f9e5c"/></svg>
-            <span>NUCLEAR</span>
+            <span>{t("legend.nuclear")}</span>
           </div>
           {liveEvents.length > 0 && (
             <div style={{marginTop:3,display:"flex",alignItems:"center",gap:5}}>
               <div style={{width:8,height:8,borderRadius:"50%",background:"#d97706"}}/>
-              <span style={{color:"#d97706"}}>RECENT EVENTS</span>
+              <span style={{color:"#d97706"}}>{t("legend.recent")}</span>
             </div>
           )}
         </div>
@@ -766,29 +774,29 @@ export default function Shindo({ chat, auth }) {
         <div style={{padding:"10px 12px 8px",borderBottom:"1px solid #cfe0f0",background:"#f7fbff",flexShrink:0}}>
           <div style={{display:"flex",justifyContent:"space-between",alignItems:"baseline",marginBottom:8}}>
             <span style={{fontSize:14,fontWeight:700,letterSpacing:"0.06em",color:"#0369a1"}}>震度</span>
-            <span style={{fontSize:10,color:"#35759b",letterSpacing:"0.1em",fontWeight:600}}>SEISMIC INTEL</span>
+            <span style={{fontSize:10,color:"#35759b",letterSpacing:"0.1em",fontWeight:600}}>{t("intel.title")}</span>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:6,marginBottom:0}}>
-            <span style={{fontSize:11,color:"#1d6d95",letterSpacing:"0.07em",minWidth:42,fontWeight:600}}>MAG</span>
+            <span style={{fontSize:11,color:"#1d6d95",letterSpacing:"0.07em",minWidth:42,fontWeight:600}}>{t("intel.mag")}</span>
             <input type="range" min={4} max={9.1} step={0.1} value={mag} onChange={e=>setMag(parseFloat(e.target.value))}
               style={{flex:1,accentColor:"#0369a1",height:3}}/>
             <span style={{fontSize:11,fontWeight:700,minWidth:32,textAlign:"right",color:"#0369a1"}}>{mag.toFixed(1)}</span>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:6,marginTop:5}}>
-            <span style={{fontSize:11,color:"#1d6d95",letterSpacing:"0.07em",minWidth:42,fontWeight:600}}>DEPTH</span>
+            <span style={{fontSize:11,color:"#1d6d95",letterSpacing:"0.07em",minWidth:42,fontWeight:600}}>{t("intel.depth")}</span>
             <input type="range" min={0} max={700} step={5} value={dep} onChange={e=>setDep(parseInt(e.target.value,10))}
               style={{flex:1,accentColor:"#0369a1",height:3}}/>
-            <span style={{fontSize:11,fontWeight:700,minWidth:32,textAlign:"right",color:"#0369a1"}}>{dep}km</span>
+            <span style={{fontSize:11,fontWeight:700,minWidth:32,textAlign:"right",color:"#0369a1"}}>{t("unit.km",{n:dep})}</span>
           </div>
           <div style={{display:"flex",justifyContent:"space-between",fontSize:9,color:"#8aa6b8",letterSpacing:"0.05em",marginTop:2,paddingLeft:48}}>
-            <span>{DEPTH_REGIME(dep)}</span>
-            <span>BELOW SURFACE</span>
+            <span>{t(DEPTH_REGIME(dep))}</span>
+            <span>{t("intel.belowSurface")}</span>
           </div>
           {predictData?.sea_floor_depth_m != null && (
             <div style={{fontSize:10,color:"#8aa6b8",marginTop:4,letterSpacing:"0.05em"}}>
-              DEPTH AUTO: {predictData.sea_floor_depth_m > 0 ? "+" : ""}{predictData.sea_floor_depth_m}m
+              {t("intel.depthAuto")}: {predictData.sea_floor_depth_m > 0 ? "+" : ""}{t("unit.m",{n:predictData.sea_floor_depth_m})}
               <span style={{marginLeft:6,color: predictData.is_offshore ? "#557f9e" : "#157a45"}}>
-                {predictData.is_offshore ? "OFFSHORE" : "ONSHORE"}
+                {predictData.is_offshore ? t("intel.offshore") : t("intel.onshore")}
               </span>
             </div>
           )}
@@ -797,16 +805,16 @@ export default function Shindo({ chat, auth }) {
         <div style={{flex:1,overflowY:"auto",padding:"10px 12px"}}>
           {!epi&&!loading&&<div style={{paddingTop:32,textAlign:"center"}}>
             <div style={{fontSize:28,marginBottom:8,color:"#0369a1",opacity:0.15,fontWeight:700}}>震</div>
-            <div style={{fontSize:12,color:"#35759b",letterSpacing:"0.08em",fontWeight:600}}>CLICK MAP TO SIMULATE</div>
-            <div style={{fontSize:11,marginTop:6,color:"#648ba4"}}>Scroll to zoom · Drag to pan</div>
+            <div style={{fontSize:12,color:"#35759b",letterSpacing:"0.08em",fontWeight:600}}>{t("intel.clickToSimulate")}</div>
+            <div style={{fontSize:11,marginTop:6,color:"#648ba4"}}>{t("intel.mapHint")}</div>
             {liveEvents.length > 0 && (
               <div style={{marginTop:16,fontSize:10,color:"#8a6a33",letterSpacing:"0.06em"}}>
-                <div style={{color:"#d97706",marginBottom:6,fontWeight:700}}>● {liveEvents.length} RECENT EVENTS</div>
+                <div style={{color:"#d97706",marginBottom:6,fontWeight:700}}>{t("intel.recentCount",{n:liveEvents.length})}</div>
                 {liveEvents.slice(0,5).map(ev=>(
                   <div key={ev.id} style={{marginBottom:3,color:"#8f7a52",display:"flex",justifyContent:"space-between",padding:"2px 6px",background:"#fdf3e6",borderRadius:3}}>
                     <span>M{ev.magnitude?.toFixed(1)}</span>
                     <span style={{opacity:0.7,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",maxWidth:130,marginLeft:6}}>
-                      {ev.place?.split(",")[0] || "Japan"}
+                      {ev.place?.split(",")[0] || t("intel.unknownPlace")}
                     </span>
                   </div>
                 ))}
@@ -815,37 +823,37 @@ export default function Shindo({ chat, auth }) {
           </div>}
 
           {loading&&<div style={{paddingTop:32,textAlign:"center",lineHeight:2.4}}>
-            <div style={{fontSize:12,color:"#0369a1",marginBottom:4,letterSpacing:"0.08em",fontWeight:700}}>ANALYSING</div>
-            {["FAULT ZONES","TREMOR EXTENT","TSUNAMI PATH","NUCLEAR RISK","NEO4J INFERENCE"].map(s=>(
-              <div key={s} style={{fontSize:11,color:"#557f9e",fontWeight:600}}>{s}</div>
+            <div style={{fontSize:12,color:"#0369a1",marginBottom:4,letterSpacing:"0.08em",fontWeight:700}}>{t("intel.analysing")}</div>
+            {["intel.step.faults","intel.step.tremor","intel.step.tsunami","intel.step.nuclear","intel.step.neo4j"].map(s=>(
+              <div key={s} style={{fontSize:11,color:"#557f9e",fontWeight:600}}>{t(s)}</div>
             ))}
           </div>}
 
           {ana&&!loading&&<div style={{fontSize:12}}>
             <div style={{padding:"6px 10px",borderRadius:5,marginBottom:9,background:sev[0],border:`1px solid ${sev[1]}40`,
               display:"flex",justifyContent:"space-between",alignItems:"center",boxShadow:`0 0 14px ${sev[1]}22`}}>
-              <span style={{fontSize:11,fontWeight:700,letterSpacing:"0.09em",color:sev[1]}}>{(ana.severity||"").toUpperCase()}</span>
-              <span style={{fontSize:10,color:sev[1],opacity:0.8}}>{ana.fault_zone}</span>
+              <span style={{fontSize:11,fontWeight:700,letterSpacing:"0.09em",color:sev[1]}}>{ana.severity?t(`sev.${ana.severity}`):""}</span>
+              <span style={{fontSize:10,color:sev[1],opacity:0.8}}>{fault(activeFault, ana.fault_zone)}</span>
             </div>
 
             {/* ── ESTIMATED IMPACT — all hazards, not tsunami-gated ── */}
             {casualties!=null&&<div style={{marginBottom:9,padding:"8px 10px",background:"#fdf0f2",border:"1px solid #e8b4bd",borderRadius:6}}>
-              <div style={{fontSize:11,color:"#a04a4a",letterSpacing:"0.1em",marginBottom:5,fontWeight:700}}>ESTIMATED IMPACT</div>
+              <div style={{fontSize:11,color:"#a04a4a",letterSpacing:"0.1em",marginBottom:5,fontWeight:700}}>{t("intel.impact")}</div>
               <div style={{display:"flex",gap:14,flexWrap:"wrap"}}>
                 <div>
-                  <div style={{fontSize:10,color:"#a34455",letterSpacing:"0.06em",fontWeight:600}}>CASUALTIES</div>
-                  <div style={{fontSize:18,color:"#c2003f",fontWeight:700,lineHeight:1.2}}>~{casualties.toLocaleString()}</div>
+                  <div style={{fontSize:10,color:"#a34455",letterSpacing:"0.06em",fontWeight:600}}>{t("intel.casualties")}</div>
+                  <div style={{fontSize:18,color:"#c2003f",fontWeight:700,lineHeight:1.2}}>~{num(casualties)}</div>
                 </div>
                 {ana.estimated_displaced!=null&&<div>
-                  <div style={{fontSize:10,color:"#a34455",letterSpacing:"0.06em",fontWeight:600}}>DISPLACED</div>
-                  <div style={{fontSize:18,color:"#c25100",fontWeight:700,lineHeight:1.2}}>~{ana.estimated_displaced.toLocaleString()}</div>
+                  <div style={{fontSize:10,color:"#a34455",letterSpacing:"0.06em",fontWeight:600}}>{t("intel.displaced")}</div>
+                  <div style={{fontSize:18,color:"#c25100",fontWeight:700,lineHeight:1.2}}>~{num(ana.estimated_displaced)}</div>
                 </div>}
               </div>
-              <div style={{fontSize:9,color:"#a3453a",marginTop:5,letterSpacing:"0.04em"}}>MODEL ESTIMATE · NOT AN OFFICIAL FORECAST</div>
+              <div style={{fontSize:9,color:"#a3453a",marginTop:5,letterSpacing:"0.04em"}}>{t("intel.impactNote")}</div>
             </div>}
 
             {ana.cascade_chain?.length>0&&<div style={{marginBottom:9}}>
-              <div style={{fontSize:11,color:"#35759b",letterSpacing:"0.1em",marginBottom:4,fontWeight:700}}>CASCADE</div>
+              <div style={{fontSize:11,color:"#35759b",letterSpacing:"0.1em",marginBottom:4,fontWeight:700}}>{t("intel.cascade")}</div>
               <div style={{display:"flex",flexWrap:"wrap",gap:3,alignItems:"center"}}>
                 {ana.cascade_chain.map((s,i)=><span key={i} style={{display:"flex",alignItems:"center",gap:2}}>
                   <span style={{fontSize:11,padding:"2px 7px",background:"#f7fbff",border:"1px solid #bdd6ea",borderRadius:3,color:"#0a5c8a",fontWeight:600}}>{s}</span>
@@ -856,99 +864,101 @@ export default function Shindo({ chat, auth }) {
 
             {tsunamiOn&&<div style={{marginBottom:9,padding:"8px 10px",background:"#f7fbff",border:"1px solid #8fb6d8",borderRadius:6,boxShadow:"0 0 16px rgba(30,90,150,0.09)"}}>
               <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:5}}>
-                <span style={{fontSize:12,color:"#14648f",letterSpacing:"0.1em",fontWeight:700}}>TSUNAMI</span>
-                <span style={{fontSize:11,fontWeight:700,color:ana.tsunami.risk==="extreme"?"#d42a2a":ana.tsunami.risk==="high"?"#cc6d00":"#0a7fb8"}}>{ana.tsunami.risk.toUpperCase()}</span>
+                <span style={{fontSize:12,color:"#14648f",letterSpacing:"0.1em",fontWeight:700}}>{t("intel.tsunami")}</span>
+                <span style={{fontSize:11,fontWeight:700,color:ana.tsunami.risk==="extreme"?"#d42a2a":ana.tsunami.risk==="high"?"#cc6d00":"#0a7fb8"}}>{t(`tsrisk.${ana.tsunami.risk}`)}</span>
               </div>
               <div style={{display:"flex",gap:10,marginBottom:6,flexWrap:"wrap"}}>
                 {ana.tsunami.max_height_m&&<div>
-                  <div style={{fontSize:10,color:"#4a7fa1",letterSpacing:"0.06em",fontWeight:600}}>WAVE HEIGHT</div>
-                  <div style={{fontSize:16,color:"#0369a1",fontWeight:700}}>{ana.tsunami.max_height_m}m</div>
+                  <div style={{fontSize:10,color:"#4a7fa1",letterSpacing:"0.06em",fontWeight:600}}>{t("intel.waveHeight")}</div>
+                  <div style={{fontSize:16,color:"#0369a1",fontWeight:700}}>{t("unit.m",{n:ana.tsunami.max_height_m})}</div>
                 </div>}
                 {ana.tsunami.warning_min&&<div>
-                  <div style={{fontSize:10,color:"#4a7fa1",letterSpacing:"0.06em",fontWeight:600}}>FIRST WAVE</div>
-                  <div style={{fontSize:16,color:"#0369a1",fontWeight:700}}>{ana.tsunami.warning_min}min</div>
+                  <div style={{fontSize:10,color:"#4a7fa1",letterSpacing:"0.06em",fontWeight:600}}>{t("intel.firstWave")}</div>
+                  <div style={{fontSize:16,color:"#0369a1",fontWeight:700}}>{t("unit.min",{n:ana.tsunami.warning_min})}</div>
                 </div>}
               </div>
               {ana.tsunami.estimated_casualties!=null&&<div style={{fontSize:11,color:"#c9503a",fontWeight:700,marginBottom:5}}>
-                ~{ana.tsunami.estimated_casualties.toLocaleString()} est. casualties
+                {t("intel.tsunamiCasualties",{n:num(ana.tsunami.estimated_casualties)})}
               </div>}
               {ana.affected_prefectures?.filter(p=>p.risk==="tsunami"||p.risk==="both").map(p=>(
                 <div key={p.id} style={{display:"flex",alignItems:"center",gap:5,marginBottom:2}}>
                   <div style={{width:5,height:5,borderRadius:"50%",background:"#2b7ba8",flexShrink:0}}/>
-                  <span style={{flex:1,fontSize:12,color:"#0d6291",fontWeight:600}}>{p.name}</span>
-                  <span style={{fontSize:11,color:"#4a7fa1"}}>{p.distance_km}km</span>
-                  {p.tsunami_height_m&&<span style={{fontSize:12,color:"#0369a1",fontWeight:700}}>{p.tsunami_height_m}m</span>}
+                  <span style={{flex:1,fontSize:12,color:"#0d6291",fontWeight:600}}>{pref(p.id,p.name)}</span>
+                  <span style={{fontSize:11,color:"#4a7fa1"}}>{t("unit.km",{n:p.distance_km})}</span>
+                  {p.tsunami_height_m&&<span style={{fontSize:12,color:"#0369a1",fontWeight:700}}>{t("unit.m",{n:p.tsunami_height_m})}</span>}
                 </div>
               ))}
               {predictData?.nearest_events?.length > 0 && (
                 <div style={{marginTop:8,borderTop:"1px solid #bdd6ea",paddingTop:7}}>
                   <div style={{fontSize:10,color:"#7398ac",letterSpacing:"0.06em",fontWeight:600,marginBottom:5,display:"flex",justifyContent:"space-between"}}>
-                    <span>NEO4J HISTORICAL BASIS</span>
-                    <span style={{color:"#9db4c4"}}>{predictData.historical_basis} events</span>
+                    <span>{t("intel.neo4jBasis")}</span>
+                    <span style={{color:"#9db4c4"}}>{t("intel.eventCount",{n:predictData.historical_basis})}</span>
                   </div>
-                  {predictData.jma_warning_ja && (
+                  {(lang==="ja" ? predictData.jma_warning_ja : predictData.jma_warning_en || predictData.jma_warning_ja) && (
                     <div style={{marginBottom:6,padding:"4px 8px",background:"#fdeef0",border:"1px solid #e8b4bd",borderRadius:4,display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-                      <span style={{fontSize:10,color:"#a04a4a",fontWeight:600}}>JMA</span>
-                      <span style={{fontSize:11,color:"#d42a2a",fontWeight:700}}>{predictData.jma_warning_ja}</span>
+                      <span style={{fontSize:10,color:"#a04a4a",fontWeight:600}}>{t("intel.jma")}</span>
+                      <span style={{fontSize:11,color:"#d42a2a",fontWeight:700}}>
+                        {lang==="ja" ? predictData.jma_warning_ja : (predictData.jma_warning_en || predictData.jma_warning_ja)}
+                      </span>
                     </div>
                   )}
                   <div style={{display:"flex",gap:8,marginBottom:6}}>
                     <div>
-                      <div style={{fontSize:10,color:"#7398ac",fontWeight:600}}>OBSERVED RANGE</div>
-                      <div style={{fontSize:13,color:"#0a5c8a",fontWeight:700}}>{predictData.wave_height_min_m}–{predictData.wave_height_max_m}m</div>
+                      <div style={{fontSize:10,color:"#7398ac",fontWeight:600}}>{t("intel.observedRange")}</div>
+                      <div style={{fontSize:13,color:"#0a5c8a",fontWeight:700}}>{predictData.wave_height_min_m}–{t("unit.m",{n:predictData.wave_height_max_m})}</div>
                     </div>
                     <div>
-                      <div style={{fontSize:10,color:"#7398ac",fontWeight:600}}>AVG</div>
-                      <div style={{fontSize:13,color:"#0a5c8a",fontWeight:700}}>{predictData.wave_height_avg_m}m</div>
+                      <div style={{fontSize:10,color:"#7398ac",fontWeight:600}}>{t("intel.avg")}</div>
+                      <div style={{fontSize:13,color:"#0a5c8a",fontWeight:700}}>{t("unit.m",{n:predictData.wave_height_avg_m})}</div>
                     </div>
                   </div>
                   {predictData.nearest_events.slice(0,3).map((ev,i) => (
                     <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",padding:"3px 7px",marginBottom:2,background:"#e9f1fa",border:"1px solid #d5e5f4",borderRadius:3}}>
-                      <span style={{fontSize:10,color:"#648ba4",fontWeight:600,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.location||"Unknown"}</span>
+                      <span style={{fontSize:10,color:"#648ba4",fontWeight:600,flex:1,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{ev.location||t("intel.unknownPlace")}</span>
                       <span style={{fontSize:10,color:"#8ba7b9",marginLeft:4,whiteSpace:"nowrap"}}>M{ev.magnitude}</span>
-                      <span style={{fontSize:10,color:"#1d6d95",fontWeight:700,marginLeft:4,whiteSpace:"nowrap"}}>{ev.waveHeight}m</span>
+                      <span style={{fontSize:10,color:"#1d6d95",fontWeight:700,marginLeft:4,whiteSpace:"nowrap"}}>{t("unit.m",{n:ev.waveHeight})}</span>
                     </div>
                   ))}
                 </div>
               )}
               {!predictData && tsunamiOn && (
                 <div style={{marginTop:8,borderTop:"1px solid #cfe0f0",paddingTop:6,fontSize:10,color:"#9db4c4",letterSpacing:"0.06em"}}>
-                  NEO4J INFERENCE LOADING...
+                  {t("intel.neo4jLoading")}
                 </div>
               )}
             </div>}
 
             {ana.affected_prefectures?.filter(p=>p.risk==="shaking").length>0&&<div style={{marginBottom:9}}>
-              <div style={{fontSize:11,color:"#35759b",letterSpacing:"0.1em",marginBottom:4,fontWeight:700}}>GROUND SHAKING</div>
+              <div style={{fontSize:11,color:"#35759b",letterSpacing:"0.1em",marginBottom:4,fontWeight:700}}>{t("intel.shaking")}</div>
               {ana.affected_prefectures.filter(p=>p.risk==="shaking").slice(0,6).map(p=>(
                 <div key={p.id} style={{display:"flex",alignItems:"center",gap:5,marginBottom:3}}>
                   <div style={{width:6,height:6,borderRadius:"50%",background:iCol(p.intensity)||"#4a7fa1",flexShrink:0}}/>
-                  <span style={{flex:1,fontSize:12,color:"#0d6291",fontWeight:600}}>{p.name}</span>
-                  <span style={{fontSize:11,color:"#4a7fa1"}}>{p.distance_km}km</span>
+                  <span style={{flex:1,fontSize:12,color:"#0d6291",fontWeight:600}}>{pref(p.id,p.name)}</span>
+                  <span style={{fontSize:11,color:"#4a7fa1"}}>{t("unit.km",{n:p.distance_km})}</span>
                   <span style={{fontSize:11,background:"#f7fbff",border:"1px solid #bdd6ea",padding:"1px 6px",borderRadius:3,color:"#0369a1",fontWeight:700,minWidth:16,textAlign:"center"}}>{p.shindo}</span>
                 </div>
               ))}
             </div>}
 
             {ana.nuclear_risk?.filter(n=>n.risk!=="none").length>0&&<div style={{marginBottom:9,padding:"8px 10px",background:"#fdf0f2",border:"1px solid #e8b4bd",borderRadius:5}}>
-              <div style={{fontSize:11,color:"#d42f3d",letterSpacing:"0.1em",marginBottom:4,fontWeight:700}}>NUCLEAR RISK</div>
+              <div style={{fontSize:11,color:"#d42f3d",letterSpacing:"0.1em",marginBottom:4,fontWeight:700}}>{t("intel.nuclear")}</div>
               {ana.nuclear_risk.filter(n=>n.risk!=="none").map(n=>(
                 <div key={n.id} style={{display:"flex",alignItems:"center",gap:4,marginBottom:3}}>
                   <svg width="8" height="8"><polygon points="4,0 8,8 0,8" fill="#d40f34"/></svg>
-                  <span style={{flex:1,fontSize:12,color:"#a3453a",fontWeight:600}}>{n.name}</span>
-                  <span style={{fontSize:11,color:"#a34455"}}>{n.distance_km}km</span>
-                  <span style={{fontSize:11,color:"#d41240",fontWeight:700}}>{n.risk.toUpperCase()}</span>
+                  <span style={{flex:1,fontSize:12,color:"#a3453a",fontWeight:600}}>{nuclear(n.id,n.name)}</span>
+                  <span style={{fontSize:11,color:"#a34455"}}>{t("unit.km",{n:n.distance_km})}</span>
+                  <span style={{fontSize:11,color:"#d41240",fontWeight:700}}>{t(`nrisk.${n.risk}`)}</span>
                 </div>
               ))}
             </div>}
 
             {ana.historical_analogs?.length>0&&<div style={{marginBottom:9}}>
-              <div style={{fontSize:11,color:"#35759b",letterSpacing:"0.1em",marginBottom:4,fontWeight:700}}>HISTORICAL ANALOGS</div>
+              <div style={{fontSize:11,color:"#35759b",letterSpacing:"0.1em",marginBottom:4,fontWeight:700}}>{t("intel.analogs")}</div>
               {ana.historical_analogs.slice(0,3).map((a,i)=>(
                 <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:6,padding:"5px 9px",marginBottom:3,background:"#f7fbff",border:"1px solid #bdd6ea",borderRadius:4}}>
                   <span style={{fontSize:12,color:"#0a5c8a",fontWeight:600}}>{a.name} <span style={{color:"#557f9e",fontSize:11}}>({a.year})</span></span>
                   <span style={{display:"flex",alignItems:"baseline",gap:7,flexShrink:0}}>
-                    {a.deaths!=null&&<span style={{fontSize:11,color:"#c2003f",fontWeight:700}}>{a.deaths.toLocaleString()} deaths</span>}
+                    {a.deaths!=null&&<span style={{fontSize:11,color:"#c2003f",fontWeight:700}}>{t("intel.deaths",{n:num(a.deaths)})}</span>}
                     <span style={{color:"#35759b",fontSize:12,fontWeight:700}}>M{a.magnitude}</span>
                   </span>
                 </div>
@@ -967,14 +977,14 @@ export default function Shindo({ chat, auth }) {
             <div style={{width:8,height:8,borderRadius:"50%",background:"#0369a1",boxShadow:"0 0 0 3px rgba(3,105,161,0.16)"}}/>
             <div>
               <div style={{fontSize:15,fontWeight:800,letterSpacing:"0.08em",color:"#0369a1"}}>震度 SHINDO</div>
-              <div style={{fontSize:10,color:"#7398ac",letterSpacing:"0.12em",marginTop:1}}>SEISMIC INTELLIGENCE AGENT</div>
+              <div style={{fontSize:10,color:"#7398ac",letterSpacing:"0.12em",marginTop:1}}>{t("chat.subtitle")}</div>
             </div>
           </div>
         </div>
         <div style={{flex:1,overflowY:"auto",padding:"14px"}}>
           {chatMsgs.map((m,i)=><ChatBubble key={i} msg={m}/>)}
           {chatLoading&&<div style={{padding:"10px 14px",background:"#eaf2fb",border:"1px solid #d5e5f4",borderRadius:6,color:"#8aa6b8",fontSize:13}}>
-            <span>analyzing </span>
+            <span>{t("chat.thinking")} </span>
             {[0,1,2].map(i=><span key={i} style={{display:"inline-block",width:4,height:4,borderRadius:"50%",background:"#0369a1",margin:"0 2px",animation:`bounce 1.2s ${i*0.2}s infinite`}}/>)}
           </div>}
           <div ref={chatEndRef}/>
@@ -983,7 +993,7 @@ export default function Shindo({ chat, auth }) {
           <div style={{display:"flex",gap:6,alignItems:"flex-end"}}>
             <textarea value={chatInput} onChange={e=>setChatInput(e.target.value)}
               onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendChat()}}}
-              placeholder="Ask about fault zones, tsunami risk, historical events…"
+              placeholder={t("chat.placeholder")}
               rows={2}
               style={{flex:1,background:"#eaf2fb",border:"1px solid #bdd6ea",borderRadius:6,
                 padding:"8px 10px",color:"#12405f",fontSize:14,fontFamily:"inherit",
@@ -995,7 +1005,7 @@ export default function Shindo({ chat, auth }) {
                 cursor:chatInput.trim()&&!chatLoading?"pointer":"default",
                 fontSize:18,fontFamily:"inherit",transition:"all 0.2s"}}>›</button>
           </div>
-          <div style={{fontSize:10,color:"#9db4c4",marginTop:5}}>Enter to send · Shift+Enter for newline</div>
+          <div style={{fontSize:10,color:"#9db4c4",marginTop:5}}>{t("chat.hint")}</div>
         </div>
       </div>
 

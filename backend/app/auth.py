@@ -17,9 +17,11 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import jwt
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
+
+from .i18n import DEFAULT, lang_of, msg
 
 router = APIRouter(prefix="/auth")
 
@@ -96,28 +98,30 @@ _bearer = HTTPBearer(auto_error=False)
 
 
 def current_user(
+    request: Request,
     creds: Optional[HTTPAuthorizationCredentials] = Depends(_bearer),
 ) -> sqlite3.Row:
     """Resolve the bearer token to a user row, or 401."""
+    lang = lang_of(request)
     if creds is None:
-        raise HTTPException(401, "Sign in to run a simulation")
+        raise HTTPException(401, msg(lang, "auth.signin_required"))
     try:
         payload = jwt.decode(creds.credentials, _secret(), algorithms=["HS256"])
     except jwt.ExpiredSignatureError:
-        raise HTTPException(401, "Session expired — sign in again")
+        raise HTTPException(401, msg(lang, "auth.session_expired"))
     except jwt.InvalidTokenError:
-        raise HTTPException(401, "Invalid session")
+        raise HTTPException(401, msg(lang, "auth.invalid_session"))
 
     with _connect() as conn:
         row = conn.execute(
             "SELECT * FROM users WHERE id = ?", (payload["sub"],)
         ).fetchone()
     if row is None:
-        raise HTTPException(401, "Account no longer exists")
+        raise HTTPException(401, msg(lang, "auth.account_gone"))
     return row
 
 
-def check_quota(user: sqlite3.Row) -> None:
+def check_quota(user: sqlite3.Row, lang: str = DEFAULT) -> None:
     """Raise 429 when the user has spent their allowance for this window."""
     if datetime.fromisoformat(user["quota_reset_at"]) <= datetime.now(timezone.utc):
         with _connect() as conn:
@@ -129,8 +133,8 @@ def check_quota(user: sqlite3.Row) -> None:
     if user["request_count"] >= REQUEST_QUOTA:
         raise HTTPException(
             429,
-            f"Simulation limit reached ({REQUEST_QUOTA} per 30 days). "
-            f"Resets {user['quota_reset_at'][:10]}.",
+            msg(lang, "auth.quota_reached",
+                quota=REQUEST_QUOTA, resets=user["quota_reset_at"][:10]),
         )
 
 
@@ -172,9 +176,9 @@ def _quota_of(row: sqlite3.Row) -> dict:
 # ── endpoints ─────────────────────────────────────────────────────────────────
 
 @router.post("/signup", response_model=Session)
-def signup(body: Credentials):
+def signup(body: Credentials, request: Request):
     if not EMAIL_RE.match(body.email):
-        raise HTTPException(400, "Enter a valid email address")
+        raise HTTPException(400, msg(lang_of(request), "auth.invalid_email"))
 
     salt = secrets.token_bytes(16)
     now  = datetime.now(timezone.utc).isoformat()
@@ -190,14 +194,14 @@ def signup(body: Credentials):
             user_id = cur.lastrowid
             row = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
     except sqlite3.IntegrityError:
-        raise HTTPException(409, "An account with that email already exists")
+        raise HTTPException(409, msg(lang_of(request), "auth.email_taken"))
 
     return Session(token=_issue_token(user_id, body.email),
                    email=body.email, quota=_quota_of(row))
 
 
 @router.post("/login", response_model=Session)
-def login(body: Credentials):
+def login(body: Credentials, request: Request):
     with _connect() as conn:
         row = conn.execute(
             "SELECT * FROM users WHERE email = ?", (body.email,)
@@ -210,7 +214,7 @@ def login(body: Credentials):
     ok = hmac.compare_digest(_hash_password(body.password, salt), expected)
 
     if row is None or not ok:
-        raise HTTPException(401, "Email or password is incorrect")
+        raise HTTPException(401, msg(lang_of(request), "auth.bad_credentials"))
 
     return Session(token=_issue_token(row["id"], row["email"]),
                    email=row["email"], quota=_quota_of(row))

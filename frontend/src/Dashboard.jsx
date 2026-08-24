@@ -1,5 +1,7 @@
-import { useState, useRef, useEffect, useCallback } from "react"
+import { useState, useRef, useEffect } from "react"
 import ReactMarkdown from "react-markdown"
+import { useI18n, LanguageToggle } from "./i18n"
+import { MONO } from "./fonts"
 
 function useWindowWidth() {
   const [w, setW] = useState(window.innerWidth)
@@ -34,6 +36,7 @@ const MD = {
 }
 
 function ChatBubble({msg}) {
+  const { t } = useI18n()
   const isUser = msg.role === "user"
   return (
     <div style={{marginBottom:10}}>
@@ -41,7 +44,7 @@ function ChatBubble({msg}) {
         background:isUser?"#cfe0f0":"#eaf2fb",
         border:`1px solid ${isUser?"#8fb6d8":"#d5e5f4"}`,
         color:isUser?"#12405f":"#1c4a6b",wordBreak:"break-word"}}>
-        {isUser&&<div style={{fontSize:10,fontWeight:700,color:"#7398ac",letterSpacing:"0.1em",marginBottom:4}}>YOU</div>}
+        {isUser&&<div style={{fontSize:10,fontWeight:700,color:"#7398ac",letterSpacing:"0.1em",marginBottom:4}}>{t("chat.you")}</div>}
         {isUser
           ? <span style={{whiteSpace:"pre-wrap"}}>{msg.text}</span>
           : <ReactMarkdown components={MD}>{msg.text}</ReactMarkdown>
@@ -52,6 +55,7 @@ function ChatBubble({msg}) {
 }
 
 function ChatPanel({ chat, mobile }) {
+  const { t, lang } = useI18n()
   const { chatMsgs: msgs, setChatMsgs: setMsgs, chatInput: input, setChatInput: setInput, chatLoading: loading, setChatLoading: setLoading } = chat
   const endRef = useRef(null)
 
@@ -64,14 +68,15 @@ function ChatPanel({ chat, mobile }) {
     setMsgs(next)
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/agent/chat`, {
-        method:"POST", headers:{"Content-Type":"application/json"},
+        method:"POST",
+        headers:{"Content-Type":"application/json","Accept-Language":lang},
         body: JSON.stringify({messages: next.slice(-12).map(m=>({role:m.role,text:m.text}))}),
       })
       if (!res.ok) { const e = await res.json().catch(()=>({})); throw new Error(e?.detail||res.statusText) }
       const d = await res.json()
       setMsgs(m=>[...m,{role:"assistant",text:d.reply}])
     } catch(err) {
-      setMsgs(m=>[...m,{role:"assistant",text:`Error: ${err.message}`}])
+      setMsgs(m=>[...m,{role:"assistant",text:t("chat.error",{msg:err.message})}])
     }
     setLoading(false)
   }
@@ -86,7 +91,7 @@ function ChatPanel({ chat, mobile }) {
           <div style={{width:8,height:8,borderRadius:"50%",background:"#0369a1",boxShadow:"0 0 0 3px rgba(3,105,161,0.16)"}}/>
           <div>
             <div style={{fontSize:15,fontWeight:800,letterSpacing:"0.08em",color:"#0369a1"}}>震度 SHINDO</div>
-            <div style={{fontSize:10,color:"#7398ac",letterSpacing:"0.12em",marginTop:1}}>SEISMIC INTELLIGENCE AGENT</div>
+            <div style={{fontSize:10,color:"#7398ac",letterSpacing:"0.12em",marginTop:1}}>{t("chat.subtitle")}</div>
           </div>
         </div>
       </div>
@@ -94,7 +99,7 @@ function ChatPanel({ chat, mobile }) {
       <div style={{flex:1,overflowY:"auto",padding:"14px"}}>
         {msgs.map((m,i)=><ChatBubble key={i} msg={m}/>)}
         {loading&&<div style={{padding:"10px 14px",background:"#eaf2fb",border:"1px solid #d5e5f4",borderRadius:6,color:"#8aa6b8",fontSize:13}}>
-          <span>analyzing </span>
+          <span>{t("chat.thinking")} </span>
           {[0,1,2].map(i=><span key={i} style={{display:"inline-block",width:4,height:4,borderRadius:"50%",background:"#0369a1",margin:"0 2px",animation:`bounce 1.2s ${i*0.2}s infinite`}}/>)}
         </div>}
         <div ref={endRef}/>
@@ -104,7 +109,7 @@ function ChatPanel({ chat, mobile }) {
         <div style={{display:"flex",gap:6,alignItems:"flex-end"}}>
           <textarea value={input} onChange={e=>setInput(e.target.value)}
             onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send()}}}
-            placeholder="Ask about fault zones, nuclear risk, historical events…"
+            placeholder={t("chat.placeholderDash")}
             rows={2}
             style={{flex:1,background:"#eaf2fb",border:"1px solid #bdd6ea",borderRadius:6,
               padding:"8px 10px",color:"#12405f",fontSize:14,fontFamily:"inherit",
@@ -116,7 +121,7 @@ function ChatPanel({ chat, mobile }) {
               cursor:input.trim()&&!loading?"pointer":"default",
               fontSize:18,fontFamily:"inherit",transition:"all 0.2s"}}>›</button>
         </div>
-        <div style={{fontSize:10,color:"#9db4c4",marginTop:5}}>Enter to send · Shift+Enter for newline</div>
+        <div style={{fontSize:10,color:"#9db4c4",marginTop:5}}>{t("chat.hint")}</div>
       </div>
     </div>
   )
@@ -142,22 +147,22 @@ const DEPTH_DIST = [
   {bin:"300+",  count:138, pct:3, label:"Deep"},
 ]
 const FAULT_RISK = [
-  {name:"Japan Trench",     type:"subduction",  events:1240,deaths:22000,maxMag:9.1,col:"#d93d2b"},
-  {name:"Nankai Trough",    type:"subduction",  events:380, deaths:8800, maxMag:8.4,col:"#cc7000"},
-  {name:"Sagami Trough",    type:"subduction",  events:210, deaths:99000,maxMag:7.9,col:"#d8478f"},
-  {name:"Median Tectonic",  type:"strike_slip", events:180, deaths:6500, maxMag:7.2,col:"#8b3fd6"},
-  {name:"Itoigawa-Shizuoka",type:"strike_slip", events:95,  deaths:2400, maxMag:7.1,col:"#2b7fd4"},
-  {name:"Noto System",      type:"reverse",     events:64,  deaths:245,  maxMag:7.6,col:"#17a05e"},
+  {id:"japan_trench",        name:"Japan Trench",     type:"subduction",  events:1240,deaths:22000,maxMag:9.1,col:"#d93d2b"},
+  {id:"nankai_trough",       name:"Nankai Trough",    type:"subduction",  events:380, deaths:8800, maxMag:8.4,col:"#cc7000"},
+  {id:"sagami_trough",       name:"Sagami Trough",    type:"subduction",  events:210, deaths:99000,maxMag:7.9,col:"#d8478f"},
+  {id:"median_tectonic_line",name:"Median Tectonic",  type:"strike_slip", events:180, deaths:6500, maxMag:7.2,col:"#8b3fd6"},
+  {id:"itoigawa_shizuoka",   name:"Itoigawa-Shizuoka",type:"strike_slip", events:95,  deaths:2400, maxMag:7.1,col:"#2b7fd4"},
+  {id:"noto_peninsula",      name:"Noto System",      type:"reverse",     events:64,  deaths:245,  maxMag:7.6,col:"#17a05e"},
 ]
 const TOP_PREFS = [
-  {name:"Miyagi",   score:94,quakes:890,tsunamis:12,npp:2},
-  {name:"Iwate",    score:87,quakes:720,tsunamis:10,npp:1},
-  {name:"Fukushima",score:85,quakes:680,tsunamis:8, npp:2},
-  {name:"Shizuoka", score:82,quakes:310,tsunamis:3, npp:1},
-  {name:"Tokyo",    score:78,quakes:440,tsunamis:4, npp:0},
-  {name:"Aichi",    score:74,quakes:280,tsunamis:3, npp:1},
-  {name:"Kochi",    score:71,quakes:190,tsunamis:7, npp:0},
-  {name:"Mie",      score:68,quakes:175,tsunamis:6, npp:0},
+  {id:"miyagi",   name:"Miyagi",   score:94,quakes:890,tsunamis:12,npp:2},
+  {id:"iwate",    name:"Iwate",    score:87,quakes:720,tsunamis:10,npp:1},
+  {id:"fukushima",name:"Fukushima",score:85,quakes:680,tsunamis:8, npp:2},
+  {id:"shizuoka", name:"Shizuoka", score:82,quakes:310,tsunamis:3, npp:1},
+  {id:"tokyo",    name:"Tokyo",    score:78,quakes:440,tsunamis:4, npp:0},
+  {id:"aichi",    name:"Aichi",    score:74,quakes:280,tsunamis:3, npp:1},
+  {id:"kochi",    name:"Kochi",    score:71,quakes:190,tsunamis:7, npp:0},
+  {id:"mie",      name:"Mie",      score:68,quakes:175,tsunamis:6, npp:0},
 ]
 const DECADE_DATA = [
   {decade:"1900s",quakes:28,tsunamis:4,deaths:82000},
@@ -178,8 +183,7 @@ const DECADE_DATA = [
 // ── Cypher queries ──────────────────────────────────────────────
 const QUERIES = [
   {
-    id:1, title:"Cascade Trace — 2011 Tohoku",
-    desc:"Follow a full disaster chain: fault zone → earthquake → tsunami → prefecture → nuclear facility.",
+    id:1,
     cypher:`MATCH path =
     (fz:FaultZone)<-[:ORIGINATED_ON]-(eq:Earthquake)
     -[:TRIGGERED]->(t:Tsunami)
@@ -192,8 +196,7 @@ ORDER BY eq.magnitude DESC`,
     tags:["cascade","tsunami","nuclear"],
   },
   {
-    id:2, title:"Compounded Risk Corridors",
-    desc:"Prefectures on subduction faults with a nuclear plant and Pacific coast exposure.",
+    id:2,
     cypher:`MATCH (fz:FaultZone)-[:UNDERLIES]->(pf:Prefecture)
       <-[:CONTAINS]-(nf:NuclearFacility)
 WHERE fz.type = 'subduction'
@@ -204,8 +207,7 @@ ORDER BY fz.predicted_max_mag DESC`,
     tags:["risk","subduction","nuclear"],
   },
   {
-    id:3, title:"Historical Analog Finder",
-    desc:"Find past M7.5+ subduction events to use as analogs for Nankai Trough scenarios.",
+    id:3,
     cypher:`MATCH (eq:Earthquake)-[:ORIGINATED_ON]->(fz:FaultZone)
 WHERE fz.type = 'subduction'
   AND eq.magnitude >= 7.5
@@ -220,8 +222,7 @@ LIMIT 20`,
     tags:["analog","historical","subduction"],
   },
   {
-    id:4, title:"Nuclear Proximity Risk",
-    desc:"Every M6.5+ earthquake that struck within 50km of a nuclear plant.",
+    id:4,
     cypher:`MATCH (eq:Earthquake)-[:WITHIN_50KM_OF]->(nf:NuclearFacility)
 WHERE eq.magnitude >= 6.5
 MATCH (eq)-[:ORIGINATED_ON]->(fz:FaultZone)
@@ -231,8 +232,7 @@ ORDER BY eq.magnitude DESC`,
     tags:["nuclear","proximity","risk"],
   },
   {
-    id:5, title:"Decade Pattern Analysis",
-    desc:"Which decades saw the most seismic activity and tsunami events?",
+    id:5,
     cypher:`MATCH (eq:Earthquake)-[:IN_DECADE]->(d:Decade)
 OPTIONAL MATCH (eq)-[:TRIGGERED]->(t:Tsunami)
 RETURN d.label,
@@ -245,8 +245,7 @@ ORDER BY d.year`,
     tags:["temporal","trends","tsunami"],
   },
   {
-    id:6, title:"Fault Zone Lethality Ranking",
-    desc:"Rank fault zones by total documented deaths and predicted future maximum.",
+    id:6,
     cypher:`MATCH (eq:Earthquake)-[:ORIGINATED_ON]->(fz:FaultZone)
 WHERE eq.deaths IS NOT NULL
 RETURN fz.name, fz.type,
@@ -258,8 +257,7 @@ ORDER BY total_deaths DESC`,
     tags:["lethality","faults","ranking"],
   },
   {
-    id:7, title:"Hamaoka Nuclear Risk",
-    desc:"All historical quakes within 50km of Hamaoka — the plant above the Nankai Trough.",
+    id:7,
     cypher:`MATCH (eq:Earthquake)-[:WITHIN_50KM_OF]->(nf:NuclearFacility {id: 'hamaoka'})
 MATCH (eq)-[:ORIGINATED_ON]->(fz:FaultZone)
 RETURN eq.time, eq.magnitude, eq.depth_km,
@@ -268,8 +266,7 @@ ORDER BY eq.magnitude DESC`,
     tags:["hamaoka","nankai","nuclear"],
   },
   {
-    id:8, title:"Prefecture Composite Risk Index",
-    desc:"Score each prefecture across four dimensions: quake count, tsunami exposure, NPP proximity, subduction fault coverage.",
+    id:8,
     cypher:`MATCH (eq:Earthquake)-[:STRUCK]->(pf:Prefecture)
 WITH pf, count(eq) AS qc, max(eq.magnitude) AS mm
 OPTIONAL MATCH (t:Tsunami)-[:INUNDATED]->(pf)
@@ -283,8 +280,7 @@ ORDER BY composite_risk DESC LIMIT 15`,
     tags:["composite","risk","index"],
   },
   {
-    id:9, title:"Graph Schema Check",
-    desc:"Verify node counts and relationship types loaded correctly in Neo4j Aura.",
+    id:9,
     cypher:`MATCH (n)
 RETURN labels(n)[0] AS node_type, count(n) AS count
 UNION ALL
@@ -297,6 +293,7 @@ ORDER BY count DESC`,
 
 // ── Tiny chart components ───────────────────────────────────────
 function BarChart({data, valueKey, labelKey, colorFn, maxVal}) {
+  const { num } = useI18n()
   const max = maxVal || Math.max(...data.map(d=>d[valueKey]))
   return (
     <div style={{display:"flex",flexDirection:"column",gap:7}}>
@@ -311,7 +308,7 @@ function BarChart({data, valueKey, labelKey, colorFn, maxVal}) {
               boxShadow:`0 0 6px ${colorFn?colorFn(d,i):"#2b7ba8"}44`,
             }}/>
           </div>
-          <div style={{width:52,fontSize:12,color:"#0369a1",textAlign:"right",flexShrink:0,fontWeight:600}}>{d[valueKey].toLocaleString()}</div>
+          <div style={{width:52,fontSize:12,color:"#0369a1",textAlign:"right",flexShrink:0,fontWeight:600}}>{num(d[valueKey])}</div>
         </div>
       ))}
     </div>
@@ -329,6 +326,7 @@ function StatCard({label,value,sub,color="#0369a1"}) {
 }
 
 function QueryCard({q}) {
+  const { t } = useI18n()
   const [open,setOpen] = useState(false)
   const [copied,setCopied] = useState(false)
   const copy = () => { navigator.clipboard.writeText(q.cypher); setCopied(true); setTimeout(()=>setCopied(false),1600) }
@@ -339,7 +337,7 @@ function QueryCard({q}) {
         <div>
           <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:5}}>
             <span style={{fontSize:11,color:"#7398ac",fontWeight:700}}>#{q.id}</span>
-            <span style={{fontSize:14,color:"#0a5c8a",fontWeight:700}}>{q.title}</span>
+            <span style={{fontSize:14,color:"#0a5c8a",fontWeight:700}}>{t(`cy.${q.id}.title`)}</span>
           </div>
           <div style={{display:"flex",gap:5}}>
             {q.tags.map(t=>(
@@ -350,11 +348,11 @@ function QueryCard({q}) {
         <span style={{fontSize:14,color:"#7398ac",flexShrink:0}}>{open?"▲":"▼"}</span>
       </div>
       {open&&<div style={{borderTop:"1px solid #cfe0f0"}}>
-        <div style={{padding:"12px 16px",fontSize:12,color:"#35759b",lineHeight:1.7}}>{q.desc}</div>
+        <div style={{padding:"12px 16px",fontSize:12,color:"#35759b",lineHeight:1.7}}>{t(`cy.${q.id}.desc`)}</div>
         <div style={{position:"relative"}}>
           <pre style={{margin:0,padding:"14px 16px",background:"#e9f1fa",
             color:"#12405f",fontSize:12,lineHeight:1.8,overflowX:"auto",
-            fontFamily:"'IBM Plex Mono',monospace",borderTop:"1px solid #dce9f6"}}>
+            fontFamily:MONO,borderTop:"1px solid #dce9f6"}}>
             {q.cypher.split("\n").map((line,i)=>{
               const hl = line
                 .replace(/(MATCH|WHERE|RETURN|ORDER BY|WITH|LIMIT|OPTIONAL|UNION ALL|AS|AND|IN|NOT)/g, '<k>$1</k>')
@@ -366,7 +364,7 @@ function QueryCard({q}) {
           </pre>
           <button onClick={copy} style={{position:"absolute",top:10,right:10,background:"#cfe0f0",border:"1px solid #8fb6d8",
             color:copied?"#0d9b57":"#1d6d95",padding:"4px 10px",borderRadius:4,fontSize:11,cursor:"pointer",fontFamily:"inherit"}}>
-            {copied?"✓ copied":"copy"}
+            {copied?t("cy.copied"):t("cy.copy")}
           </button>
         </div>
       </div>}
@@ -400,26 +398,29 @@ function OverdueGauge({score}) {
 
 // ── RISK ANALYSIS TAB ───────────────────────────────────────────
 function RiskTab({data, loading, error}) {
+  const { t, num, fault } = useI18n()
   const TYPE_COL = {subduction:"#d93d2b", strike_slip:"#8b3fd6", crustal:"#a37800", reverse:"#0a7fb8", intraslab:"#2b7fd4"}
   return (
     <div>
       {/* Disclaimer — always visible */}
       <div style={{border:"1px solid #e0d090",background:"#fdf8e8",borderRadius:6,padding:"12px 16px",marginBottom:20,fontSize:12,color:"#8a6d1f",lineHeight:1.8}}>
-        <span style={{fontWeight:700,color:"#a37800",letterSpacing:"0.06em"}}>STATISTICAL ANALYSIS — NOT PREDICTION</span>
-        {"  "}These figures represent historical recurrence rates derived from 75 years of seismic records.
-        Earthquake timing is inherently unpredictable. A ratio above 1.0× indicates a fault zone has exceeded its
-        historical average recurrence interval — this does not imply imminent occurrence.
+        <span style={{fontWeight:700,color:"#a37800",letterSpacing:"0.06em"}}>{t("risk.disclaimerTitle")}</span>
+        {"  "}{t("risk.disclaimer")}
       </div>
 
-      {loading&&<div style={{color:"#8aa6b8",fontSize:13,padding:20}}>Loading recurrence data from graph…</div>}
-      {error&&<div style={{color:"#d84315",fontSize:13,padding:20}}>Could not load risk data: {error}</div>}
+      {loading&&<div style={{color:"#8aa6b8",fontSize:13,padding:20}}>{t("risk.loading")}</div>}
+      {error&&<div style={{color:"#d84315",fontSize:13,padding:20}}>{t("risk.error",{msg:error})}</div>}
 
       {data&&<>
         {/* Summary ranking */}
         <div style={{background:"#f7fbff",border:"1px solid #cfe0f0",borderRadius:8,padding:"14px 16px",marginBottom:16}}>
-          <div style={{fontSize:12,color:"#4a7fa1",letterSpacing:"0.1em",marginBottom:12,fontWeight:700}}>HISTORICAL OVERDUE RATIO — RANKED</div>
+          <div style={{fontSize:12,color:"#4a7fa1",letterSpacing:"0.1em",marginBottom:12,fontWeight:700}}>{t("risk.rankedTitle")}</div>
           <div style={{fontSize:11,color:"#8ba7b9",marginBottom:10}}>
-            Based on {data.data_range?.total_events?.toLocaleString()} events · {data.data_range?.from_year}–{data.data_range?.to_year}
+            {t("risk.basedOn",{
+              n:    num(data.data_range?.total_events),
+              from: data.data_range?.from_year,
+              to:   data.data_range?.to_year,
+            })}
           </div>
           {data.ranked_by_overdue?.map((r,i)=>{
             const score = r.overdue_score
@@ -427,8 +428,11 @@ function RiskTab({data, loading, error}) {
             return (
               <div key={r.fault_id} style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
                 <div style={{width:16,fontSize:10,color:"#9db4c4",textAlign:"right"}}>{i+1}.</div>
-                <div style={{flex:1,fontSize:12,color:"#0a5c8a",fontWeight:600}}>{r.fault_name}</div>
-                <div style={{fontSize:11,color:col,fontWeight:700}}>{r.display_label}</div>
+                <div style={{flex:1,fontSize:12,color:"#0a5c8a",fontWeight:600}}>{fault(r.fault_id, r.fault_name)}</div>
+                {/* Rebuilt locally rather than using the API's display_label, which is English-only */}
+                <div style={{fontSize:11,color:col,fontWeight:700}}>
+                  {t("risk.overdueLabel",{tier:r.tier?.replace("m",""),score:score.toFixed(1)})}
+                </div>
               </div>
             )
           })}
@@ -441,17 +445,17 @@ function RiskTab({data, loading, error}) {
             <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:12}}>
               <div>
                 <div style={{display:"flex",alignItems:"center",gap:8,marginBottom:4}}>
-                  <span style={{fontSize:14,fontWeight:700,color:"#0a5c8a"}}>{fz.fault_name}</span>
+                  <span style={{fontSize:14,fontWeight:700,color:"#0a5c8a"}}>{fault(fz.fault_id, fz.fault_name)}</span>
                   <span style={{fontSize:9,padding:"2px 7px",borderRadius:3,
                     background:"#dce9f6",border:`1px solid ${TYPE_COL[fz.fault_type]||"#9db4c4"}`,
                     color:TYPE_COL[fz.fault_type]||"#9db4c4",letterSpacing:"0.06em",fontWeight:700}}>
-                    {fz.fault_type}
+                    {t(`faulttype.${fz.fault_type}`)}
                   </span>
                 </div>
                 <div style={{fontSize:11,color:"#7398ac"}}>
-                  Predicted max: <span style={{color:"#cc7000",fontWeight:700}}>M{fz.predicted_max_mag}</span>
-                  {fz.last_major_year&&<> · Last major: <span style={{color:"#35759b"}}>{fz.last_major_year}</span></>}
-                  {" · "}<span style={{color:"#8aa6b8"}}>{fz.total_events?.toLocaleString()} total events</span>
+                  {t("risk.predictedMax")} <span style={{color:"#cc7000",fontWeight:700}}>M{fz.predicted_max_mag}</span>
+                  {fz.last_major_year&&<> · {t("risk.lastMajor")} <span style={{color:"#35759b"}}>{fz.last_major_year}</span></>}
+                  {" · "}<span style={{color:"#8aa6b8"}}>{t("risk.totalEvents",{n:num(fz.total_events)})}</span>
                 </div>
               </div>
               {/* Gauge for best tier */}
@@ -463,30 +467,31 @@ function RiskTab({data, loading, error}) {
 
             {/* Tier table */}
             <div style={{overflowX:"auto"}}><div style={{display:"grid",gridTemplateColumns:"auto 1fr 1fr 1fr 1fr 1fr",gap:0,fontSize:11,minWidth:380}}>
-              {["TIER","EVENTS","AVG INTERVAL","LAST EVENT","YRS SINCE","OVERDUE RATIO"].map(h=>(
-                <div key={h} style={{padding:"5px 8px",color:"#5f88a6",borderBottom:"1px solid #c9dcee",fontWeight:700,letterSpacing:"0.06em",fontSize:10}}>{h}</div>
+              {["risk.th.tier","risk.th.events","risk.th.avgInterval","risk.th.lastEvent","risk.th.yrsSince","risk.th.overdue"].map(h=>(
+                <div key={h} style={{padding:"5px 8px",color:"#5f88a6",borderBottom:"1px solid #c9dcee",fontWeight:700,letterSpacing:"0.06em",fontSize:10}}>{t(h)}</div>
               ))}
               {["m6","m7","m8"].map(tier=>{
-                const t = fz.tiers?.[tier]
-                if (!t) return null
-                const score = t.overdue_score
+                // `row`, not `t` — `t` is the translate function in this scope
+                const row = fz.tiers?.[tier]
+                if (!row) return null
+                const score = row.overdue_score
                 const col = score == null ? "#9db4c4" : score < 0.8 ? "#0f9e5c" : score < 1.5 ? "#a37800" : score < 2.5 ? "#cc7000" : "#d63000"
                 return [
                   <div key={`${tier}-l`} style={{padding:"5px 8px",color:"#1d6d95",borderBottom:"1px solid #dce9f6",fontWeight:700}}>
                     {tier.toUpperCase().replace("M","M")}+
                   </div>,
                   <div key={`${tier}-ec`} style={{padding:"5px 8px",color:"#35759b",borderBottom:"1px solid #dce9f6"}}>
-                    {t.event_count}
-                    {t.sample_size_warning&&<span style={{fontSize:9,padding:"1px 4px",background:"#fdf1e3",border:"1px solid #e8c9a0",borderRadius:3,color:"#a35f00",marginLeft:5}}>low n</span>}
+                    {row.event_count}
+                    {row.sample_size_warning&&<span style={{fontSize:9,padding:"1px 4px",background:"#fdf1e3",border:"1px solid #e8c9a0",borderRadius:3,color:"#a35f00",marginLeft:5}}>{t("risk.lowN")}</span>}
                   </div>,
                   <div key={`${tier}-ar`} style={{padding:"5px 8px",color:"#4a7fa1",borderBottom:"1px solid #dce9f6"}}>
-                    {t.avg_recurrence_years != null ? `${t.avg_recurrence_years} yr` : "—"}
+                    {row.avg_recurrence_years != null ? t("risk.years",{n:row.avg_recurrence_years}) : "—"}
                   </div>,
                   <div key={`${tier}-le`} style={{padding:"5px 8px",color:"#4a7fa1",borderBottom:"1px solid #dce9f6"}}>
-                    {t.last_event_year ?? "—"}
+                    {row.last_event_year ?? "—"}
                   </div>,
                   <div key={`${tier}-ys`} style={{padding:"5px 8px",color:"#4a7fa1",borderBottom:"1px solid #dce9f6"}}>
-                    {t.years_since_last != null ? `${t.years_since_last} yr` : "—"}
+                    {row.years_since_last != null ? t("risk.years",{n:row.years_since_last}) : "—"}
                   </div>,
                   <div key={`${tier}-os`} style={{padding:"5px 8px",borderBottom:"1px solid #dce9f6",fontWeight:700,color:col}}>
                     {score != null ? `${score.toFixed(2)}×` : "—"}
@@ -503,6 +508,7 @@ function RiskTab({data, loading, error}) {
 
 // ── MAIN DASHBOARD ──────────────────────────────────────────────
 export default function Dashboard({onBack, chat}) {
+  const { t, lang, num, pref, fault } = useI18n()
   const width = useWindowWidth()
   const isMobile = width < 768
   const [activeTab,setActiveTab] = useState("eda")
@@ -514,7 +520,9 @@ export default function Dashboard({onBack, chat}) {
     setActiveTab(t)
     if (t === "risk" && !riskData && !riskLoading) {
       setRiskLoading(true)
-      fetch(`${import.meta.env.VITE_API_URL}/analysis/predict`)
+      fetch(`${import.meta.env.VITE_API_URL}/analysis/predict`, {
+        headers: {"Accept-Language": lang},
+      })
         .then(r => { if (!r.ok) throw new Error(r.statusText); return r.json() })
         .then(d => { setRiskData(d); setRiskLoading(false) })
         .catch(e => { setRiskError(e.message); setRiskLoading(false) })
@@ -524,23 +532,26 @@ export default function Dashboard({onBack, chat}) {
   const col2 = isMobile ? "1fr" : "1fr 1fr"
 
   return (
-    <div style={{height:"100vh",background:"#eef5fc",fontFamily:"'IBM Plex Mono',monospace",color:"#2b7ba8",display:"flex",flexDirection:"column"}}>
+    <div style={{height:"100vh",background:"#eef5fc",fontFamily:MONO,color:"#2b7ba8",display:"flex",flexDirection:"column"}}>
       {/* Nav */}
       <div style={{borderBottom:"1px solid #cfe0f0",background:"#f7fbff",padding:isMobile?"0 12px":"0 24px",
         display:"flex",alignItems:"center",gap:isMobile?8:16,height:50,flexShrink:0,flexWrap:"wrap",minHeight:50}}>
         <button onClick={onBack} style={{background:"none",border:"1px solid #bdd6ea",borderRadius:5,
           color:"#35759b",fontSize:11,padding:"5px 10px",cursor:"pointer",fontFamily:"inherit",letterSpacing:"0.06em",flexShrink:0}}>
-          ← SHINDO
+          {t("nav.backToShindo")}
         </button>
         {!isMobile&&<div style={{fontSize:14,fontWeight:700,color:"#0369a1",letterSpacing:"0.08em"}}>
-          DATA ANALYSIS DASHBOARD
+          {t("nav.dashboardTitle")}
         </div>}
-        <div style={{marginLeft:"auto",display:"flex",gap:isMobile?2:4,flexShrink:0}}>
-          {[["eda",isMobile?"EDA":"EDA CHARTS"],["risk",isMobile?"RISK":"RISK ANALYSIS"],["cypher",isMobile?"CYPHER":"CYPHER QUERIES"]].map(([t,label])=>(
-            <button key={t} onClick={()=>selectTab(t)}
-              style={{background:activeTab===t?"#cfe0f0":"none",border:"1px solid",
-                borderColor:activeTab===t?"#8fb6d8":"transparent",borderRadius:5,
-                color:activeTab===t?"#0369a1":"#8aa6b8",fontSize:isMobile?10:11,padding:isMobile?"5px 8px":"5px 14px",
+        <div style={{marginLeft:"auto",display:"flex",gap:isMobile?2:4,flexShrink:0,alignItems:"center"}}>
+          <LanguageToggle compact/>
+          {[["eda",   t(isMobile?"dash.tab.edaShort":"dash.tab.eda")],
+            ["risk",  t(isMobile?"dash.tab.riskShort":"dash.tab.risk")],
+            ["cypher",t(isMobile?"dash.tab.cypherShort":"dash.tab.cypher")]].map(([tab,label])=>(
+            <button key={tab} onClick={()=>selectTab(tab)}
+              style={{background:activeTab===tab?"#cfe0f0":"none",border:"1px solid",
+                borderColor:activeTab===tab?"#8fb6d8":"transparent",borderRadius:5,
+                color:activeTab===tab?"#0369a1":"#8aa6b8",fontSize:isMobile?10:11,padding:isMobile?"5px 8px":"5px 14px",
                 cursor:"pointer",fontFamily:"inherit",letterSpacing:"0.05em"}}>
               {label}
             </button>
@@ -556,30 +567,30 @@ export default function Dashboard({onBack, chat}) {
         {activeTab==="eda"&&<>
           {/* KPI strip */}
           <div style={{display:"flex",gap:10,marginBottom:24,flexWrap:"wrap"}}>
-            <StatCard label="TOTAL EVENTS (M4+)" value="4,720" sub="1900 – 2024" color="#0369a1"/>
-            <StatCard label="DEADLIEST EVENT"    value="M9.1"  sub="Tohoku 2011 · 22k deaths" color="#d84315"/>
-            <StatCard label="ACTIVE FAULT ZONES" value="7"     sub="monitored in graph" color="#a37800"/>
-            <StatCard label="NUCLEAR FACILITIES" value="15"    sub="tracked in graph" color="#0f9e5c"/>
-            <StatCard label="AVG ANNUAL M6+"     value="18.4"  sub="past 50 years" color="#8b3fd6"/>
+            <StatCard label={t("dash.kpi.total")}     value={num(4720)} sub={t("dash.kpi.totalSub")} color="#0369a1"/>
+            <StatCard label={t("dash.kpi.deadliest")} value="M9.1"      sub={t("dash.kpi.deadliestSub")} color="#d84315"/>
+            <StatCard label={t("dash.kpi.faults")}    value="7"         sub={t("dash.kpi.faultsSub")} color="#a37800"/>
+            <StatCard label={t("dash.kpi.npp")}       value="15"        sub={t("dash.kpi.nppSub")} color="#0f9e5c"/>
+            <StatCard label={t("dash.kpi.annual")}    value="18.4"      sub={t("dash.kpi.annualSub")} color="#8b3fd6"/>
           </div>
 
           <div style={{display:"grid",gridTemplateColumns:col2,gap:16,marginBottom:16}}>
             {/* Magnitude distribution */}
             <div style={{background:"#f7fbff",border:"1px solid #cfe0f0",borderRadius:8,padding:"14px 16px"}}>
-              <div style={{fontSize:12,color:"#4a7fa1",letterSpacing:"0.1em",marginBottom:14,fontWeight:700}}>MAGNITUDE DISTRIBUTION</div>
+              <div style={{fontSize:12,color:"#4a7fa1",letterSpacing:"0.1em",marginBottom:14,fontWeight:700}}>{t("dash.magDist")}</div>
               <BarChart data={MAG_DIST} valueKey="count" labelKey="bin"
                 colorFn={(d,i)=>{
                   const cols=["#648ba4","#5b859f","#4a7fa1","#cc7000","#d16000","#d94a00","#d63000","#b0001c"]
                   return cols[i]||"#2b7ba8"
                 }}/>
               <div style={{fontSize:12,color:"#648ba4",marginTop:12,lineHeight:1.7}}>
-                38% of events M4.0–4.4. Each magnitude step is ~31.6× more energy.
+                {t("dash.magDistNote")}
               </div>
             </div>
 
             {/* Depth distribution */}
             <div style={{background:"#f7fbff",border:"1px solid #cfe0f0",borderRadius:8,padding:"14px 16px"}}>
-              <div style={{fontSize:12,color:"#4a7fa1",letterSpacing:"0.1em",marginBottom:14,fontWeight:700}}>DEPTH DISTRIBUTION (km)</div>
+              <div style={{fontSize:12,color:"#4a7fa1",letterSpacing:"0.1em",marginBottom:14,fontWeight:700}}>{t("dash.depthDist")}</div>
               <BarChart data={DEPTH_DIST} valueKey="count" labelKey="bin"
                 colorFn={(d)=>{
                   if(d.label==="Crustal") return "#cc7000"
@@ -587,7 +598,7 @@ export default function Dashboard({onBack, chat}) {
                   return "#2b7ba8"
                 }}/>
               <div style={{fontSize:12,color:"#648ba4",marginTop:12,lineHeight:1.7}}>
-                35% shallow crustal (10–30km) — highest surface shaking. Deep intraslab events less destructive but broader reach.
+                {t("dash.depthDistNote")}
               </div>
             </div>
           </div>
@@ -595,7 +606,7 @@ export default function Dashboard({onBack, chat}) {
           <div style={{display:"grid",gridTemplateColumns:col2,gap:16,marginBottom:16}}>
             {/* Decade trend */}
             <div style={{background:"#f7fbff",border:"1px solid #cfe0f0",borderRadius:8,padding:"14px 16px"}}>
-              <div style={{fontSize:12,color:"#4a7fa1",letterSpacing:"0.1em",marginBottom:14,fontWeight:700}}>EVENTS PER DECADE (M4+)</div>
+              <div style={{fontSize:12,color:"#4a7fa1",letterSpacing:"0.1em",marginBottom:14,fontWeight:700}}>{t("dash.decade")}</div>
               <div style={{display:"flex",alignItems:"flex-end",gap:3,height:100}}>
                 {DECADE_DATA.map((d,i)=>{
                   const maxQ=Math.max(...DECADE_DATA.map(x=>x.quakes))
@@ -606,7 +617,7 @@ export default function Dashboard({onBack, chat}) {
                         boxShadow:`0 0 6px ${d.tsunamis>=7?"#d84315":"#2b7ba8"}44`,
                         transition:"height 0.6s ease",position:"relative"}}>
                         {d.tsunamis>=5&&<div style={{position:"absolute",bottom:"100%",left:"50%",transform:"translateX(-50%)",
-                          fontSize:7,color:"#c05f38",whiteSpace:"nowrap"}}>{d.tsunamis}ts</div>}
+                          fontSize:7,color:"#c05f38",whiteSpace:"nowrap"}}>{d.tsunamis}{t("dash.decadeTsSuffix")}</div>}
                       </div>
                       <div style={{fontSize:6,color:"#9db4c4",transform:"rotate(-45deg)",transformOrigin:"top center",
                         marginTop:4,whiteSpace:"nowrap"}}>{d.decade.slice(0,4)}s</div>
@@ -615,33 +626,34 @@ export default function Dashboard({onBack, chat}) {
                 })}
               </div>
               <div style={{fontSize:12,color:"#648ba4",marginTop:18,lineHeight:1.7}}>
-                Increasing trend due to improved seismic network coverage (not actual increase). Red bars = high tsunami years.
+                {t("dash.decadeNote")}
               </div>
             </div>
 
             {/* Fault lethality */}
             <div style={{background:"#f7fbff",border:"1px solid #cfe0f0",borderRadius:8,padding:"14px 16px"}}>
-              <div style={{fontSize:12,color:"#4a7fa1",letterSpacing:"0.1em",marginBottom:14,fontWeight:700}}>FAULT ZONE TOTAL DEATHS</div>
-              <BarChart data={FAULT_RISK} valueKey="deaths" labelKey="name"
+              <div style={{fontSize:12,color:"#4a7fa1",letterSpacing:"0.1em",marginBottom:14,fontWeight:700}}>{t("dash.faultDeaths")}</div>
+              <BarChart data={FAULT_RISK.map(f=>({...f,label:fault(f.id,f.name)}))}
+                valueKey="deaths" labelKey="label"
                 colorFn={(d)=>d.col} maxVal={150000}/>
               <div style={{fontSize:12,color:"#648ba4",marginTop:12,lineHeight:1.7}}>
-                Sagami Trough leads due to 1923 Great Kanto (99,000 deaths). Japan Trench second: 2011 Tohoku (22,000).
+                {t("dash.faultDeathsNote")}
               </div>
             </div>
           </div>
 
           {/* Prefecture risk table */}
           <div style={{background:"#f7fbff",border:"1px solid #cfe0f0",borderRadius:8,padding:"14px 16px"}}>
-            <div style={{fontSize:12,color:"#4a7fa1",letterSpacing:"0.1em",marginBottom:14,fontWeight:700}}>PREFECTURE COMPOSITE RISK INDEX (top 8)</div>
+            <div style={{fontSize:12,color:"#4a7fa1",letterSpacing:"0.1em",marginBottom:14,fontWeight:700}}>{t("dash.prefIndex")}</div>
             <div style={{overflowX:"auto"}}><div style={{display:"grid",gridTemplateColumns:"2fr 1fr 1fr 1fr 1fr 1fr",gap:0,minWidth:420}}>
-              {["PREFECTURE","RISK SCORE","QUAKES","TSUNAMIS","NPP","RISK BAR"].map(h=>(
-                <div key={h} style={{fontSize:11,color:"#4a7fa1",padding:"6px 10px",borderBottom:"1px solid #c9dcee",letterSpacing:"0.07em",fontWeight:700}}>{h}</div>
+              {["dash.th.prefecture","dash.th.riskScore","dash.th.quakes","dash.th.tsunamis","dash.th.npp","dash.th.riskBar"].map(h=>(
+                <div key={h} style={{fontSize:11,color:"#4a7fa1",padding:"6px 10px",borderBottom:"1px solid #c9dcee",letterSpacing:"0.07em",fontWeight:700}}>{t(h)}</div>
               ))}
               {TOP_PREFS.map((p,i)=>{
                 const barW=`${p.score}%`
                 const col=p.score>85?"#d84315":p.score>75?"#cc7000":"#2b7ba8"
                 return [
-                  <div key={`n${i}`} style={{fontSize:12,color:"#0a5c8a",padding:"7px 10px",borderBottom:"1px solid #dce9f6",fontWeight:600}}>{p.name}</div>,
+                  <div key={`n${i}`} style={{fontSize:12,color:"#0a5c8a",padding:"7px 10px",borderBottom:"1px solid #dce9f6",fontWeight:600}}>{pref(p.id,p.name)}</div>,
                   <div key={`s${i}`} style={{fontSize:12,color:col,padding:"7px 10px",borderBottom:"1px solid #dce9f6",fontWeight:700}}>{p.score}</div>,
                   <div key={`q${i}`} style={{fontSize:12,color:"#35759b",padding:"7px 10px",borderBottom:"1px solid #dce9f6"}}>{p.quakes}</div>,
                   <div key={`t${i}`} style={{fontSize:12,color:"#1d6d95",padding:"7px 10px",borderBottom:"1px solid #dce9f6"}}>{p.tsunamis}</div>,
@@ -654,7 +666,7 @@ export default function Dashboard({onBack, chat}) {
             </div>
             </div>
             <div style={{fontSize:12,color:"#648ba4",marginTop:12}}>
-              Score = quake_count + tsunami_count×10 + npp_count×5 + subduction_zones×8
+              {t("dash.prefFormula")}
             </div>
           </div>
         </>}
@@ -665,17 +677,17 @@ export default function Dashboard({onBack, chat}) {
         {/* ── CYPHER TAB ──────────────────────────────────────── */}
         {activeTab==="cypher"&&<>
           <div style={{marginBottom:20,padding:"16px 20px",background:"#f7fbff",border:"1px solid #cfe0f0",borderRadius:8}}>
-            <div style={{fontSize:12,color:"#4a7fa1",letterSpacing:"0.08em",marginBottom:10,fontWeight:700}}>HOW TO USE</div>
+            <div style={{fontSize:12,color:"#4a7fa1",letterSpacing:"0.08em",marginBottom:10,fontWeight:700}}>{t("cy.howTo")}</div>
             <div style={{fontSize:13,color:"#35759b",lineHeight:1.8}}>
-              Open <span style={{color:"#0a5c8a"}}>Neo4j Aura Console</span> → your database → <span style={{color:"#0a5c8a"}}>Query</span> tab.
-              Paste any query below and run it. Queries use the SHINDO graph schema:<br/>
+              {t("cy.howTo.open")} <span style={{color:"#0a5c8a"}}>Neo4j Aura Console</span> → {t("cy.howTo.db")} → <span style={{color:"#0a5c8a"}}>Query</span> {t("cy.howTo.tab")}
+              {" "}{t("cy.howTo.schema")}<br/>
               <span style={{color:"#0369a1"}}>Earthquake</span> · <span style={{color:"#0369a1"}}>FaultZone</span> · <span style={{color:"#0369a1"}}>Tsunami</span> · <span style={{color:"#0369a1"}}>Prefecture</span> · <span style={{color:"#0369a1"}}>NuclearFacility</span> · <span style={{color:"#0369a1"}}>Decade</span>
             </div>
           </div>
 
           {/* schema diagram */}
           <div style={{marginBottom:20,padding:"16px 20px",background:"#f7fbff",border:"1px solid #cfe0f0",borderRadius:8}}>
-            <div style={{fontSize:12,color:"#4a7fa1",letterSpacing:"0.08em",marginBottom:14,fontWeight:700}}>GRAPH SCHEMA</div>
+            <div style={{fontSize:12,color:"#4a7fa1",letterSpacing:"0.08em",marginBottom:14,fontWeight:700}}>{t("cy.schema")}</div>
             <div style={{fontSize:12,fontFamily:"inherit",lineHeight:2.4,color:"#4a7fa1"}}>
               <div><span style={{color:"#8b3fd6"}}>(FaultZone)</span> <span style={{color:"#93a9bb"}}>←[:ORIGINATED_ON]—</span> <span style={{color:"#d84315"}}>(Earthquake)</span> <span style={{color:"#93a9bb"}}>—[:TRIGGERED]→</span> <span style={{color:"#1f8ad4"}}>(Tsunami)</span> <span style={{color:"#93a9bb"}}>—[:INUNDATED]→</span> <span style={{color:"#0f9e5c"}}>(Prefecture)</span></div>
               <div><span style={{color:"#d84315"}}>(Earthquake)</span> <span style={{color:"#93a9bb"}}>—[:STRUCK]→</span> <span style={{color:"#0f9e5c"}}>(Prefecture)</span> <span style={{color:"#93a9bb"}}>—[:CONTAINS]→</span> <span style={{color:"#a37800"}}>(NuclearFacility)</span></div>

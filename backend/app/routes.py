@@ -6,10 +6,11 @@ import asyncio
 import httpx
 from datetime import datetime, timezone
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 from .db import get_db, Neo4jService
 from .analysis import get_cached_predict
+from .i18n import chat_instruction, lang_of, msg
 from app.agent.agent import run_impact_agent
 
 router = APIRouter()
@@ -42,7 +43,7 @@ def _extract_iso_date(text: str) -> Optional[str]:
 # ── OAuth token cache ────────────────────────────────────────────
 _token_cache: dict = {"token": None, "expires_at": 0}
 
-async def get_aura_token() -> str:
+async def get_aura_token(lang: str = "en") -> str:
     now = time.time()
     if _token_cache["token"] and now < _token_cache["expires_at"] - 30:
         return _token_cache["token"]
@@ -61,7 +62,7 @@ async def get_aura_token() -> str:
             },
         )
     if not resp.is_success:
-        raise HTTPException(502, f"Aura OAuth failed: {resp.text}")
+        raise HTTPException(502, msg(lang, "agent.oauth_failed"))
 
     data = resp.json()
     _token_cache["token"] = data["access_token"]
@@ -90,13 +91,18 @@ class PredictRequest(BaseModel):
 
 # ── Agent chat endpoint ──────────────────────────────────────────
 @router.post("/agent/chat", response_model=ChatResponse)
-async def agent_chat(req: ChatRequest, db: Neo4jService = Depends(get_db)):
+async def agent_chat(
+    req: ChatRequest,
+    request: Request,
+    db: Neo4jService = Depends(get_db),
+):
+    lang = lang_of(request)
     agent_url = os.getenv("AURA_AGENT_URL")
     if not agent_url:
-        raise HTTPException(500, "AURA_AGENT_URL not set")
+        raise HTTPException(500, msg(lang, "agent.not_configured"))
 
     token, _ = await asyncio.gather(
-        get_aura_token(),
+        get_aura_token(lang),
         asyncio.sleep(0),
     )
 
@@ -197,7 +203,9 @@ async def agent_chat(req: ChatRequest, db: Neo4jService = Depends(get_db)):
         except Exception:
             pass
 
-    message = date_context + sim_context + risk_context + recent_event_context + last_user
+    # The language directive leads, so it is not buried under the injected context.
+    message = (chat_instruction(lang) + date_context + sim_context
+               + risk_context + recent_event_context + last_user)
 
     async with httpx.AsyncClient(timeout=60) as client:
         resp = await client.post(
@@ -210,7 +218,7 @@ async def agent_chat(req: ChatRequest, db: Neo4jService = Depends(get_db)):
         )
 
     if not resp.is_success:
-        raise HTTPException(502, f"Aura agent error {resp.status_code}: {resp.text}")
+        raise HTTPException(502, msg(lang, "agent.error", status=resp.status_code))
 
     data = resp.json()
     reply = ""

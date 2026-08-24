@@ -2,8 +2,9 @@ import asyncio
 import logging
 import time
 from datetime import datetime, timezone
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from .db import get_db, Neo4jService
+from .i18n import lang_of, msg
 
 log = logging.getLogger(__name__)
 
@@ -141,7 +142,7 @@ def get_cached_predict():
 
 
 @router.get("/predict")
-async def predict(db: Neo4jService = Depends(get_db)):
+async def predict(request: Request, db: Neo4jService = Depends(get_db)):
     now = time.time()
     if _predict_cache["data"] and now < _predict_cache["expires_at"]:
         return _predict_cache["data"]
@@ -154,9 +155,8 @@ async def predict(db: Neo4jService = Depends(get_db)):
         log.exception("analysis/predict failed")
         raise HTTPException(
             status_code=503,
-            detail="Risk analysis is unavailable — the seismic graph could not be "
-                   f"reached ({type(e).__name__}). Recent events on the map are "
-                   "unaffected.",
+            detail=msg(lang_of(request), "graph.risk_unavailable",
+                       error=type(e).__name__),
         )
 
     _predict_cache["data"] = data

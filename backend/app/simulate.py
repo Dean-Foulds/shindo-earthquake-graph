@@ -18,10 +18,11 @@ from anthropic import (
     APIStatusError,
     RateLimitError,
 )
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from .auth import check_quota, current_user, record_usage
+from .i18n import analysis_instruction, lang_of, msg
 
 router = APIRouter(prefix="/agent")
 
@@ -129,11 +130,11 @@ ANALYSIS_SCHEMA = {
 _client: Optional[Anthropic] = None
 
 
-def _anthropic() -> Anthropic:
+def _anthropic(lang: str = "en") -> Anthropic:
     global _client
     if _client is None:
         if not os.getenv("ANTHROPIC_API_KEY"):
-            raise HTTPException(503, "Simulation is unavailable — ANTHROPIC_API_KEY is not set")
+            raise HTTPException(503, msg(lang, "sim.unavailable"))
         _client = Anthropic()
     return _client
 
@@ -146,8 +147,13 @@ class SimulationRequest(BaseModel):
 
 
 @router.post("/analyze")
-def analyze(body: SimulationRequest, user: sqlite3.Row = Depends(current_user)):
-    check_quota(user)
+def analyze(
+    body: SimulationRequest,
+    request: Request,
+    user: sqlite3.Row = Depends(current_user),
+):
+    lang = lang_of(request)
+    check_quota(user, lang)
 
     prompt = (
         f"Earthquake: {body.lat:.2f}°N {body.lon:.2f}°E "
@@ -161,11 +167,12 @@ def analyze(body: SimulationRequest, user: sqlite3.Row = Depends(current_user)):
         "hazards combined — shaking, building collapse, landslide, fire, tsunami), "
         "never null. For shaking-dominant inland events this is driven by collapse "
         "and landslide, not tsunami. Also give historical_analogs[].deaths for every "
-        "analog."
+        "analog. "
+        + analysis_instruction(lang)
     )
 
     try:
-        message = _anthropic().messages.create(
+        message = _anthropic(lang).messages.create(
             model=MODEL,
             max_tokens=MAX_TOKENS,
             system="You are Shindo, Japan seismic risk AI backed by a Neo4j graph.",
@@ -182,16 +189,16 @@ def analyze(body: SimulationRequest, user: sqlite3.Row = Depends(current_user)):
             },
         )
     except RateLimitError:
-        raise HTTPException(503, "Model is rate limited — try again shortly")
+        raise HTTPException(503, msg(lang, "sim.rate_limited"))
     except APIConnectionError:
-        raise HTTPException(503, "Could not reach the model API")
+        raise HTTPException(503, msg(lang, "sim.unreachable"))
     except APIStatusError as e:
-        raise HTTPException(502, f"Model API error ({e.status_code})")
+        raise HTTPException(502, msg(lang, "sim.api_error", status=e.status_code))
 
     if message.stop_reason == "refusal":
-        raise HTTPException(422, "The model declined to analyse this scenario")
+        raise HTTPException(422, msg(lang, "sim.refused"))
     if message.stop_reason == "max_tokens":
-        raise HTTPException(502, "Model response was truncated")
+        raise HTTPException(502, msg(lang, "sim.truncated"))
 
     record_usage(user["id"], message.usage.input_tokens, message.usage.output_tokens)
 
@@ -199,4 +206,4 @@ def analyze(body: SimulationRequest, user: sqlite3.Row = Depends(current_user)):
     try:
         return json.loads(text)
     except json.JSONDecodeError:
-        raise HTTPException(502, "Model returned unparseable output")
+        raise HTTPException(502, msg(lang, "sim.unparseable"))

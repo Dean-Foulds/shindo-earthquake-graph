@@ -1,4 +1,6 @@
 import { useState } from "react"
+import { useI18n, LanguageToggle } from "./i18n"
+import { MONO } from "./fonts"
 
 const API = import.meta.env.VITE_API_URL
 
@@ -12,6 +14,7 @@ const LABEL = {
 }
 
 export default function Login({ onSignedIn }) {
+  const { t, lang } = useI18n()
   const [mode,     setMode]     = useState("signup")
   const [email,    setEmail]    = useState("")
   const [password, setPassword] = useState("")
@@ -27,7 +30,7 @@ export default function Login({ onSignedIn }) {
 
     // Mirrors the backend's min_length=10 so the failure is immediate, not a round trip.
     if (isSignup && password.length < 10) {
-      setError("Password must be at least 10 characters")
+      setError(t("login.passwordTooShort"))
       return
     }
 
@@ -35,7 +38,7 @@ export default function Login({ onSignedIn }) {
     try {
       const res = await fetch(`${API}/auth/${isSignup ? "signup" : "login"}`, {
         method:"POST",
-        headers:{"Content-Type":"application/json"},
+        headers:{"Content-Type":"application/json","Accept-Language":lang},
         body: JSON.stringify({ email, password }),
       })
       const d = await res.json().catch(() => ({}))
@@ -43,9 +46,7 @@ export default function Login({ onSignedIn }) {
       onSignedIn(d)
     } catch (err) {
       setError(
-        err.message === "Failed to fetch"
-          ? "Can't reach the server. Is the backend running?"
-          : err.message
+        err.message === "Failed to fetch" ? t("login.unreachable") : err.message
       )
     }
     setBusy(false)
@@ -54,8 +55,12 @@ export default function Login({ onSignedIn }) {
   return (
     <div style={{minHeight:"100vh",background:"#eef5fc",display:"flex",
       alignItems:"center",justifyContent:"center",padding:20,
-      fontFamily:"'IBM Plex Mono',monospace"}}>
+      fontFamily:MONO}}>
       <div style={{width:"100%",maxWidth:380}}>
+
+        <div style={{display:"flex",justifyContent:"flex-end",marginBottom:10}}>
+          <LanguageToggle/>
+        </div>
 
         <div style={{textAlign:"center",marginBottom:22}}>
           <div style={{fontSize:34,fontWeight:700,color:"#0369a1",letterSpacing:"0.04em"}}>震度</div>
@@ -63,7 +68,7 @@ export default function Login({ onSignedIn }) {
             SHINDO
           </div>
           <div style={{fontSize:11,color:"#648ba4",letterSpacing:"0.08em",marginTop:6}}>
-            Japan seismic risk analysis
+            {t("login.tagline")}
           </div>
         </div>
 
@@ -71,7 +76,7 @@ export default function Login({ onSignedIn }) {
           borderRadius:8,padding:"20px 22px"}}>
 
           <div style={{display:"flex",gap:4,marginBottom:18}}>
-            {[["signup","SIGN UP"],["login","SIGN IN"]].map(([m,label])=>(
+            {[["signup",t("login.signup")],["login",t("login.signin")]].map(([m,label])=>(
               <button key={m} type="button" onClick={()=>{setMode(m);setError(null)}}
                 style={{flex:1,padding:"7px 0",fontSize:11,letterSpacing:"0.08em",
                   fontWeight:700,cursor:"pointer",borderRadius:5,fontFamily:"inherit",
@@ -84,13 +89,13 @@ export default function Login({ onSignedIn }) {
           </div>
 
           <label style={{display:"block",marginBottom:12}}>
-            <span style={LABEL}>EMAIL</span>
+            <span style={LABEL}>{t("login.email")}</span>
             <input type="email" value={email} required autoComplete="username"
               onChange={e=>setEmail(e.target.value)} style={FIELD}/>
           </label>
 
           <label style={{display:"block",marginBottom:6}}>
-            <span style={LABEL}>PASSWORD</span>
+            <span style={LABEL}>{t("login.password")}</span>
             <input type="password" value={password} required
               autoComplete={isSignup ? "new-password" : "current-password"}
               onChange={e=>setPassword(e.target.value)} style={FIELD}/>
@@ -98,7 +103,7 @@ export default function Login({ onSignedIn }) {
 
           {isSignup && (
             <div style={{fontSize:10,color:"#8aa6b8",marginBottom:12}}>
-              At least 10 characters.
+              {t("login.passwordHint")}
             </div>
           )}
 
@@ -116,13 +121,12 @@ export default function Login({ onSignedIn }) {
               background:busy?"#dce9f6":"#0369a1",
               border:"1px solid #0369a1",
               color:busy?"#8aa6b8":"#ffffff"}}>
-            {busy ? "…" : isSignup ? "CREATE ACCOUNT" : "SIGN IN"}
+            {busy ? "…" : isSignup ? t("login.createAccount") : t("login.signin")}
           </button>
         </form>
 
         <div style={{fontSize:10,color:"#8aa6b8",textAlign:"center",marginTop:14,lineHeight:1.7}}>
-          An account is required because each simulation calls a language model.
-          Simulations are capped per account.
+          {t("login.note")}
         </div>
       </div>
     </div>
